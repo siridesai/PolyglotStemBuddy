@@ -189,7 +189,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, settings, onBack 
   const renderMedia = (media: MessageMedia) => {
     if (media.type === 'diagram' && media.diagramData) {
       return (
-        <div className="relative rounded-lg overflow-hidden bg-white p-2 max-w-[300px] mx-auto">
+        <div className="mt-4 relative rounded-lg overflow-hidden bg-white p-2 max-w-[300px]">
           <div 
             className="cursor-pointer group"
             onClick={() => setSelectedMedia(media)}
@@ -205,7 +205,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, settings, onBack 
             </div>
           </div>
           {media.caption && (
-            <div className="mt-1 text-sm text-gray-600 text-center">
+            <div className="mt-2 text-sm text-gray-600 text-center">
               {media.caption}
             </div>
           )}
@@ -215,7 +215,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, settings, onBack 
     
     if (media.type === 'image' && media.url) {
       return (
-        <div className="relative rounded-lg overflow-hidden cursor-pointer group max-w-[300px] mx-auto">
+        <div className="mt-4 relative rounded-lg overflow-hidden cursor-pointer group max-w-[300px]">
           <div onClick={() => setSelectedMedia(media)}>
             <img 
               src={media.url} 
@@ -229,8 +229,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, settings, onBack 
               <Maximize2 className="w-4 h-4 text-gray-600" />
             </div>
             {media.caption && (
-              <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-2 
-                            text-sm transition-opacity group-hover:opacity-100 md:opacity-0">
+              <div className="mt-2 text-sm text-gray-600 text-center">
                 {media.caption}
               </div>
             )}
@@ -257,24 +256,25 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, settings, onBack 
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-6">
         {messages.map((message) => (
           <div
             key={message.id}
             className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`max-w-[80%] rounded-2xl px-4 py-3 space-y-2 ${
+              className={`max-w-[80%] rounded-2xl px-4 py-3 ${
                 message.type === 'user'
                   ? 'bg-indigo-600 text-white'
                   : 'bg-white shadow-md text-gray-800'
               }`}
             >
               <div className="whitespace-pre-wrap">{message.content}</div>
+              
               {message.media && message.media.length > 0 && (
-                <div className="space-y-4 mt-3">
+                <div className="space-y-6">
                   {message.media.map((media, index) => (
-                    <div key={index} className="relative">
+                    <div key={index}>
                       {renderMedia(media)}
                     </div>
                   ))}
