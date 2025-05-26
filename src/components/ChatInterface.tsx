@@ -1,11 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Message, Prompt, ChildSettings, MessageMedia } from '../types';
+import { Message, Prompt, ChildSettings } from '../types';
 import { getLocalizedPromptContent } from '../data/prompts';
 import { getTranslation } from '../data/translations';
-import { ArrowLeft, Send, Maximize2, BookOpen, Brain, Sparkles } from 'lucide-react';
+import { ArrowLeft, Send, BookOpen, Brain, Sparkles } from 'lucide-react';
 import Button from './ui/Button';
-import Diagram from './ui/Diagram';
-import ImageModal from './ui/ImageModal';
 import QuizModal from './ui/QuizModal';
 import SummaryModal from './ui/SummaryModal';
 import { runAssistant } from '../api/runAssistant';
@@ -19,7 +17,6 @@ interface ChatInterfaceProps {
 const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, settings, onBack }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
-  const [selectedMedia, setSelectedMedia] = useState<MessageMedia | null>(null);
   const [showQuiz, setShowQuiz] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -36,48 +33,20 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, settings, onBack 
     if (settings.age <= 8) {
       if (lang === 'es') {
         return {
-          content: `¡Vamos a aprender sobre ${topic} de una manera divertida!`,
-          media: [
-            {
-              type: 'image' as const,
-              url: 'https://images.pexels.com/photos/3825527/pexels-photo-3825527.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-              caption: '¡Descubriendo la ciencia!'
-            }
-          ]
+          content: `¡Vamos a aprender sobre ${topic} de una manera divertida!`
         };
       } else if (lang === 'hi') {
         return {
-          content: `आइए ${topic} के बारे में मजेदार तरीके से जानें!`,
-          media: [
-            {
-              type: 'image' as const,
-              url: 'https://images.pexels.com/photos/3825527/pexels-photo-3825527.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-              caption: 'विज्ञान की खोज!'
-            }
-          ]
+          content: `आइए ${topic} के बारे में मजेदार तरीके से जानें!`
         };
       }
       return {
-        content: `Let's learn about ${topic} in a fun way!`,
-        media: [
-          {
-            type: 'image' as const,
-            url: 'https://images.pexels.com/photos/3825527/pexels-photo-3825527.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-            caption: 'Discovering science!'
-          }
-        ]
+        content: `Let's learn about ${topic} in a fun way!`
       };
     }
 
     return {
-      content: `Let's explore ${topic} together!`,
-      media: [
-        {
-          type: 'image' as const,
-          url: 'https://images.pexels.com/photos/3825527/pexels-photo-3825527.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-          caption: 'Learning together'
-        }
-      ]
+      content: `Let's explore ${topic} together!`
     };
   };
 
@@ -106,7 +75,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, settings, onBack 
         id: '2',
         type: 'assistant',
         content: ageAppropriateContent.content,
-        media: ageAppropriateContent.media,
         timestamp: new Date()
       }
     ]);
@@ -155,61 +123,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, settings, onBack 
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const renderMedia = (media: MessageMedia) => {
-    if (media.type === 'diagram' && media.diagramData) {
-      return (
-        <div className="mt-4 relative rounded-lg overflow-hidden bg-white p-2 max-w-[300px]">
-          <div 
-            className="cursor-pointer group"
-            onClick={() => setSelectedMedia(media)}
-          >
-            <Diagram
-              width={280}
-              height={200}
-              data={media.diagramData}
-            />
-            <div className="absolute top-2 right-2 bg-white rounded-full p-1 opacity-0 
-                          group-hover:opacity-100 transition-opacity shadow-md">
-              <Maximize2 className="w-4 h-4 text-gray-600" />
-            </div>
-          </div>
-          {media.caption && (
-            <div className="mt-2 text-sm text-gray-600 text-center">
-              {media.caption}
-            </div>
-          )}
-        </div>
-      );
-    }
-    
-    if (media.type === 'image' && media.url) {
-      return (
-        <div className="mt-4 relative rounded-lg overflow-hidden cursor-pointer group max-w-[300px]">
-          <div onClick={() => setSelectedMedia(media)}>
-            <img 
-              src={media.url} 
-              alt={media.caption || 'Shared image'} 
-              className="w-full h-auto object-cover rounded-lg transition-transform 
-                       group-hover:scale-[1.02] duration-200"
-              loading="lazy"
-            />
-            <div className="absolute top-2 right-2 bg-white rounded-full p-1 opacity-0 
-                          group-hover:opacity-100 transition-opacity shadow-md">
-              <Maximize2 className="w-4 h-4 text-gray-600" />
-            </div>
-            {media.caption && (
-              <div className="mt-2 text-sm text-gray-600 text-center">
-                {media.caption}
-              </div>
-            )}
-          </div>
-        </div>
-      );
-    }
-
-    return null;
   };
 
   return (
@@ -273,16 +186,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, settings, onBack 
               }`}
             >
               <div className="whitespace-pre-wrap">{message.content}</div>
-              
-              {message.media && message.media.length > 0 && (
-                <div className="space-y-6">
-                  {message.media.map((media, index) => (
-                    <div key={index}>
-                      {renderMedia(media)}
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
           </div>
         ))}
@@ -314,13 +217,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, settings, onBack 
           </div>
         </div>
       </div>
-
-      {selectedMedia && (
-        <ImageModal
-          media={selectedMedia}
-          onClose={() => setSelectedMedia(null)}
-        />
-      )}
 
       {showQuiz && (
         <QuizModal

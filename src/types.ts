@@ -3,31 +3,10 @@ export interface ChildSettings {
   language: string;
 }
 
-export interface MessageMedia {
-  type: 'image' | 'diagram';
-  url?: string;
-  caption?: string;
-  diagramData?: {
-    nodes: Array<{
-      id: string;
-      label: string;
-      x: number;
-      y: number;
-      color?: string;
-    }>;
-    edges: Array<{
-      from: string;
-      to: string;
-      label?: string;
-    }>;
-  };
-}
-
 export interface Message {
   id: string;
   type: 'user' | 'assistant';
   content: string;
-  media?: MessageMedia[];
   timestamp: Date;
 }
 
