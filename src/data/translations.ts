@@ -1,3 +1,5 @@
+import { Language } from './languages';
+
 type TranslationKey = 
   | 'selectAgeGroup'
   | 'chooseLanguage'
@@ -25,7 +27,10 @@ type TranslationKey =
   | 'send'
   | 'earlyLearnerResponse'
   | 'juniorLearnerResponse'
-  | 'teenLearnerResponse';
+  | 'teenLearnerResponse'
+  | 'additionalResources'
+  | 'readyForQuiz'
+  | 'learnSomethingElse';
 
 type Translations = {
   [key in TranslationKey]: string;
@@ -63,7 +68,10 @@ export const translations: TranslationSet = {
     send: 'Send',
     earlyLearnerResponse: "That's a great topic! Let's explore",
     juniorLearnerResponse: "That's a great topic! Let's dive deeper into",
-    teenLearnerResponse: "That's a great topic! Let's investigate"
+    teenLearnerResponse: "That's a great topic! Let's investigate",
+    additionalResources: 'Additional Resources',
+    readyForQuiz: 'Ready for Quiz?',
+    learnSomethingElse: 'Learn Something Else'
   },
   es: {
     selectAgeGroup: 'Selecciona grupo de edad',
@@ -92,7 +100,10 @@ export const translations: TranslationSet = {
     send: 'Enviar',
     earlyLearnerResponse: '¡Excelente tema! Vamos a explorar',
     juniorLearnerResponse: '¡Excelente tema! Profundicemos en',
-    teenLearnerResponse: '¡Excelente tema! Investigemos'
+    teenLearnerResponse: '¡Excelente tema! Investigemos',
+    additionalResources: 'Recursos Adicionales',
+    readyForQuiz: '¿Listo para el Quiz?',
+    learnSomethingElse: 'Aprender Algo Nuevo'
   },
   hi: {
     selectAgeGroup: 'आयु वर्ग चुनें',
@@ -121,7 +132,10 @@ export const translations: TranslationSet = {
     send: 'भेजें',
     earlyLearnerResponse: 'बहुत अच्छा विषय! चलो खोजते हैं',
     juniorLearnerResponse: 'बहुत अच्छा विषय! चलो गहराई से जानते हैं',
-    teenLearnerResponse: 'बहुत अच्छा विषय! चलो जांच करते हैं'
+    teenLearnerResponse: 'बहुत अच्छा विषय! चलो जांच करते हैं',
+    additionalResources: 'अतिरिक्त संसाधन',
+    readyForQuiz: 'क्विज़ के लिए तैयार?',
+    learnSomethingElse: 'कुछ और सीखें'
   }
 };
 
