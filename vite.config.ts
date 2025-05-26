@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   optimizeDeps: {
-    include: ['@react-pdf/renderer', 'base64-js'],
+    include: ['@react-pdf/renderer', 'base64-js', 'unicode-trie'],
     exclude: ['@react-pdf/font', '@react-pdf/layout']
   },
   build: {
