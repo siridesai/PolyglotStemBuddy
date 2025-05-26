@@ -11,6 +11,7 @@ if (!azureOpenAIKey || !azureOpenAIEndpoint) {
     throw new Error("Please set AZURE_OPENAI_KEY and AZURE_OPENAI_ENDPOINT in your environment variables.");
 }
 
+
 const getClient = () => {
     const assistantsClient = new AzureOpenAI({
         endpoint: azureOpenAIEndpoint,
