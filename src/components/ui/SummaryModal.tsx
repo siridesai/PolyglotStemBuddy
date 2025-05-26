@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { X, Download, Mail, Check, Save } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, Download, Mail, Check } from 'lucide-react';
 import { Message, ChildSettings, MessageMedia } from '../../types';
 import Button from './Button';
 import { getTranslation } from '../../data/translations';
@@ -58,7 +58,6 @@ const SummaryModal: React.FC<SummaryModalProps> = ({ onClose, messages, settings
   const [email, setEmail] = useState('');
   const [diagramUrls, setDiagramUrls] = useState<{ [key: string]: string }>({});
   const [pdfReady, setPdfReady] = useState(false);
-  const [savingDiagrams, setSavingDiagrams] = useState(false);
 
   React.useEffect(() => {
     const generateDiagramImages = async () => {
@@ -76,9 +75,9 @@ const SummaryModal: React.FC<SummaryModalProps> = ({ onClose, messages, settings
               const ctx = canvas.getContext('2d');
               if (!ctx) continue;
 
-              // Draw diagram
+              // Draw diagram with improved quality
               const drawNode = (x: number, y: number, label: string, color = '#4F46E5') => {
-                const radius = 60; // Larger radius for better quality
+                const radius = 60; // Larger radius
                 ctx.beginPath();
                 ctx.fillStyle = color;
                 ctx.arc(x * 2, y * 2, radius, 0, 2 * Math.PI); // Scale coordinates
@@ -100,10 +99,10 @@ const SummaryModal: React.FC<SummaryModalProps> = ({ onClose, messages, settings
                 ctx.stroke();
 
                 if (label) {
-                  const midX = (fromX + toX) * 2 / 2;
-                  const midY = (fromY + toY) * 2 / 2;
+                  const midX = (fromX + toX) / 2 * 2;
+                  const midY = (fromY + toY) / 2 * 2;
                   ctx.fillStyle = '#64748B';
-                  ctx.font = '24px Quicksand';
+                  ctx.font = '24px Quicksand'; // Larger font
                   ctx.textAlign = 'center';
                   ctx.textBaseline = 'middle';
                   ctx.fillText(label, midX, midY - 20);
@@ -141,24 +140,6 @@ const SummaryModal: React.FC<SummaryModalProps> = ({ onClose, messages, settings
     e.preventDefault();
     setEmailSent(true);
     setTimeout(() => setEmailSent(false), 3000);
-  };
-
-  const handleSaveDiagrams = async () => {
-    setSavingDiagrams(true);
-    try {
-      for (const [key, dataUrl] of Object.entries(diagramUrls)) {
-        const link = document.createElement('a');
-        link.href = dataUrl;
-        link.download = `diagram-${key}.png`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        // Add a small delay between downloads
-        await new Promise(resolve => setTimeout(resolve, 100));
-      }
-    } finally {
-      setSavingDiagrams(false);
-    }
   };
 
   const LessonPDF = () => (
@@ -260,53 +241,37 @@ const SummaryModal: React.FC<SummaryModalProps> = ({ onClose, messages, settings
               <div className="p-4 border-2 border-gray-200 rounded-xl">
                 <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
                   <Download className="w-5 h-5" />
-                  Download Options
+                  Download PDF
                 </h3>
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-gray-600 mb-2">Save as PDF</p>
-                    {pdfReady ? (
-                      <PDFDownloadLink
-                        document={<LessonPDF />}
-                        fileName={`${topic.toLowerCase().replace(/\s+/g, '-')}-summary.pdf`}
-                      >
-                        {({ loading }) => (
-                          <Button
-                            onClick={() => {}}
-                            variant="secondary"
-                            size="medium"
-                            disabled={loading}
-                          >
-                            {loading ? 'Preparing...' : 'Download PDF'}
-                          </Button>
-                        )}
-                      </PDFDownloadLink>
-                    ) : (
+                <p className="text-gray-600 mb-4">
+                  Save this lesson summary as a PDF file
+                </p>
+                {pdfReady ? (
+                  <PDFDownloadLink
+                    document={<LessonPDF />}
+                    fileName={`${topic.toLowerCase().replace(/\s+/g, '-')}-summary.pdf`}
+                  >
+                    {({ loading }) => (
                       <Button
                         onClick={() => {}}
                         variant="secondary"
                         size="medium"
-                        disabled={true}
+                        disabled={loading}
                       >
-                        Preparing PDF...
+                        {loading ? 'Preparing...' : 'Download Summary'}
                       </Button>
                     )}
-                  </div>
-                  
-                  <div>
-                    <p className="text-gray-600 mb-2">Save Diagrams</p>
-                    <Button
-                      onClick={handleSaveDiagrams}
-                      variant="secondary"
-                      size="medium"
-                      disabled={!pdfReady || savingDiagrams}
-                      className="flex items-center gap-2"
-                    >
-                      <Save className="w-4 h-4" />
-                      {savingDiagrams ? 'Saving...' : 'Save All Diagrams'}
-                    </Button>
-                  </div>
-                </div>
+                  </PDFDownloadLink>
+                ) : (
+                  <Button
+                    onClick={() => {}}
+                    variant="secondary"
+                    size="medium"
+                    disabled={true}
+                  >
+                    Preparing PDF...
+                  </Button>
+                )}
               </div>
 
               <div className="p-4 border-2 border-gray-200 rounded-xl">
