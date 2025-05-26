@@ -13,6 +13,7 @@ const getClient = () => {
     endpoint: azureOpenAIEndpoint,
     apiVersion: azureOpenAIVersion,
     apiKey: azureOpenAIKey,
+    dangerouslyAllowBrowser: true
   });
   return assistantsClient;
 };
