@@ -261,7 +261,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, settings, onBack 
               onClick={() => {/* Handle additional resources */}}
               variant="secondary"
               size="small"
-              className="flex items-center gap-1"
+              className="flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-700"
             >
               <BookOpen className="w-4 h-4" />
               <span className="hidden sm:inline">{getTranslation(settings.language, 'additionalResources')}</span>
@@ -270,7 +270,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, settings, onBack 
               onClick={() => {/* Handle quiz */}}
               variant="secondary"
               size="small"
-              className="flex items-center gap-1"
+              className="flex items-center gap-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700"
             >
               <Brain className="w-4 h-4" />
               <span className="hidden sm:inline">{getTranslation(settings.language, 'readyForQuiz')}</span>
@@ -279,7 +279,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, settings, onBack 
               onClick={onBack}
               variant="secondary"
               size="small"
-              className="flex items-center gap-1"
+              className="flex items-center gap-1 bg-purple-50 hover:bg-purple-100 text-purple-700"
             >
               <Sparkles className="w-4 h-4" />
               <span className="hidden sm:inline">{getTranslation(settings.language, 'learnSomethingElse')}</span>
@@ -292,19 +292,19 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, settings, onBack 
         {messages.map((message) => (
           <div
             key={message.id}
-            className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+            className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'} w-full`}
           >
             <div
-              className={`max-w-[80%] rounded-2xl px-4 py-3 ${
+              className={`w-full max-w-[95%] rounded-2xl px-6 py-4 ${
                 message.type === 'user'
                   ? 'bg-indigo-600 text-white'
                   : 'bg-white shadow-md text-gray-800'
               }`}
             >
-              <div className="whitespace-pre-wrap">{message.content}</div>
+              <div className="whitespace-pre-wrap text-lg">{message.content}</div>
               
               {message.media && message.media.length > 0 && (
-                <div className="space-y-6">
+                <div className="space-y-6 mt-4">
                   {message.media.map((media, index) => (
                     <div key={index}>
                       {renderMedia(media)}
@@ -319,7 +319,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, settings, onBack 
       </div>
 
       <div className="bg-white border-t p-4">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-7xl mx-auto">
           <div className="flex gap-2">
             <input
               type="text"
