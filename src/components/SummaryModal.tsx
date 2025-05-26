@@ -3,21 +3,8 @@ import { X, Download, Mail, Check } from 'lucide-react';
 import { Message, ChildSettings, MessageMedia } from '../../types';
 import Button from './Button';
 import { getTranslation } from '../../data/translations';
-import { pdf, Document, Page, Text, View, StyleSheet, Image, Font } from '@react-pdf/renderer';
+import { pdf, Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
 import Diagram from './Diagram';
-
-// Register fonts for PDF
-Font.register({
-  family: 'Helvetica',
-  src: 'https://fonts.cdnfonts.com/s/29107/Helvetica.woff'
-});
-
-interface SummaryModalProps {
-  onClose: () => void;
-  messages: Message[];
-  settings: ChildSettings;
-  topic: string;
-}
 
 const styles = StyleSheet.create({
   page: {
@@ -94,6 +81,13 @@ const MyDocument = ({ messages, topic, diagramUrls }: { messages: Message[], top
     </Page>
   </Document>
 );
+
+interface SummaryModalProps {
+  onClose: () => void;
+  messages: Message[];
+  settings: ChildSettings;
+  topic: string;
+}
 
 const SummaryModal: React.FC<SummaryModalProps> = ({ onClose, messages, settings, topic }) => {
   const [emailSent, setEmailSent] = useState(false);
@@ -181,7 +175,8 @@ const SummaryModal: React.FC<SummaryModalProps> = ({ onClose, messages, settings
 
   const generatePdf = async (urls: { [key: string]: string }) => {
     try {
-      const blob = await pdf(<MyDocument messages={messages} topic={topic} diagramUrls={urls} />).toBlob();
+      const doc = <MyDocument messages={messages} topic={topic} diagramUrls={urls} />;
+      const blob = await pdf(doc).toBlob();
       setPdfBlob(blob);
       setIsGeneratingPdf(false);
     } catch (error) {
