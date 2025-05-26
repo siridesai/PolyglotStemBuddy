@@ -295,7 +295,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, settings, onBack 
             className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'} w-full`}
           >
             <div
-              className={`w-full max-w-[95%] rounded-2xl px-6 py-4 ${
+              className={`flex-1 max-w-[95%] rounded-2xl px-6 py-4 ${
                 message.type === 'user'
                   ? 'bg-indigo-600 text-white text-right'
                   : 'bg-white shadow-md text-gray-800'
