@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { X, Download, Mail, Check } from 'lucide-react';
 import { Message, ChildSettings, MessageMedia } from '../../types';
 import Button from './Button';
@@ -53,34 +53,185 @@ const styles = StyleSheet.create({
   }
 });
 
-const LessonPDF = ({ messages, topic }: { messages: Message[]; topic: string }) => (
-  <Document>
-    <Page size="A4" style={styles.page}>
-      <Text style={styles.title}>{topic} - Learning Summary</Text>
-      
-      {messages
-        .filter(m => m.type === 'assistant')
-        .map((message, index) => (
-          <View key={index} style={styles.section}>
-            <Text style={styles.content}>• {message.content}</Text>
-            
-            {message.media && message.media.map((media, mediaIndex) => (
-              <View key={mediaIndex} style={styles.mediaContainer}>
-                {media.type === 'image' && media.url && (
-                  <>
-                    <Image src={media.url} style={styles.image} />
-                    {media.caption && <Text style={styles.caption}>{media.caption}</Text>}
-                  </>
-                )}
-                {/* For diagrams, we'll skip rendering them in the PDF for now */}
-                {media.caption && <Text style={styles.caption}>{media.caption}</Text>}
-              </View>
-            ))}
-          </View>
-        ))}
-    </Page>
-  </Document>
-);
+const DiagramToPNG = ({ data }: { data: MessageMedia['diagramData'] }) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  React.useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || !data) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Draw diagram using the same logic as the Diagram component
+    const drawNode = (x: number, y: number, label: string, color = '#4F46E5') => {
+      const radius = 30;
+      ctx.beginPath();
+      ctx.fillStyle = color;
+      ctx.arc(x, y, radius, 0, 2 * Math.PI);
+      ctx.fill();
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = '14px Quicksand';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(label, x, y);
+    };
+
+    const drawEdge = (fromX: number, fromY: number, toX: number, toY: number, label?: string) => {
+      ctx.beginPath();
+      ctx.strokeStyle = '#94A3B8';
+      ctx.lineWidth = 2;
+      ctx.moveTo(fromX, fromY);
+      ctx.lineTo(toX, toY);
+      ctx.stroke();
+
+      if (label) {
+        const midX = (fromX + toX) / 2;
+        const midY = (fromY + toY) / 2;
+        ctx.fillStyle = '#64748B';
+        ctx.font = '12px Quicksand';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(label, midX, midY - 10);
+      }
+    };
+
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Draw edges first
+    data.edges.forEach(edge => {
+      const fromNode = data.nodes.find(n => n.id === edge.from);
+      const toNode = data.nodes.find(n => n.id === edge.to);
+      if (fromNode && toNode) {
+        drawEdge(fromNode.x, fromNode.y, toNode.x, toNode.y, edge.label);
+      }
+    });
+
+    // Draw nodes on top
+    data.nodes.forEach(node => {
+      drawNode(node.x, node.y, node.label, node.color);
+    });
+  }, [data]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      width={280}
+      height={200}
+      style={{ display: 'none' }}
+    />
+  );
+};
+
+const LessonPDF = ({ messages, topic }: { messages: Message[]; topic: string }) => {
+  const [diagramUrls, setDiagramUrls] = useState<{ [key: string]: string }>({});
+
+  React.useEffect(() => {
+    messages.forEach((message, messageIndex) => {
+      message.media?.forEach((media, mediaIndex) => {
+        if (media.type === 'diagram' && media.diagramData) {
+          const canvas = document.createElement('canvas');
+          canvas.width = 280;
+          canvas.height = 200;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return;
+
+          // Draw diagram
+          const drawNode = (x: number, y: number, label: string, color = '#4F46E5') => {
+            const radius = 30;
+            ctx.beginPath();
+            ctx.fillStyle = color;
+            ctx.arc(x, y, radius, 0, 2 * Math.PI);
+            ctx.fill();
+
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = '14px Quicksand';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(label, x, y);
+          };
+
+          const drawEdge = (fromX: number, fromY: number, toX: number, toY: number, label?: string) => {
+            ctx.beginPath();
+            ctx.strokeStyle = '#94A3B8';
+            ctx.lineWidth = 2;
+            ctx.moveTo(fromX, fromY);
+            ctx.lineTo(toX, toY);
+            ctx.stroke();
+
+            if (label) {
+              const midX = (fromX + toX) / 2;
+              const midY = (fromY + toY) / 2;
+              ctx.fillStyle = '#64748B';
+              ctx.font = '12px Quicksand';
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.fillText(label, midX, midY - 10);
+            }
+          };
+
+          // Draw edges first
+          media.diagramData.edges.forEach(edge => {
+            const fromNode = media.diagramData!.nodes.find(n => n.id === edge.from);
+            const toNode = media.diagramData!.nodes.find(n => n.id === edge.to);
+            if (fromNode && toNode) {
+              drawEdge(fromNode.x, fromNode.y, toNode.x, toNode.y, edge.label);
+            }
+          });
+
+          // Draw nodes on top
+          media.diagramData.nodes.forEach(node => {
+            drawNode(node.x, node.y, node.label, node.color);
+          });
+
+          const url = canvas.toDataURL('image/png');
+          setDiagramUrls(prev => ({
+            ...prev,
+            [`${messageIndex}-${mediaIndex}`]: url
+          }));
+        }
+      });
+    });
+  }, [messages]);
+
+  return (
+    <Document>
+      <Page size="A4" style={styles.page}>
+        <Text style={styles.title}>{topic} - Learning Summary</Text>
+        
+        {messages
+          .filter(m => m.type === 'assistant')
+          .map((message, messageIndex) => (
+            <View key={messageIndex} style={styles.section}>
+              <Text style={styles.content}>• {message.content}</Text>
+              
+              {message.media && message.media.map((media, mediaIndex) => (
+                <View key={mediaIndex} style={styles.mediaContainer}>
+                  {media.type === 'image' && media.url && (
+                    <>
+                      <Image src={media.url} style={styles.image} />
+                      {media.caption && <Text style={styles.caption}>{media.caption}</Text>}
+                    </>
+                  )}
+                  {media.type === 'diagram' && media.diagramData && (
+                    <>
+                      <Image 
+                        src={diagramUrls[`${messageIndex}-${mediaIndex}`]} 
+                        style={styles.image} 
+                      />
+                      {media.caption && <Text style={styles.caption}>{media.caption}</Text>}
+                    </>
+                  )}
+                </View>
+              ))}
+            </View>
+          ))}
+      </Page>
+    </Document>
+  );
+};
 
 const SummaryModal: React.FC<SummaryModalProps> = ({ onClose, messages, settings, topic }) => {
   const [emailSent, setEmailSent] = useState(false);
