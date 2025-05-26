@@ -6,6 +6,7 @@ import { ArrowLeft, Send, Maximize2, BookOpen, Brain, Sparkles } from 'lucide-re
 import Button from './ui/Button';
 import Diagram from './ui/Diagram';
 import ImageModal from './ui/ImageModal';
+import QuizModal from './ui/QuizModal';
 
 interface ChatInterfaceProps {
   prompt: Prompt;
@@ -17,6 +18,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, settings, onBack 
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [selectedMedia, setSelectedMedia] = useState<MessageMedia | null>(null);
+  const [showQuiz, setShowQuiz] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const localizedContent = getLocalizedPromptContent(prompt, settings.language);
 
@@ -267,7 +269,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, settings, onBack 
               <span className="hidden sm:inline">{getTranslation(settings.language, 'additionalResources')}</span>
             </Button>
             <Button
-              onClick={() => {/* Handle quiz */}}
+              onClick={() => setShowQuiz(true)}
               variant="secondary"
               size="small"
               className="flex items-center gap-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700"
@@ -347,6 +349,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, settings, onBack 
         <ImageModal
           media={selectedMedia}
           onClose={() => setSelectedMedia(null)}
+        />
+      )}
+
+      {showQuiz && (
+        <QuizModal
+          onClose={() => setShowQuiz(false)}
+          settings={settings}
+          topic={localizedContent.title}
         />
       )}
     </div>
