@@ -1,6 +1,6 @@
 export const runAssistant = async (message: string, age?: number, language: string = 'en') => {
     try {
-        const response = await fetch('http://localhost:3000/runAssistant', {
+        const response = await fetch('/api/runAssistant', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
