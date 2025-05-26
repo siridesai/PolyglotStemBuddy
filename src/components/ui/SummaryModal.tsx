@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { X, Download, Mail, Check } from 'lucide-react';
-import { Message, ChildSettings, MessageMedia } from '../../types';
+import { Message, ChildSettings } from '../../types';
 import Button from './Button';
 import { getTranslation } from '../../data/translations';
-import { PDFDownloadLink, Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
-import Diagram from './Diagram';
+import { Document, Page, Text, View, StyleSheet, Image, PDFViewer } from '@react-pdf/renderer';
 
 interface SummaryModalProps {
   onClose: () => void;
@@ -22,11 +21,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     marginBottom: 20,
     textAlign: 'center'
-  },
-  subtitle: {
-    fontSize: 18,
-    marginBottom: 15,
-    color: '#4B5563'
   },
   content: {
     fontSize: 12,
@@ -63,49 +57,47 @@ const SummaryModal: React.FC<SummaryModalProps> = ({ onClose, messages, settings
     const generateDiagramImages = async () => {
       const urls: { [key: string]: string } = {};
       
-      for (let messageIndex = 0; messageIndex < messages.length; messageIndex++) {
-        const message = messages[messageIndex];
+      for (const [messageIndex, message] of messages.entries()) {
         if (message.media) {
-          for (let mediaIndex = 0; mediaIndex < message.media.length; mediaIndex++) {
-            const media = message.media[mediaIndex];
+          for (const [mediaIndex, media] of message.media.entries()) {
             if (media.type === 'diagram' && media.diagramData) {
               const canvas = document.createElement('canvas');
-              canvas.width = 800; // Larger size for better quality
-              canvas.height = 600;
+              canvas.width = 280;
+              canvas.height = 200;
               const ctx = canvas.getContext('2d');
               if (!ctx) continue;
 
-              // Draw diagram with improved quality
+              // Draw diagram
               const drawNode = (x: number, y: number, label: string, color = '#4F46E5') => {
-                const radius = 60; // Larger radius
+                const radius = 30;
                 ctx.beginPath();
                 ctx.fillStyle = color;
-                ctx.arc(x * 2, y * 2, radius, 0, 2 * Math.PI); // Scale coordinates
+                ctx.arc(x, y, radius, 0, 2 * Math.PI);
                 ctx.fill();
 
                 ctx.fillStyle = '#FFFFFF';
-                ctx.font = '28px Quicksand'; // Larger font
+                ctx.font = '14px Quicksand';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.fillText(label, x * 2, y * 2);
+                ctx.fillText(label, x, y);
               };
 
               const drawEdge = (fromX: number, fromY: number, toX: number, toY: number, label?: string) => {
                 ctx.beginPath();
                 ctx.strokeStyle = '#94A3B8';
-                ctx.lineWidth = 4; // Thicker lines
-                ctx.moveTo(fromX * 2, fromY * 2);
-                ctx.lineTo(toX * 2, toY * 2);
+                ctx.lineWidth = 2;
+                ctx.moveTo(fromX, fromY);
+                ctx.lineTo(toX, toY);
                 ctx.stroke();
 
                 if (label) {
-                  const midX = (fromX + toX) / 2 * 2;
-                  const midY = (fromY + toY) / 2 * 2;
+                  const midX = (fromX + toX) / 2;
+                  const midY = (fromY + toY) / 2;
                   ctx.fillStyle = '#64748B';
-                  ctx.font = '24px Quicksand'; // Larger font
+                  ctx.font = '12px Quicksand';
                   ctx.textAlign = 'center';
                   ctx.textBaseline = 'middle';
-                  ctx.fillText(label, midX, midY - 20);
+                  ctx.fillText(label, midX, midY - 10);
                 }
               };
 
@@ -153,7 +145,7 @@ const SummaryModal: React.FC<SummaryModalProps> = ({ onClose, messages, settings
             <View key={messageIndex} style={styles.section}>
               <Text style={styles.content}>• {message.content}</Text>
               
-              {message.media && message.media.map((media, mediaIndex) => (
+              {message.media?.map((media, mediaIndex) => (
                 <View key={mediaIndex} style={styles.mediaContainer}>
                   {media.type === 'image' && media.url && (
                     <>
@@ -216,11 +208,11 @@ const SummaryModal: React.FC<SummaryModalProps> = ({ onClose, messages, settings
                                   className="rounded-lg w-full h-auto"
                                 />
                               )}
-                              {media.type === 'diagram' && media.diagramData && (
-                                <Diagram
-                                  width={280}
-                                  height={200}
-                                  data={media.diagramData}
+                              {media.type === 'diagram' && media.diagramData && diagramUrls[`${index}-${mediaIndex}`] && (
+                                <img
+                                  src={diagramUrls[`${index}-${mediaIndex}`]}
+                                  alt={media.caption || 'Diagram'}
+                                  className="rounded-lg w-full h-auto"
                                 />
                               )}
                               {media.caption && (
@@ -246,31 +238,10 @@ const SummaryModal: React.FC<SummaryModalProps> = ({ onClose, messages, settings
                 <p className="text-gray-600 mb-4">
                   Save this lesson summary as a PDF file
                 </p>
-                {pdfReady ? (
-                  <PDFDownloadLink
-                    document={<LessonPDF />}
-                    fileName={`${topic.toLowerCase().replace(/\s+/g, '-')}-summary.pdf`}
-                  >
-                    {({ loading }) => (
-                      <Button
-                        onClick={() => {}}
-                        variant="secondary"
-                        size="medium"
-                        disabled={loading}
-                      >
-                        {loading ? 'Preparing...' : 'Download Summary'}
-                      </Button>
-                    )}
-                  </PDFDownloadLink>
-                ) : (
-                  <Button
-                    onClick={() => {}}
-                    variant="secondary"
-                    size="medium"
-                    disabled={true}
-                  >
-                    Preparing PDF...
-                  </Button>
+                {pdfReady && (
+                  <PDFViewer style={{ width: '100%', height: 500 }}>
+                    <LessonPDF />
+                  </PDFViewer>
                 )}
               </div>
 
