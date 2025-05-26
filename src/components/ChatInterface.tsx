@@ -243,16 +243,48 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, settings, onBack 
 
   return (
     <div className="flex flex-col h-screen bg-gradient-to-b from-sky-50 to-indigo-50">
-      <div className="bg-white shadow-sm p-4 flex items-center justify-between">
-        <div className="flex items-center">
-          <button 
-            onClick={onBack}
-            className="flex items-center text-indigo-600 hover:text-indigo-800 transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5 mr-2" />
-            <span>{getTranslation(settings.language, 'back')}</span>
-          </button>
-          <h2 className="ml-4 font-semibold text-gray-800">{localizedContent.title}</h2>
+      <div className="bg-white shadow-sm p-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <button 
+              onClick={onBack}
+              className="flex items-center text-indigo-600 hover:text-indigo-800 transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5 mr-2" />
+              <span>{getTranslation(settings.language, 'back')}</span>
+            </button>
+            <h2 className="font-semibold text-gray-800">{localizedContent.title}</h2>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={() => {/* Handle additional resources */}}
+              variant="secondary"
+              size="small"
+              className="flex items-center gap-1"
+            >
+              <BookOpen className="w-4 h-4" />
+              <span className="hidden sm:inline">{getTranslation(settings.language, 'additionalResources')}</span>
+            </Button>
+            <Button
+              onClick={() => {/* Handle quiz */}}
+              variant="secondary"
+              size="small"
+              className="flex items-center gap-1"
+            >
+              <Brain className="w-4 h-4" />
+              <span className="hidden sm:inline">{getTranslation(settings.language, 'readyForQuiz')}</span>
+            </Button>
+            <Button
+              onClick={onBack}
+              variant="secondary"
+              size="small"
+              className="flex items-center gap-1"
+            >
+              <Sparkles className="w-4 h-4" />
+              <span className="hidden sm:inline">{getTranslation(settings.language, 'learnSomethingElse')}</span>
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -288,36 +320,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, settings, onBack 
 
       <div className="bg-white border-t p-4">
         <div className="max-w-4xl mx-auto">
-          <div className="flex flex-wrap gap-2 mb-4">
-            <Button
-              onClick={() => {/* Handle additional resources */}}
-              variant="secondary"
-              size="medium"
-              className="flex items-center gap-2"
-            >
-              <BookOpen className="w-4 h-4" />
-              {getTranslation(settings.language, 'additionalResources')}
-            </Button>
-            <Button
-              onClick={() => {/* Handle quiz */}}
-              variant="secondary"
-              size="medium"
-              className="flex items-center gap-2"
-            >
-              <Brain className="w-4 h-4" />
-              {getTranslation(settings.language, 'readyForQuiz')}
-            </Button>
-            <Button
-              onClick={onBack}
-              variant="secondary"
-              size="medium"
-              className="flex items-center gap-2"
-            >
-              <Sparkles className="w-4 h-4" />
-              {getTranslation(settings.language, 'learnSomethingElse')}
-            </Button>
-          </div>
-
           <div className="flex gap-2">
             <input
               type="text"
