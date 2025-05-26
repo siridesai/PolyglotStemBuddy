@@ -5,7 +5,7 @@ export default defineConfig({
   plugins: [react()],
   optimizeDeps: {
     include: ['@react-pdf/renderer', 'base64-js', 'unicode-trie'],
-    exclude: ['@react-pdf/font', '@react-pdf/layout']
+    exclude: ['@react-pdf/font', '@react-pdf/layout', 'brotli']
   },
   build: {
     commonjsOptions: {
