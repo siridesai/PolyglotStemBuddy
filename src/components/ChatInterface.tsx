@@ -5,6 +5,7 @@ import { getTranslation } from '../data/translations';
 import { ArrowLeft, Send } from 'lucide-react';
 import Button from './ui/Button';
 import Diagram from './ui/Diagram';
+import ImageModal from './ui/ImageModal';
 
 interface ChatInterfaceProps {
   prompt: Prompt;
@@ -15,6 +16,7 @@ interface ChatInterfaceProps {
 const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, settings, onBack }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
+  const [selectedImage, setSelectedImage] = useState<{ src: string; alt: string } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const localizedContent = getLocalizedPromptContent(prompt, settings.language);
 
@@ -106,7 +108,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, settings, onBack 
       };
     }
 
-    // Add similar content for other age groups...
     return {
       content: `Let's explore ${topic} together!`,
       media: [
@@ -205,15 +206,21 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, settings, onBack 
     
     if (media.type === 'image' && media.url) {
       return (
-        <div className="relative rounded-lg overflow-hidden">
+        <div className="relative rounded-lg overflow-hidden cursor-pointer group">
           <img 
             src={media.url} 
             alt={media.caption || 'Shared image'} 
-            className="w-full h-auto object-cover rounded-lg"
+            className="w-full max-w-md mx-auto h-auto object-cover rounded-lg transition-transform 
+                     group-hover:scale-[1.02] duration-200"
             loading="lazy"
+            onClick={() => setSelectedImage({ 
+              src: media.url!, 
+              alt: media.caption || 'Shared image' 
+            })}
           />
           {media.caption && (
-            <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-2 text-sm">
+            <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-2 
+                          text-sm transition-opacity group-hover:opacity-100 md:opacity-0">
               {media.caption}
             </div>
           )}
@@ -290,6 +297,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, settings, onBack 
           </Button>
         </div>
       </div>
+
+      {selectedImage && (
+        <ImageModal
+          src={selectedImage.src}
+          alt={selectedImage.alt}
+          onClose={() => setSelectedImage(null)}
+        />
+      )}
     </div>
   );
 };
