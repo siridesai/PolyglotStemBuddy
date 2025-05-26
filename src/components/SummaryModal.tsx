@@ -3,17 +3,13 @@ import { X, Download, Mail, Check } from 'lucide-react';
 import { Message, ChildSettings, MessageMedia } from '../../types';
 import Button from './Button';
 import { getTranslation } from '../../data/translations';
-import { PDFViewer, PDFDownloadLink, Document, Page, Text, View, StyleSheet, Image, Font } from '@react-pdf/renderer';
+import { pdf, Document, Page, Text, View, StyleSheet, Image, Font } from '@react-pdf/renderer';
 import Diagram from './Diagram';
 
 // Register fonts for PDF
 Font.register({
   family: 'Helvetica',
-  fonts: [
-    {
-      src: 'https://fonts.cdnfonts.com/s/29107/Helvetica.woff',
-    }
-  ]
+  src: 'https://fonts.cdnfonts.com/s/29107/Helvetica.woff'
 });
 
 interface SummaryModalProps {
@@ -63,11 +59,48 @@ const styles = StyleSheet.create({
   }
 });
 
+const MyDocument = ({ messages, topic, diagramUrls }: { messages: Message[], topic: string, diagramUrls: { [key: string]: string } }) => (
+  <Document>
+    <Page size="A4" style={styles.page}>
+      <Text style={styles.title}>{topic} - Learning Summary</Text>
+      
+      {messages
+        .filter(m => m.type === 'assistant')
+        .map((message, messageIndex) => (
+          <View key={messageIndex} style={styles.section}>
+            <Text style={styles.content}>• {message.content}</Text>
+            
+            {message.media && message.media.map((media, mediaIndex) => (
+              <View key={mediaIndex} style={styles.mediaContainer}>
+                {media.type === 'image' && media.url && (
+                  <>
+                    <Image src={media.url} style={styles.image} />
+                    {media.caption && <Text style={styles.caption}>{media.caption}</Text>}
+                  </>
+                )}
+                {media.type === 'diagram' && media.diagramData && diagramUrls[`${messageIndex}-${mediaIndex}`] && (
+                  <>
+                    <Image 
+                      src={diagramUrls[`${messageIndex}-${mediaIndex}`]} 
+                      style={styles.image} 
+                    />
+                    {media.caption && <Text style={styles.caption}>{media.caption}</Text>}
+                  </>
+                )}
+              </View>
+            ))}
+          </View>
+        ))}
+    </Page>
+  </Document>
+);
+
 const SummaryModal: React.FC<SummaryModalProps> = ({ onClose, messages, settings, topic }) => {
   const [emailSent, setEmailSent] = useState(false);
   const [email, setEmail] = useState('');
   const [diagramUrls, setDiagramUrls] = useState<{ [key: string]: string }>({});
-  const [pdfReady, setPdfReady] = useState(false);
+  const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(true);
 
   React.useEffect(() => {
     const generateDiagramImages = async () => {
@@ -140,11 +173,22 @@ const SummaryModal: React.FC<SummaryModalProps> = ({ onClose, messages, settings
       }
       
       setDiagramUrls(urls);
-      setPdfReady(true);
+      generatePdf(urls);
     };
 
     generateDiagramImages();
-  }, [messages]);
+  }, [messages, topic]);
+
+  const generatePdf = async (urls: { [key: string]: string }) => {
+    try {
+      const blob = await pdf(<MyDocument messages={messages} topic={topic} diagramUrls={urls} />).toBlob();
+      setPdfBlob(blob);
+      setIsGeneratingPdf(false);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      setIsGeneratingPdf(false);
+    }
+  };
 
   const handleEmailShare = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -153,41 +197,18 @@ const SummaryModal: React.FC<SummaryModalProps> = ({ onClose, messages, settings
     setTimeout(() => setEmailSent(false), 3000);
   };
 
-  const MyDocument = () => (
-    <Document>
-      <Page size="A4" style={styles.page}>
-        <Text style={styles.title}>{topic} - Learning Summary</Text>
-        
-        {messages
-          .filter(m => m.type === 'assistant')
-          .map((message, messageIndex) => (
-            <View key={messageIndex} style={styles.section}>
-              <Text style={styles.content}>• {message.content}</Text>
-              
-              {message.media && message.media.map((media, mediaIndex) => (
-                <View key={mediaIndex} style={styles.mediaContainer}>
-                  {media.type === 'image' && media.url && (
-                    <>
-                      <Image src={media.url} style={styles.image} />
-                      {media.caption && <Text style={styles.caption}>{media.caption}</Text>}
-                    </>
-                  )}
-                  {media.type === 'diagram' && media.diagramData && diagramUrls[`${messageIndex}-${mediaIndex}`] && (
-                    <>
-                      <Image 
-                        src={diagramUrls[`${messageIndex}-${mediaIndex}`]} 
-                        style={styles.image} 
-                      />
-                      {media.caption && <Text style={styles.caption}>{media.caption}</Text>}
-                    </>
-                  )}
-                </View>
-              ))}
-            </View>
-          ))}
-      </Page>
-    </Document>
-  );
+  const handleDownload = () => {
+    if (pdfBlob) {
+      const url = URL.createObjectURL(pdfBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${topic.toLowerCase().replace(/\s+/g, '-')}-summary.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
@@ -257,32 +278,14 @@ const SummaryModal: React.FC<SummaryModalProps> = ({ onClose, messages, settings
                 <p className="text-gray-600 mb-4">
                   Save this lesson summary as a PDF file
                 </p>
-                {pdfReady ? (
-                  <PDFDownloadLink
-                    document={<MyDocument />}
-                    fileName={`${topic.toLowerCase().replace(/\s+/g, '-')}-summary.pdf`}
-                  >
-                    {({ loading }) => (
-                      <Button
-                        onClick={() => {}}
-                        variant="secondary"
-                        size="medium"
-                        disabled={loading}
-                      >
-                        {loading ? 'Preparing...' : 'Download Summary'}
-                      </Button>
-                    )}
-                  </PDFDownloadLink>
-                ) : (
-                  <Button
-                    onClick={() => {}}
-                    variant="secondary"
-                    size="medium"
-                    disabled={true}
-                  >
-                    Preparing PDF...
-                  </Button>
-                )}
+                <Button
+                  onClick={handleDownload}
+                  variant="secondary"
+                  size="medium"
+                  disabled={isGeneratingPdf || !pdfBlob}
+                >
+                  {isGeneratingPdf ? 'Preparing...' : 'Download Summary'}
+                </Button>
               </div>
 
               <div className="p-4 border-2 border-gray-200 rounded-xl">
