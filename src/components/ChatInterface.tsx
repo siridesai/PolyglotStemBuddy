@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Message, Prompt, ChildSettings, MessageMedia } from '../types';
 import { getLocalizedPromptContent } from '../data/prompts';
 import { getTranslation } from '../data/translations';
-import { ArrowLeft, Send } from 'lucide-react';
+import { ArrowLeft, Send, Maximize2 } from 'lucide-react';
 import Button from './ui/Button';
 import Diagram from './ui/Diagram';
 import ImageModal from './ui/ImageModal';
@@ -16,7 +16,7 @@ interface ChatInterfaceProps {
 const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, settings, onBack }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
-  const [selectedImage, setSelectedImage] = useState<{ src: string; alt: string } | null>(null);
+  const [selectedMedia, setSelectedMedia] = useState<MessageMedia | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const localizedContent = getLocalizedPromptContent(prompt, settings.language);
 
@@ -189,14 +189,23 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, settings, onBack 
   const renderMedia = (media: MessageMedia) => {
     if (media.type === 'diagram' && media.diagramData) {
       return (
-        <div className="relative rounded-lg overflow-hidden bg-white p-4">
-          <Diagram
-            width={400}
-            height={300}
-            data={media.diagramData}
-          />
+        <div className="relative rounded-lg overflow-hidden bg-white p-2 max-w-[300px] mx-auto">
+          <div 
+            className="cursor-pointer group"
+            onClick={() => setSelectedMedia(media)}
+          >
+            <Diagram
+              width={280}
+              height={200}
+              data={media.diagramData}
+            />
+            <div className="absolute top-2 right-2 bg-white rounded-full p-1 opacity-0 
+                          group-hover:opacity-100 transition-opacity shadow-md">
+              <Maximize2 className="w-4 h-4 text-gray-600" />
+            </div>
+          </div>
           {media.caption && (
-            <div className="mt-2 text-sm text-gray-600 text-center">
+            <div className="mt-1 text-sm text-gray-600 text-center">
               {media.caption}
             </div>
           )}
@@ -206,24 +215,26 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, settings, onBack 
     
     if (media.type === 'image' && media.url) {
       return (
-        <div className="relative rounded-lg overflow-hidden cursor-pointer group">
-          <img 
-            src={media.url} 
-            alt={media.caption || 'Shared image'} 
-            className="w-full max-w-md mx-auto h-auto object-cover rounded-lg transition-transform 
-                     group-hover:scale-[1.02] duration-200"
-            loading="lazy"
-            onClick={() => setSelectedImage({ 
-              src: media.url!, 
-              alt: media.caption || 'Shared image' 
-            })}
-          />
-          {media.caption && (
-            <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-2 
-                          text-sm transition-opacity group-hover:opacity-100 md:opacity-0">
-              {media.caption}
+        <div className="relative rounded-lg overflow-hidden cursor-pointer group max-w-[300px] mx-auto">
+          <div onClick={() => setSelectedMedia(media)}>
+            <img 
+              src={media.url} 
+              alt={media.caption || 'Shared image'} 
+              className="w-full h-auto object-cover rounded-lg transition-transform 
+                       group-hover:scale-[1.02] duration-200"
+              loading="lazy"
+            />
+            <div className="absolute top-2 right-2 bg-white rounded-full p-1 opacity-0 
+                          group-hover:opacity-100 transition-opacity shadow-md">
+              <Maximize2 className="w-4 h-4 text-gray-600" />
             </div>
-          )}
+            {media.caption && (
+              <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-2 
+                            text-sm transition-opacity group-hover:opacity-100 md:opacity-0">
+                {media.caption}
+              </div>
+            )}
+          </div>
         </div>
       );
     }
@@ -298,11 +309,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, settings, onBack 
         </div>
       </div>
 
-      {selectedImage && (
+      {selectedMedia && (
         <ImageModal
-          src={selectedImage.src}
-          alt={selectedImage.alt}
-          onClose={() => setSelectedImage(null)}
+          media={selectedMedia}
+          onClose={() => setSelectedMedia(null)}
         />
       )}
     </div>
