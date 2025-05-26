@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Message, Prompt, ChildSettings, MessageMedia } from '../types';
 import { getLocalizedPromptContent } from '../data/prompts';
 import { getTranslation } from '../data/translations';
-import { ArrowLeft, Send, Maximize2 } from 'lucide-react';
+import { ArrowLeft, Send, Maximize2, BookOpen, Brain, Sparkles } from 'lucide-react';
 import Button from './ui/Button';
 import Diagram from './ui/Diagram';
 import ImageModal from './ui/ImageModal';
@@ -287,25 +287,57 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, settings, onBack 
       </div>
 
       <div className="bg-white border-t p-4">
-        <div className="flex gap-2 max-w-4xl mx-auto">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-            placeholder={getTranslation(settings.language, 'typeMessage')}
-            className="flex-1 border-2 border-gray-200 rounded-xl px-4 py-2 focus:outline-none focus:border-indigo-500"
-          />
-          <Button
-            onClick={handleSend}
-            disabled={!input.trim()}
-            variant="primary"
-            size="medium"
-            className="flex items-center gap-2"
-          >
-            <Send className="w-4 h-4" />
-            {getTranslation(settings.language, 'send')}
-          </Button>
+        <div className="max-w-4xl mx-auto">
+          <div className="flex flex-wrap gap-2 mb-4">
+            <Button
+              onClick={() => {/* Handle additional resources */}}
+              variant="secondary"
+              size="medium"
+              className="flex items-center gap-2"
+            >
+              <BookOpen className="w-4 h-4" />
+              {getTranslation(settings.language, 'additionalResources')}
+            </Button>
+            <Button
+              onClick={() => {/* Handle quiz */}}
+              variant="secondary"
+              size="medium"
+              className="flex items-center gap-2"
+            >
+              <Brain className="w-4 h-4" />
+              {getTranslation(settings.language, 'readyForQuiz')}
+            </Button>
+            <Button
+              onClick={onBack}
+              variant="secondary"
+              size="medium"
+              className="flex items-center gap-2"
+            >
+              <Sparkles className="w-4 h-4" />
+              {getTranslation(settings.language, 'learnSomethingElse')}
+            </Button>
+          </div>
+
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+              placeholder={getTranslation(settings.language, 'typeMessage')}
+              className="flex-1 border-2 border-gray-200 rounded-xl px-4 py-2 focus:outline-none focus:border-indigo-500"
+            />
+            <Button
+              onClick={handleSend}
+              disabled={!input.trim()}
+              variant="primary"
+              size="medium"
+              className="flex items-center gap-2"
+            >
+              <Send className="w-4 h-4" />
+              {getTranslation(settings.language, 'send')}
+            </Button>
+          </div>
         </div>
       </div>
 
