@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const { AzureOpenAI } = require('openai');
+const { OpenAI } = require('openai');
 
 dotenv.config();
 
@@ -20,72 +20,36 @@ if (!azureOpenAIKey || !azureOpenAIEndpoint) {
 }
 
 const getClient = () => {
-    const assistantsClient = new AzureOpenAI({
-        endpoint: azureOpenAIEndpoint,
-        apiVersion: azureOpenAIVersion,
+    return new OpenAI({
         apiKey: azureOpenAIKey,
+        baseURL: `${azureOpenAIEndpoint}/openai/deployments/gpt-4`,
+        defaultQuery: { 'api-version': azureOpenAIVersion },
+        defaultHeaders: { 'api-key': azureOpenAIKey }
     });
-    return assistantsClient;
-};
-
-const runAssistantBackend = async (message, age, language = 'en') => {
-    try {
-        const assistantsClient = getClient();
-        
-        // Create a thread
-        const thread = await assistantsClient.beta.threads.create({});
-
-        // Add the user's message to the thread
-        await assistantsClient.beta.threads.messages.create(thread.id, {
-            role: "user",
-            content: message,
-        });
-
-        // Create the assistant
-        const assistant = await assistantsClient.beta.assistants.create({
-            model: "gpt-4o-mini",
-            name: "Assistant248",
-            instructions: "You're an AI tutor assistant specializing in STEM topics for school students. You cater to 3 different age groups 5-8, 9-12 and 13-16. If no age group is specified assume it is 9-12 age group. If the age group is specified then respond to the question with an answer that relevant to that age group. The answer must be precise and concise. Offer age appropriate follow-up prompt suggestions. By default use English as the language for responses. If the user specifies a different language preference, only then use that language. Include ASCII art diagrams in the response to explain the concept. Render the ASCII art diagram so it shows as a readable image.",
-            tools: [],
-            tool_resources: {},
-            temperature: 0.1,
-            top_p: 1
-        });
-
-        // Run the thread
-        const run = await assistantsClient.beta.threads.runs.create(thread.id, {
-            assistant_id: assistant.id,
-        });
-
-        // Poll for completion
-        let runStatus = run.status;
-        while (runStatus === 'queued' || runStatus === 'in_progress') {
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            const runStatusResponse = await assistantsClient.beta.threads.runs.retrieve(
-                thread.id,
-                run.id
-            );
-            runStatus = runStatusResponse.status;
-        }
-
-        // Get the messages once complete
-        if (runStatus === 'completed') {
-            const messages = await assistantsClient.beta.threads.messages.list(thread.id);
-            return messages.data[0].content[0].text.value;
-        } else {
-            throw new Error(`Run failed with status: ${runStatus}`);
-        }
-    } catch (error) {
-        console.error(`Error running assistant: ${error.message}`);
-        throw error;
-    }
 };
 
 app.post('/runAssistant', async (req, res) => {
     try {
-        const { message, age, language } = req.body;
-        const result = await runAssistantBackend(message, age, language);
-        res.json({ result });
+        const { message, age, language = 'en' } = req.body;
+        const client = getClient();
+
+        const completion = await client.chat.completions.create({
+            model: 'gpt-4',
+            messages: [
+                {
+                    role: 'system',
+                    content: `You're an AI tutor assistant specializing in STEM topics for school students. You cater to 3 different age groups 5-8, 9-12 and 13-16. If no age group is specified assume it is 9-12 age group. If the age group is specified then respond to the question with an answer that relevant to that age group. The answer must be precise and concise. Offer age appropriate follow-up prompt suggestions. By default use English as the language for responses. If the user specifies a different language preference (${language}), only then use that language.`
+                },
+                {
+                    role: 'user',
+                    content: message
+                }
+            ],
+            temperature: 0.7,
+            max_tokens: 500
+        });
+
+        res.json({ result: completion.choices[0].message.content });
     } catch (error) {
         console.error("Backend API error:", error);
         res.status(500).json({ error: error.message });
