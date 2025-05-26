@@ -143,8 +143,6 @@ export const translations: TranslationSet = {
   }
 };
 
-export const getTranslation = (language: string, key: Trans
-
-lationKey): string => {
+export const getTranslation = (language: string, key: TranslationKey): string => {
   return translations[language]?.[key] || translations['en'][key];
 };
