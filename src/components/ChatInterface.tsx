@@ -8,6 +8,7 @@ import Diagram from './ui/Diagram';
 import ImageModal from './ui/ImageModal';
 import QuizModal from './ui/QuizModal';
 import SummaryModal from './ui/SummaryModal';
+import { runAssistant } from '../api/runAssistant';
 
 interface ChatInterfaceProps {
   prompt: Prompt;
@@ -21,6 +22,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, settings, onBack 
   const [selectedMedia, setSelectedMedia] = useState<MessageMedia | null>(null);
   const [showQuiz, setShowQuiz] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const localizedContent = getLocalizedPromptContent(prompt, settings.language);
 
@@ -40,21 +42,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, settings, onBack 
               type: 'image' as const,
               url: 'https://images.pexels.com/photos/3825527/pexels-photo-3825527.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
               caption: '¡Descubriendo la ciencia!'
-            },
-            {
-              type: 'diagram' as const,
-              caption: 'Conceptos básicos',
-              diagramData: {
-                nodes: [
-                  { id: '1', label: topic, x: 200, y: 150, color: '#4F46E5' },
-                  { id: '2', label: '¡Diversión!', x: 100, y: 100, color: '#059669' },
-                  { id: '3', label: 'Aprendizaje', x: 300, y: 100, color: '#DC2626' }
-                ],
-                edges: [
-                  { from: '1', to: '2', label: 'es' },
-                  { from: '1', to: '3', label: 'para' }
-                ]
-              }
             }
           ]
         };
@@ -66,21 +53,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, settings, onBack 
               type: 'image' as const,
               url: 'https://images.pexels.com/photos/3825527/pexels-photo-3825527.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
               caption: 'विज्ञान की खोज!'
-            },
-            {
-              type: 'diagram' as const,
-              caption: 'मूल अवधारणाएं',
-              diagramData: {
-                nodes: [
-                  { id: '1', label: topic, x: 200, y: 150, color: '#4F46E5' },
-                  { id: '2', label: 'मज़ा', x: 100, y: 100, color: '#059669' },
-                  { id: '3', label: 'सीखना', x: 300, y: 100, color: '#DC2626' }
-                ],
-                edges: [
-                  { from: '1', to: '2', label: 'है' },
-                  { from: '1', to: '3', label: 'के लिए' }
-                ]
-              }
             }
           ]
         };
@@ -92,21 +64,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, settings, onBack 
             type: 'image' as const,
             url: 'https://images.pexels.com/photos/3825527/pexels-photo-3825527.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
             caption: 'Discovering science!'
-          },
-          {
-            type: 'diagram' as const,
-            caption: 'Basic concepts',
-            diagramData: {
-              nodes: [
-                { id: '1', label: topic, x: 200, y: 150, color: '#4F46E5' },
-                { id: '2', label: 'Fun', x: 100, y: 100, color: '#059669' },
-                { id: '3', label: 'Learning', x: 300, y: 100, color: '#DC2626' }
-              ],
-              edges: [
-                { from: '1', to: '2', label: 'is' },
-                { from: '1', to: '3', label: 'for' }
-              ]
-            }
           }
         ]
       };
@@ -159,35 +116,45 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, settings, onBack 
     scrollToBottom();
   }, [messages]);
 
-  const handleSend = () => {
-    if (!input.trim()) return;
+  const handleSend = async () => {
+    if (!input.trim() || isLoading) return;
 
-    const newMessages = [
-      ...messages,
-      {
-        id: Date.now().toString(),
-        type: 'user',
-        content: input,
-        timestamp: new Date()
-      }
-    ];
+    const userMessage = {
+      id: Date.now().toString(),
+      type: 'user' as const,
+      content: input,
+      timestamp: new Date()
+    };
 
-    setMessages(newMessages);
+    setMessages(prev => [...prev, userMessage]);
     setInput('');
+    setIsLoading(true);
 
-    setTimeout(() => {
-      const response = getAgeAppropriateContent(localizedContent.title.toLowerCase());
-      setMessages([
-        ...newMessages,
-        {
-          id: (Date.now() + 1).toString(),
-          type: 'assistant',
-          content: response.content,
-          media: response.media,
-          timestamp: new Date()
-        }
-      ]);
-    }, 1000);
+    try {
+      const response = await runAssistant(input, settings.age, settings.language);
+      
+      const assistantMessage = {
+        id: (Date.now() + 1).toString(),
+        type: 'assistant' as const,
+        content: response,
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, assistantMessage]);
+    } catch (error) {
+      console.error('Error getting assistant response:', error);
+      
+      const errorMessage = {
+        id: (Date.now() + 1).toString(),
+        type: 'assistant' as const,
+        content: 'I apologize, but I encountered an error. Please try again.',
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const renderMedia = (media: MessageMedia) => {
@@ -332,16 +299,17 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, settings, onBack 
               onKeyPress={(e) => e.key === 'Enter' && handleSend()}
               placeholder={getTranslation(settings.language, 'typeMessage')}
               className="flex-1 border-2 border-gray-200 rounded-xl px-4 py-2 focus:outline-none focus:border-indigo-500"
+              disabled={isLoading}
             />
             <Button
               onClick={handleSend}
-              disabled={!input.trim()}
+              disabled={!input.trim() || isLoading}
               variant="primary"
               size="medium"
               className="flex items-center gap-2"
             >
               <Send className="w-4 h-4" />
-              {getTranslation(settings.language, 'send')}
+              {isLoading ? 'Sending...' : getTranslation(settings.language, 'send')}
             </Button>
           </div>
         </div>
