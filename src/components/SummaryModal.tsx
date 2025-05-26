@@ -3,8 +3,18 @@ import { X, Download, Mail, Check } from 'lucide-react';
 import { Message, ChildSettings, MessageMedia } from '../../types';
 import Button from './Button';
 import { getTranslation } from '../../data/translations';
-import { PDFDownloadLink, Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
+import { PDFViewer, PDFDownloadLink, Document, Page, Text, View, StyleSheet, Image, Font } from '@react-pdf/renderer';
 import Diagram from './Diagram';
+
+// Register fonts for PDF
+Font.register({
+  family: 'Helvetica',
+  fonts: [
+    {
+      src: 'https://fonts.cdnfonts.com/s/29107/Helvetica.woff',
+    }
+  ]
+});
 
 interface SummaryModalProps {
   onClose: () => void;
@@ -143,7 +153,7 @@ const SummaryModal: React.FC<SummaryModalProps> = ({ onClose, messages, settings
     setTimeout(() => setEmailSent(false), 3000);
   };
 
-  const LessonPDF = () => (
+  const MyDocument = () => (
     <Document>
       <Page size="A4" style={styles.page}>
         <Text style={styles.title}>{topic} - Learning Summary</Text>
@@ -249,7 +259,7 @@ const SummaryModal: React.FC<SummaryModalProps> = ({ onClose, messages, settings
                 </p>
                 {pdfReady ? (
                   <PDFDownloadLink
-                    document={<LessonPDF />}
+                    document={<MyDocument />}
                     fileName={`${topic.toLowerCase().replace(/\s+/g, '-')}-summary.pdf`}
                   >
                     {({ loading }) => (
