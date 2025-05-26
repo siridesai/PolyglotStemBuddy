@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { X, Download, Mail, Check } from 'lucide-react';
-import { Message, ChildSettings } from '../../types';
+import { Message, ChildSettings, MessageMedia } from '../../types';
 import Button from './Button';
 import { getTranslation } from '../../data/translations';
-import { PDFDownloadLink, Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
+import { PDFDownloadLink, Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
+import Diagram from './Diagram';
 
 interface SummaryModalProps {
   onClose: () => void;
@@ -34,23 +35,122 @@ const styles = StyleSheet.create({
   },
   section: {
     marginBottom: 20
+  },
+  image: {
+    marginVertical: 10,
+    maxWidth: '100%',
+    objectFit: 'contain'
+  },
+  caption: {
+    fontSize: 10,
+    color: '#6B7280',
+    textAlign: 'center',
+    marginTop: 5
+  },
+  mediaContainer: {
+    marginVertical: 15,
+    alignItems: 'center'
   }
 });
+
+const DiagramToPNG = ({ data, width, height }: { data: MessageMedia['diagramData']; width: number; height: number }) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!canvasRef.current || !data) return;
+
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Draw diagram on canvas
+    const drawNode = (x: number, y: number, label: string, color = '#4F46E5') => {
+      ctx.beginPath();
+      ctx.fillStyle = color;
+      ctx.arc(x, y, 30, 0, 2 * Math.PI);
+      ctx.fill();
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = '14px Helvetica';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(label, x, y);
+    };
+
+    const drawEdge = (fromX: number, fromY: number, toX: number, toY: number, label?: string) => {
+      ctx.beginPath();
+      ctx.strokeStyle = '#94A3B8';
+      ctx.lineWidth = 2;
+      ctx.moveTo(fromX, fromY);
+      ctx.lineTo(toX, toY);
+      ctx.stroke();
+
+      if (label) {
+        ctx.fillStyle = '#64748B';
+        ctx.font = '12px Helvetica';
+        ctx.fillText(label, (fromX + toX) / 2, (fromY + toY) / 2 - 10);
+      }
+    };
+
+    // Clear canvas
+    ctx.clearRect(0, 0, width, height);
+
+    // Draw edges
+    data.edges.forEach(edge => {
+      const fromNode = data.nodes.find(n => n.id === edge.from);
+      const toNode = data.nodes.find(n => n.id === edge.to);
+      if (fromNode && toNode) {
+        drawEdge(fromNode.x, fromNode.y, toNode.x, toNode.y, edge.label);
+      }
+    });
+
+    // Draw nodes
+    data.nodes.forEach(node => {
+      drawNode(node.x, node.y, node.label, node.color);
+    });
+
+    // Convert canvas to PNG
+    setImageUrl(canvas.toDataURL('image/png'));
+  }, [data, width, height]);
+
+  return (
+    <>
+      <canvas ref={canvasRef} width={width} height={height} style={{ display: 'none' }} />
+      {imageUrl && <Image src={imageUrl} style={styles.image} />}
+    </>
+  );
+};
 
 const LessonPDF = ({ messages, topic }: { messages: Message[]; topic: string }) => (
   <Document>
     <Page size="A4" style={styles.page}>
       <Text style={styles.title}>{topic} - Learning Summary</Text>
-      <View style={styles.section}>
-        <Text style={styles.subtitle}>Key Points:</Text>
-        {messages
-          .filter(m => m.type === 'assistant')
-          .map((message, index) => (
-            <Text key={index} style={styles.content}>
-              • {message.content}
-            </Text>
-          ))}
-      </View>
+      
+      {messages
+        .filter(m => m.type === 'assistant')
+        .map((message, index) => (
+          <View key={index} style={styles.section}>
+            <Text style={styles.content}>• {message.content}</Text>
+            
+            {message.media && message.media.map((media, mediaIndex) => (
+              <View key={mediaIndex} style={styles.mediaContainer}>
+                {media.type === 'image' && media.url && (
+                  <>
+                    <Image src={media.url} style={styles.image} />
+                    {media.caption && <Text style={styles.caption}>{media.caption}</Text>}
+                  </>
+                )}
+                {media.type === 'diagram' && media.diagramData && (
+                  <>
+                    <DiagramToPNG data={media.diagramData} width={400} height={300} />
+                    {media.caption && <Text style={styles.caption}>{media.caption}</Text>}
+                  </>
+                )}
+              </View>
+            ))}
+          </View>
+        ))}
     </Page>
   </Document>
 );
@@ -87,13 +187,40 @@ const SummaryModal: React.FC<SummaryModalProps> = ({ onClose, messages, settings
               <h3 className="font-semibold text-lg text-indigo-900 mb-3">
                 {topic}
               </h3>
-              <div className="space-y-2">
+              <div className="space-y-4">
                 {messages
                   .filter(m => m.type === 'assistant')
                   .map((message, index) => (
-                    <p key={index} className="text-indigo-700">
-                      • {message.content}
-                    </p>
+                    <div key={index}>
+                      <p className="text-indigo-700">• {message.content}</p>
+                      {message.media && (
+                        <div className="grid grid-cols-2 gap-4 mt-2">
+                          {message.media.map((media, mediaIndex) => (
+                            <div key={mediaIndex} className="relative">
+                              {media.type === 'image' && media.url && (
+                                <img
+                                  src={media.url}
+                                  alt={media.caption || 'Learning material'}
+                                  className="rounded-lg w-full h-auto"
+                                />
+                              )}
+                              {media.type === 'diagram' && media.diagramData && (
+                                <Diagram
+                                  width={280}
+                                  height={200}
+                                  data={media.diagramData}
+                                />
+                              )}
+                              {media.caption && (
+                                <p className="text-sm text-gray-600 mt-1 text-center">
+                                  {media.caption}
+                                </p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   ))}
               </div>
             </div>
