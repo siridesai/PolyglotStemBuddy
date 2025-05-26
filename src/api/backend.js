@@ -1,4 +1,7 @@
 import { AzureOpenAI } from 'openai';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const azureOpenAIKey = process.env.VITE_AZURE_OPENAI_KEY;
 const azureOpenAIEndpoint = process.env.VITE_AZURE_OPENAI_ENDPOINT;
@@ -17,7 +20,7 @@ const getClient = () => {
     return assistantsClient;
 };
 
-export const runAssistantBackend = async (message: string, age?: number, language: string = 'en') => {
+export const runAssistantBackend = async (message, age, language = 'en') => {
     try {
         const assistantsClient = getClient();
         
