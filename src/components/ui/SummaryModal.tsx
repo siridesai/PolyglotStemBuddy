@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
   mediaContainer: {
     marginVertical: 15,
     width: '100%',
-    alignItems: 'center'
+    alignItems: 'flex-start'
   }
 });
 
@@ -65,15 +65,13 @@ const SummaryModal: React.FC<SummaryModalProps> = ({ onClose, messages, settings
           for (const [mediaIndex, media] of message.media.entries()) {
             if (media.type === 'diagram' && media.diagramData) {
               const canvas = document.createElement('canvas');
-              // Increased canvas size for better quality
               canvas.width = 560;
               canvas.height = 400;
               const ctx = canvas.getContext('2d');
               if (!ctx) continue;
 
-              const scale = 2; // Scale factor for better quality
+              const scale = 2;
 
-              // Draw diagram
               const drawNode = (x: number, y: number, label: string, color = '#4F46E5') => {
                 const radius = 30 * scale;
                 ctx.beginPath();
@@ -107,7 +105,6 @@ const SummaryModal: React.FC<SummaryModalProps> = ({ onClose, messages, settings
                 }
               };
 
-              // Draw edges first
               media.diagramData.edges.forEach(edge => {
                 const fromNode = media.diagramData!.nodes.find(n => n.id === edge.from);
                 const toNode = media.diagramData!.nodes.find(n => n.id === edge.to);
@@ -116,7 +113,6 @@ const SummaryModal: React.FC<SummaryModalProps> = ({ onClose, messages, settings
                 }
               });
 
-              // Draw nodes on top
               media.diagramData.nodes.forEach(node => {
                 drawNode(node.x, node.y, node.label, node.color);
               });
@@ -206,7 +202,7 @@ const SummaryModal: React.FC<SummaryModalProps> = ({ onClose, messages, settings
                       {message.media && (
                         <div className="flex flex-col gap-6">
                           {message.media.map((media, mediaIndex) => (
-                            <div key={mediaIndex} className="flex flex-col items-center w-full">
+                            <div key={mediaIndex} className="flex flex-col items-start">
                               {media.type === 'image' && media.url && (
                                 <img
                                   src={media.url}
@@ -218,11 +214,11 @@ const SummaryModal: React.FC<SummaryModalProps> = ({ onClose, messages, settings
                                 <img
                                   src={diagramUrls[`${index}-${mediaIndex}`]}
                                   alt={media.caption || 'Diagram'}
-                                  className="rounded-lg w-full max-w-[560px] h-auto"
+                                  className="rounded-lg max-w-[560px] h-auto"
                                 />
                               )}
                               {media.caption && (
-                                <p className="text-sm text-gray-600 mt-2 text-center">
+                                <p className="text-sm text-gray-600 mt-2">
                                   {media.caption}
                                 </p>
                               )}
