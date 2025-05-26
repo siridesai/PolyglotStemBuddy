@@ -172,7 +172,7 @@ const SummaryModal: React.FC<SummaryModalProps> = ({ onClose, messages, settings
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-2xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-gray-800">
@@ -191,32 +191,32 @@ const SummaryModal: React.FC<SummaryModalProps> = ({ onClose, messages, settings
               <h3 className="font-semibold text-lg text-indigo-900 mb-3">
                 {topic}
               </h3>
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {messages
                   .filter(m => m.type === 'assistant')
                   .map((message, index) => (
-                    <div key={index}>
+                    <div key={index} className="space-y-4">
                       <p className="text-indigo-700">• {message.content}</p>
                       {message.media && (
-                        <div className="grid grid-cols-2 gap-4 mt-2">
+                        <div className="flex flex-col gap-6">
                           {message.media.map((media, mediaIndex) => (
-                            <div key={mediaIndex} className="relative">
+                            <div key={mediaIndex} className="flex flex-col items-center">
                               {media.type === 'image' && media.url && (
                                 <img
                                   src={media.url}
                                   alt={media.caption || 'Learning material'}
-                                  className="rounded-lg w-full h-auto"
+                                  className="rounded-lg max-w-full h-auto"
                                 />
                               )}
                               {media.type === 'diagram' && media.diagramData && diagramUrls[`${index}-${mediaIndex}`] && (
                                 <img
                                   src={diagramUrls[`${index}-${mediaIndex}`]}
                                   alt={media.caption || 'Diagram'}
-                                  className="rounded-lg w-full h-auto"
+                                  className="rounded-lg max-w-full h-auto"
                                 />
                               )}
                               {media.caption && (
-                                <p className="text-sm text-gray-600 mt-1 text-center">
+                                <p className="text-sm text-gray-600 mt-2 text-center">
                                   {media.caption}
                                 </p>
                               )}
