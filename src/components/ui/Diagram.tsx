@@ -20,8 +20,8 @@ interface DiagramProps {
 }
 
 const Diagram: React.FC<DiagramProps> = ({ 
-  width = 400, 
-  height = 300, 
+  width = 280, 
+  height = 200, 
   data 
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -33,15 +33,19 @@ const Diagram: React.FC<DiagramProps> = ({
     label: string,
     color = '#4F46E5'
   ) => {
+    const scale = Math.min(width / 400, height / 300);
+    const radius = 30 * scale;
+    const fontSize = 14 * scale;
+
     // Draw circle
     ctx.beginPath();
     ctx.fillStyle = color;
-    ctx.arc(x, y, 30, 0, 2 * Math.PI);
+    ctx.arc(x, y, radius, 0, 2 * Math.PI);
     ctx.fill();
 
     // Draw label
     ctx.fillStyle = '#FFFFFF';
-    ctx.font = '14px Quicksand';
+    ctx.font = `${fontSize}px Quicksand`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(label, x, y);
@@ -55,10 +59,12 @@ const Diagram: React.FC<DiagramProps> = ({
     toY: number,
     label?: string
   ) => {
+    const scale = Math.min(width / 400, height / 300);
+    
     // Draw line
     ctx.beginPath();
     ctx.strokeStyle = '#94A3B8';
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 2 * scale;
     ctx.moveTo(fromX, fromY);
     ctx.lineTo(toX, toY);
     ctx.stroke();
@@ -68,10 +74,10 @@ const Diagram: React.FC<DiagramProps> = ({
       const midX = (fromX + toX) / 2;
       const midY = (fromY + toY) / 2;
       ctx.fillStyle = '#64748B';
-      ctx.font = '12px Quicksand';
+      ctx.font = `${12 * scale}px Quicksand`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(label, midX, midY - 10);
+      ctx.fillText(label, midX, midY - 10 * scale);
     }
   };
 
@@ -82,6 +88,10 @@ const Diagram: React.FC<DiagramProps> = ({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    // Scale coordinates based on canvas size
+    const scaleX = width / 400;
+    const scaleY = height / 300;
+
     // Clear canvas
     ctx.clearRect(0, 0, width, height);
 
@@ -90,13 +100,26 @@ const Diagram: React.FC<DiagramProps> = ({
       const fromNode = data.nodes.find(n => n.id === edge.from);
       const toNode = data.nodes.find(n => n.id === edge.to);
       if (fromNode && toNode) {
-        drawEdge(ctx, fromNode.x, fromNode.y, toNode.x, toNode.y, edge.label);
+        drawEdge(
+          ctx,
+          fromNode.x * scaleX,
+          fromNode.y * scaleY,
+          toNode.x * scaleX,
+          toNode.y * scaleY,
+          edge.label
+        );
       }
     });
 
     // Draw nodes on top
     data.nodes.forEach(node => {
-      drawNode(ctx, node.x, node.y, node.label, node.color);
+      drawNode(
+        ctx,
+        node.x * scaleX,
+        node.y * scaleY,
+        node.label,
+        node.color
+      );
     });
   }, [data, width, height]);
 
