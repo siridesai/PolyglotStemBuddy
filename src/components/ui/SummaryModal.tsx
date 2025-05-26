@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { X, Download, Mail, Check } from 'lucide-react';
 import { Message, ChildSettings, MessageMedia } from '../../types';
 import Button from './Button';
@@ -53,75 +53,6 @@ const styles = StyleSheet.create({
   }
 });
 
-const DiagramToPNG = ({ data, width, height }: { data: MessageMedia['diagramData']; width: number; height: number }) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!canvasRef.current || !data) return;
-
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    // Draw diagram on canvas
-    const drawNode = (x: number, y: number, label: string, color = '#4F46E5') => {
-      ctx.beginPath();
-      ctx.fillStyle = color;
-      ctx.arc(x, y, 30, 0, 2 * Math.PI);
-      ctx.fill();
-
-      ctx.fillStyle = '#FFFFFF';
-      ctx.font = '14px Helvetica';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(label, x, y);
-    };
-
-    const drawEdge = (fromX: number, fromY: number, toX: number, toY: number, label?: string) => {
-      ctx.beginPath();
-      ctx.strokeStyle = '#94A3B8';
-      ctx.lineWidth = 2;
-      ctx.moveTo(fromX, fromY);
-      ctx.lineTo(toX, toY);
-      ctx.stroke();
-
-      if (label) {
-        ctx.fillStyle = '#64748B';
-        ctx.font = '12px Helvetica';
-        ctx.fillText(label, (fromX + toX) / 2, (fromY + toY) / 2 - 10);
-      }
-    };
-
-    // Clear canvas
-    ctx.clearRect(0, 0, width, height);
-
-    // Draw edges
-    data.edges.forEach(edge => {
-      const fromNode = data.nodes.find(n => n.id === edge.from);
-      const toNode = data.nodes.find(n => n.id === edge.to);
-      if (fromNode && toNode) {
-        drawEdge(fromNode.x, fromNode.y, toNode.x, toNode.y, edge.label);
-      }
-    });
-
-    // Draw nodes
-    data.nodes.forEach(node => {
-      drawNode(node.x, node.y, node.label, node.color);
-    });
-
-    // Convert canvas to PNG
-    setImageUrl(canvas.toDataURL('image/png'));
-  }, [data, width, height]);
-
-  return (
-    <>
-      <canvas ref={canvasRef} width={width} height={height} style={{ display: 'none' }} />
-      {imageUrl && <Image src={imageUrl} style={styles.image} />}
-    </>
-  );
-};
-
 const LessonPDF = ({ messages, topic }: { messages: Message[]; topic: string }) => (
   <Document>
     <Page size="A4" style={styles.page}>
@@ -141,12 +72,8 @@ const LessonPDF = ({ messages, topic }: { messages: Message[]; topic: string }) 
                     {media.caption && <Text style={styles.caption}>{media.caption}</Text>}
                   </>
                 )}
-                {media.type === 'diagram' && media.diagramData && (
-                  <>
-                    <DiagramToPNG data={media.diagramData} width={400} height={300} />
-                    {media.caption && <Text style={styles.caption}>{media.caption}</Text>}
-                  </>
-                )}
+                {/* For diagrams, we'll skip rendering them in the PDF for now */}
+                {media.caption && <Text style={styles.caption}>{media.caption}</Text>}
               </View>
             ))}
           </View>
