@@ -292,19 +292,19 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, settings, onBack 
         {messages.map((message) => (
           <div
             key={message.id}
-            className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'} w-full`}
+            className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`flex-1 max-w-[95%] rounded-2xl px-6 py-4 ${
+              className={`max-w-[80%] rounded-2xl px-4 py-3 ${
                 message.type === 'user'
-                  ? 'bg-indigo-600 text-white text-right'
+                  ? 'bg-indigo-600 text-white'
                   : 'bg-white shadow-md text-gray-800'
               }`}
             >
-              <div className="whitespace-pre-wrap text-lg">{message.content}</div>
+              <div className="whitespace-pre-wrap">{message.content}</div>
               
               {message.media && message.media.length > 0 && (
-                <div className="space-y-6 mt-4">
+                <div className="space-y-6">
                   {message.media.map((media, index) => (
                     <div key={index}>
                       {renderMedia(media)}
@@ -319,7 +319,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, settings, onBack 
       </div>
 
       <div className="bg-white border-t p-4">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-4xl mx-auto">
           <div className="flex gap-2">
             <input
               type="text"
