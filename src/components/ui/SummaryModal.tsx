@@ -3,7 +3,6 @@ import { X, Download, Mail, Check } from 'lucide-react';
 import { Message, ChildSettings } from '../../types';
 import Button from './Button';
 import { getTranslation } from '../../data/translations';
-import { Document, Page, Text, View, StyleSheet, Image, PDFViewer } from '@react-pdf/renderer';
 
 interface SummaryModalProps {
   onClose: () => void;
@@ -12,57 +11,22 @@ interface SummaryModalProps {
   topic: string;
 }
 
-const styles = StyleSheet.create({
-  page: {
-    padding: 30,
-    fontFamily: 'Helvetica'
-  },
-  title: {
-    fontSize: 24,
-    marginBottom: 20,
-    textAlign: 'center'
-  },
-  content: {
-    fontSize: 12,
-    lineHeight: 1.5,
-    marginBottom: 10
-  },
-  section: {
-    marginBottom: 20,
-    width: '100%'
-  },
-  image: {
-    marginVertical: 10,
-    width: '100%',
-    maxWidth: 500,
-    objectFit: 'contain'
-  },
-  caption: {
-    fontSize: 10,
-    color: '#6B7280',
-    textAlign: 'center',
-    marginTop: 5
-  },
-  mediaContainer: {
-    marginVertical: 15,
-    width: '100%',
-    alignItems: 'flex-start'
-  }
-});
-
 const SummaryModal: React.FC<SummaryModalProps> = ({ onClose, messages, settings, topic }) => {
   const [emailSent, setEmailSent] = useState(false);
   const [email, setEmail] = useState('');
   const [diagramUrls, setDiagramUrls] = useState<{ [key: string]: string }>({});
-  const [pdfReady, setPdfReady] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(true);
+  const [summaryImage, setSummaryImage] = useState<string | null>(null);
 
   React.useEffect(() => {
     const generateDiagramImages = async () => {
       const urls: { [key: string]: string } = {};
       
-      for (const [messageIndex, message] of messages.entries()) {
+      for (let messageIndex = 0; messageIndex < messages.length; messageIndex++) {
+        const message = messages[messageIndex];
         if (message.media) {
-          for (const [mediaIndex, media] of message.media.entries()) {
+          for (let mediaIndex = 0; mediaIndex < message.media.length; mediaIndex++) {
+            const media = message.media[mediaIndex];
             if (media.type === 'diagram' && media.diagramData) {
               const canvas = document.createElement('canvas');
               canvas.width = 560;
@@ -124,11 +88,108 @@ const SummaryModal: React.FC<SummaryModalProps> = ({ onClose, messages, settings
       }
       
       setDiagramUrls(urls);
-      setPdfReady(true);
+      generateSummaryImage(urls);
     };
 
     generateDiagramImages();
-  }, [messages]);
+  }, [messages, topic]);
+
+  const generateSummaryImage = async (urls: { [key: string]: string }) => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      setIsGenerating(false);
+      return;
+    }
+
+    // Set dimensions (16:9 aspect ratio)
+    canvas.width = 1920;
+    canvas.height = 1080;
+
+    // Set background
+    ctx.fillStyle = '#F8FAFC';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Add title
+    ctx.fillStyle = '#1E293B';
+    ctx.font = 'bold 48px Quicksand';
+    ctx.textAlign = 'center';
+    ctx.fillText(`${topic} - Learning Summary`, canvas.width / 2, 80);
+
+    let yOffset = 160;
+    const margin = 60;
+    const contentWidth = canvas.width - (margin * 2);
+
+    // Add content
+    const assistantMessages = messages.filter(m => m.type === 'assistant');
+    for (const message of assistantMessages) {
+      // Add message content
+      ctx.font = '24px Quicksand';
+      ctx.fillStyle = '#334155';
+      ctx.textAlign = 'left';
+
+      // Word wrap text
+      const words = message.content.split(' ');
+      let line = '';
+      for (const word of words) {
+        const testLine = line + word + ' ';
+        const metrics = ctx.measureText(testLine);
+        if (metrics.width > contentWidth) {
+          ctx.fillText(line, margin, yOffset);
+          line = word + ' ';
+          yOffset += 40;
+        } else {
+          line = testLine;
+        }
+      }
+      ctx.fillText(line, margin, yOffset);
+      yOffset += 60;
+
+      // Add media
+      if (message.media) {
+        for (const [index, media] of message.media.entries()) {
+          if (media.type === 'image' && media.url) {
+            try {
+              const img = new Image();
+              img.crossOrigin = 'anonymous';
+              await new Promise((resolve, reject) => {
+                img.onload = resolve;
+                img.onerror = reject;
+                img.src = media.url;
+              });
+
+              const aspectRatio = img.width / img.height;
+              const maxWidth = contentWidth;
+              const width = Math.min(maxWidth, img.width);
+              const height = width / aspectRatio;
+
+              ctx.drawImage(img, margin, yOffset, width, height);
+              yOffset += height + 40;
+            } catch (error) {
+              console.error('Error loading image:', error);
+            }
+          } else if (media.type === 'diagram' && urls[`${index}-${index}`]) {
+            const img = new Image();
+            img.src = urls[`${index}-${index}`];
+            await new Promise(resolve => {
+              img.onload = resolve;
+            });
+
+            const aspectRatio = img.width / img.height;
+            const maxWidth = contentWidth;
+            const width = Math.min(maxWidth, img.width);
+            const height = width / aspectRatio;
+
+            ctx.drawImage(img, margin, yOffset, width, height);
+            yOffset += height + 40;
+          }
+        }
+      }
+    }
+
+    setSummaryImage(canvas.toDataURL('image/png'));
+    setIsGenerating(false);
+  };
 
   const handleEmailShare = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -136,41 +197,16 @@ const SummaryModal: React.FC<SummaryModalProps> = ({ onClose, messages, settings
     setTimeout(() => setEmailSent(false), 3000);
   };
 
-  const LessonPDF = () => (
-    <Document>
-      <Page size="A4" style={styles.page}>
-        <Text style={styles.title}>{topic} - Learning Summary</Text>
-        
-        {messages
-          .filter(m => m.type === 'assistant')
-          .map((message, messageIndex) => (
-            <View key={messageIndex} style={styles.section}>
-              <Text style={styles.content}>• {message.content}</Text>
-              
-              {message.media?.map((media, mediaIndex) => (
-                <View key={mediaIndex} style={styles.mediaContainer}>
-                  {media.type === 'image' && media.url && (
-                    <>
-                      <Image src={media.url} style={styles.image} />
-                      {media.caption && <Text style={styles.caption}>{media.caption}</Text>}
-                    </>
-                  )}
-                  {media.type === 'diagram' && media.diagramData && diagramUrls[`${messageIndex}-${mediaIndex}`] && (
-                    <>
-                      <Image 
-                        src={diagramUrls[`${messageIndex}-${mediaIndex}`]} 
-                        style={styles.image} 
-                      />
-                      {media.caption && <Text style={styles.caption}>{media.caption}</Text>}
-                    </>
-                  )}
-                </View>
-              ))}
-            </View>
-          ))}
-      </Page>
-    </Document>
-  );
+  const handleDownload = () => {
+    if (summaryImage) {
+      const link = document.createElement('a');
+      link.href = summaryImage;
+      link.download = `${topic.toLowerCase().replace(/\s+/g, '-')}-summary.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
@@ -235,16 +271,19 @@ const SummaryModal: React.FC<SummaryModalProps> = ({ onClose, messages, settings
               <div className="p-4 border-2 border-gray-200 rounded-xl">
                 <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
                   <Download className="w-5 h-5" />
-                  Download PDF
+                  Download Summary
                 </h3>
                 <p className="text-gray-600 mb-4">
-                  Save this lesson summary as a PDF file
+                  Save this lesson summary as an image
                 </p>
-                {pdfReady && (
-                  <PDFViewer style={{ width: '100%', height: 500 }}>
-                    <LessonPDF />
-                  </PDFViewer>
-                )}
+                <Button
+                  onClick={handleDownload}
+                  variant="secondary"
+                  size="medium"
+                  disabled={isGenerating || !summaryImage}
+                >
+                  {isGenerating ? 'Preparing...' : 'Download Summary'}
+                </Button>
               </div>
 
               <div className="p-4 border-2 border-gray-200 rounded-xl">
