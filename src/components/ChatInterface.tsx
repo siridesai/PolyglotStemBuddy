@@ -7,6 +7,7 @@ import Button from './ui/Button';
 import Diagram from './ui/Diagram';
 import ImageModal from './ui/ImageModal';
 import QuizModal from './ui/QuizModal';
+import SummaryModal from './ui/SummaryModal';
 
 interface ChatInterfaceProps {
   prompt: Prompt;
@@ -19,6 +20,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, settings, onBack 
   const [input, setInput] = useState('');
   const [selectedMedia, setSelectedMedia] = useState<MessageMedia | null>(null);
   const [showQuiz, setShowQuiz] = useState(false);
+  const [showSummary, setShowSummary] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const localizedContent = getLocalizedPromptContent(prompt, settings.language);
 
@@ -278,7 +280,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, settings, onBack 
               <span className="hidden sm:inline">{getTranslation(settings.language, 'readyForQuiz')}</span>
             </Button>
             <Button
-              onClick={onBack}
+              onClick={() => setShowSummary(true)}
               variant="secondary"
               size="small"
               className="flex items-center gap-1 bg-purple-50 hover:bg-purple-100 text-purple-700"
@@ -355,6 +357,18 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, settings, onBack 
       {showQuiz && (
         <QuizModal
           onClose={() => setShowQuiz(false)}
+          settings={settings}
+          topic={localizedContent.title}
+        />
+      )}
+
+      {showSummary && (
+        <SummaryModal
+          onClose={() => {
+            setShowSummary(false);
+            onBack();
+          }}
+          messages={messages}
           settings={settings}
           topic={localizedContent.title}
         />

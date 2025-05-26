@@ -30,7 +30,8 @@ type TranslationKey =
   | 'teenLearnerResponse'
   | 'additionalResources'
   | 'readyForQuiz'
-  | 'learnSomethingElse';
+  | 'learnSomethingElse'
+  | 'lessonSummary';
 
 type Translations = {
   [key in TranslationKey]: string;
@@ -71,7 +72,8 @@ export const translations: TranslationSet = {
     teenLearnerResponse: "That's a great topic! Let's investigate",
     additionalResources: 'Additional Resources',
     readyForQuiz: 'Ready for Quiz?',
-    learnSomethingElse: 'Learn Something Else'
+    learnSomethingElse: 'Learn Something Else',
+    lessonSummary: 'Lesson Summary'
   },
   es: {
     selectAgeGroup: 'Selecciona grupo de edad',
@@ -103,7 +105,8 @@ export const translations: TranslationSet = {
     teenLearnerResponse: '¡Excelente tema! Investigemos',
     additionalResources: 'Recursos Adicionales',
     readyForQuiz: '¿Listo para el Quiz?',
-    learnSomethingElse: 'Aprender Algo Nuevo'
+    learnSomethingElse: 'Aprender Algo Nuevo',
+    lessonSummary: 'Resumen de la Lección'
   },
   hi: {
     selectAgeGroup: 'आयु वर्ग चुनें',
@@ -135,10 +138,13 @@ export const translations: TranslationSet = {
     teenLearnerResponse: 'बहुत अच्छा विषय! चलो जांच करते हैं',
     additionalResources: 'अतिरिक्त संसाधन',
     readyForQuiz: 'क्विज़ के लिए तैयार?',
-    learnSomethingElse: 'कुछ और सीखें'
+    learnSomethingElse: 'कुछ और सीखें',
+    lessonSummary: 'पाठ सारांश'
   }
 };
 
-export const getTranslation = (language: string, key: TranslationKey): string => {
+export const getTranslation = (language: string, key: Trans
+
+lationKey): string => {
   return translations[language]?.[key] || translations['en'][key];
 };
