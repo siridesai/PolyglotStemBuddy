@@ -28,11 +28,13 @@ const styles = StyleSheet.create({
     marginBottom: 10
   },
   section: {
-    marginBottom: 20
+    marginBottom: 20,
+    width: '100%'
   },
   image: {
     marginVertical: 10,
-    maxWidth: '100%',
+    width: '100%',
+    maxWidth: 500,
     objectFit: 'contain'
   },
   caption: {
@@ -43,6 +45,7 @@ const styles = StyleSheet.create({
   },
   mediaContainer: {
     marginVertical: 15,
+    width: '100%',
     alignItems: 'center'
   }
 });
@@ -62,42 +65,45 @@ const SummaryModal: React.FC<SummaryModalProps> = ({ onClose, messages, settings
           for (const [mediaIndex, media] of message.media.entries()) {
             if (media.type === 'diagram' && media.diagramData) {
               const canvas = document.createElement('canvas');
-              canvas.width = 280;
-              canvas.height = 200;
+              // Increased canvas size for better quality
+              canvas.width = 560;
+              canvas.height = 400;
               const ctx = canvas.getContext('2d');
               if (!ctx) continue;
 
+              const scale = 2; // Scale factor for better quality
+
               // Draw diagram
               const drawNode = (x: number, y: number, label: string, color = '#4F46E5') => {
-                const radius = 30;
+                const radius = 30 * scale;
                 ctx.beginPath();
                 ctx.fillStyle = color;
-                ctx.arc(x, y, radius, 0, 2 * Math.PI);
+                ctx.arc(x * scale, y * scale, radius, 0, 2 * Math.PI);
                 ctx.fill();
 
                 ctx.fillStyle = '#FFFFFF';
-                ctx.font = '14px Quicksand';
+                ctx.font = `${14 * scale}px Quicksand`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.fillText(label, x, y);
+                ctx.fillText(label, x * scale, y * scale);
               };
 
               const drawEdge = (fromX: number, fromY: number, toX: number, toY: number, label?: string) => {
                 ctx.beginPath();
                 ctx.strokeStyle = '#94A3B8';
-                ctx.lineWidth = 2;
-                ctx.moveTo(fromX, fromY);
-                ctx.lineTo(toX, toY);
+                ctx.lineWidth = 2 * scale;
+                ctx.moveTo(fromX * scale, fromY * scale);
+                ctx.lineTo(toX * scale, toY * scale);
                 ctx.stroke();
 
                 if (label) {
                   const midX = (fromX + toX) / 2;
                   const midY = (fromY + toY) / 2;
                   ctx.fillStyle = '#64748B';
-                  ctx.font = '12px Quicksand';
+                  ctx.font = `${12 * scale}px Quicksand`;
                   ctx.textAlign = 'center';
                   ctx.textBaseline = 'middle';
-                  ctx.fillText(label, midX, midY - 10);
+                  ctx.fillText(label, midX * scale, midY * scale - 10 * scale);
                 }
               };
 
@@ -200,7 +206,7 @@ const SummaryModal: React.FC<SummaryModalProps> = ({ onClose, messages, settings
                       {message.media && (
                         <div className="flex flex-col gap-6">
                           {message.media.map((media, mediaIndex) => (
-                            <div key={mediaIndex} className="flex flex-col items-center">
+                            <div key={mediaIndex} className="flex flex-col items-center w-full">
                               {media.type === 'image' && media.url && (
                                 <img
                                   src={media.url}
@@ -212,7 +218,7 @@ const SummaryModal: React.FC<SummaryModalProps> = ({ onClose, messages, settings
                                 <img
                                   src={diagramUrls[`${index}-${mediaIndex}`]}
                                   alt={media.caption || 'Diagram'}
-                                  className="rounded-lg max-w-full h-auto"
+                                  className="rounded-lg w-full max-w-[560px] h-auto"
                                 />
                               )}
                               {media.caption && (
