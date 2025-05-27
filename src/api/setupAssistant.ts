@@ -1,6 +1,6 @@
 import { AzureOpenAI } from 'openai';
 
-const azureOpenAIKey = import.meta.env.VITE_AZURE_OPENAI_KEY;
+/*const azureOpenAIKey = import.meta.env.VITE_AZURE_OPENAI_KEY;
 const azureOpenAIEndpoint = import.meta.env.VITE_AZURE_OPENAI_ENDPOINT;
 const azureOpenAIVersion = "2024-05-01-preview";
 
@@ -37,3 +37,4 @@ export const setupAssistant = async () => {
     throw error;
   }
 };
+*/

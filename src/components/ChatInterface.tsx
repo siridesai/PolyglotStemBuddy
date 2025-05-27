@@ -7,6 +7,10 @@ import Button from './ui/Button';
 import QuizModal from './ui/QuizModal';
 import SummaryModal from './ui/SummaryModal';
 import { runAssistant } from '../api/runAssistant';
+import { useCookies } from 'react-cookie';
+
+
+const COOKIE_NAME = 'my_cookie';
 
 interface ChatInterfaceProps {
   prompt: Prompt;
@@ -20,6 +24,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, settings, onBack 
   const [showQuiz, setShowQuiz] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [cookies, setCookie] = useCookies([COOKIE_NAME]);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const localizedContent = getLocalizedPromptContent(prompt, settings.language);
 
@@ -84,6 +90,17 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, settings, onBack 
     scrollToBottom();
   }, [messages]);
 
+  useEffect(() => {
+    // Check if the cookie exists
+    if (!cookies[COOKIE_NAME]) {
+      // Set the cookie if missing
+      setCookie(COOKIE_NAME, String(Math.floor(Math.random() * 100) + 1), { path: '/', maxAge: 3600 });
+    }
+    // You can now use cookies[COOKIE_NAME] as the value
+    console.log('Cookie value:', cookies[COOKIE_NAME]);
+  }, [cookies, setCookie]);
+
+
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
 
@@ -99,7 +116,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, settings, onBack 
     setIsLoading(true);
 
     try {
-      const response = await runAssistant(input, settings.age, settings.language);
+      const response = await runAssistant(input, settings.age, settings.language, cookies[COOKIE_NAME] );
       
       const assistantMessage = {
         id: (Date.now() + 1).toString(),

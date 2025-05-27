@@ -1,52 +1,70 @@
 import { AzureOpenAI } from 'openai';
 import dotenv from 'dotenv';
+import { getAssistantClient } from '../assistantClient.js';
+import { getAssistant } from '../assistant.js';
+import { Mutex } from 'async-mutex';
 
-dotenv.config();
+// Session-thread mapping with concurrency control
+const sessionThreadMap = new Map();
+const mapMutex = new Mutex();
 
-const azureOpenAIKey = process.env.VITE_AZURE_OPENAI_KEY;
-const azureOpenAIEndpoint = process.env.VITE_AZURE_OPENAI_ENDPOINT;
-const azureOpenAIVersion = "2024-05-01-preview";
+// Create or retrieve thread for session
+async function getOrCreateThread(sessionId) {
+  const release = await mapMutex.acquire();
+  
+  try {
+    if (sessionThreadMap.has(sessionId)) {
+        console.log("Using existing thread");
+        return sessionThreadMap.get(sessionId);
+    }
 
-if (!azureOpenAIKey || !azureOpenAIEndpoint) {
-    throw new Error("Please set AZURE_OPENAI_KEY and AZURE_OPENAI_ENDPOINT in your environment variables.");
+    // Get assistant client
+    const assistantsClient = getAssistantClient();
+
+    const thread = await assistantsClient.beta.threads.create({});
+    console.log("Creating new thread");
+    // Store worker reference and thread ID
+    sessionThreadMap.set(sessionId, thread.id );
+
+    // TBD logic to clean session thread map
+    /*worker.on('exit', () => {
+      sessionThreadMap.delete(sessionId);
+    }); */
+
+    return sessionThreadMap.get(sessionId);
+  } finally {
+    release();
+  }
 }
 
 
-const getClient = () => {
-    const assistantsClient = new AzureOpenAI({
-        endpoint: azureOpenAIEndpoint,
-        apiVersion: azureOpenAIVersion,
-        apiKey: azureOpenAIKey,
-    });
-    return assistantsClient;
-};
 
-export const runAssistantBackend = async (message, age, language = 'en') => {
+
+export const runAssistantBackend = async (message, age, language = 'en', sessionId) => {
     try {
-        const assistantsClient = getClient();
+        console.log("Received message: " + message);
+        console.log("Received age: " + age);
+        console.log("Received language: " + language);
+        console.log("Received sessionId: " + sessionId);
         
-        // Create a thread
-        const thread = await assistantsClient.beta.threads.create({});
-
+        // Get assistant client
+        const assistantsClient = getAssistantClient();
+        console.log("Got assistant client") ;
+        // Create or retrieve existing thread
+        const threadID = await getOrCreateThread(sessionId) ;
+        console.log("Using thread id: " + threadID) ;
+        
         // Add the user's message to the thread
-        await assistantsClient.beta.threads.messages.create(thread.id, {
+        await assistantsClient.beta.threads.messages.create(threadID, {
             role: "user",
             content: message,
         });
 
-        // Create the assistant
-        const assistant = await assistantsClient.beta.assistants.create({
-            model: "gpt-4o-mini",
-            name: "Assistant248",
-            instructions: "You're an AI tutor assistant specializing in STEM topics for school students. You cater to 3 different age groups 5-8, 9-12 and 13-16. If no age group is specified assume it is 9-12 age group. If the age group is specified then respond to the question with an answer that relevant to that age group. The answer must be precise and concise. Offer age appropriate follow-up prompt suggestions. By default use English as the language for responses. If the user specifies a different language preference, only then use that language. Include ASCII art diagrams in the response to explain the concept. Render the ASCII art diagram so it shows as a readable image.",
-            tools: [],
-            tool_resources: {},
-            temperature: 0.1,
-            top_p: 1
-        });
+        // Get the specific assistant to use with the thread
+        const assistant = getAssistant() ;
 
         // Run the thread
-        const run = await assistantsClient.beta.threads.runs.create(thread.id, {
+        const run = await assistantsClient.beta.threads.runs.create(threadID, {
             assistant_id: assistant.id,
         });
 
@@ -55,7 +73,7 @@ export const runAssistantBackend = async (message, age, language = 'en') => {
         while (runStatus === 'queued' || runStatus === 'in_progress') {
             await new Promise(resolve => setTimeout(resolve, 1000));
             const runStatusResponse = await assistantsClient.beta.threads.runs.retrieve(
-                thread.id,
+                threadID,
                 run.id
             );
             runStatus = runStatusResponse.status;
@@ -63,7 +81,7 @@ export const runAssistantBackend = async (message, age, language = 'en') => {
 
         // Get the messages once complete
         if (runStatus === 'completed') {
-            const messages = await assistantsClient.beta.threads.messages.list(thread.id);
+            const messages = await assistantsClient.beta.threads.messages.list(threadID);
             return messages.data[0].content[0].text.value;
         } else {
             throw new Error(`Run failed with status: ${runStatus}`);
@@ -73,3 +91,5 @@ export const runAssistantBackend = async (message, age, language = 'en') => {
         throw error;
     }
 };
+
+
