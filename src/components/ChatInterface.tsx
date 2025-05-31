@@ -1,86 +1,66 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Message, Prompt, ChildSettings } from '../types';
-import { getLocalizedPromptContent } from '../data/prompts';
+import { Message, ChildSettings } from '../types';
 import { getTranslation } from '../data/translations';
-import { ArrowLeft, Send, BookOpen, Brain, Sparkles } from 'lucide-react';
+import { ArrowLeft, Send, BookOpen, Brain } from 'lucide-react';
 import Button from './ui/Button';
 import QuizModal from './ui/QuizModal';
-import SummaryModal from './ui/SummaryModal';
 import { runAssistant } from '../api/runAssistant';
 import { useCookies } from 'react-cookie';
+import { availableLanguages } from '../data/languages';
 
 
 const COOKIE_NAME = 'my_cookie';
 
 interface ChatInterfaceProps {
-  prompt: Prompt;
   settings: ChildSettings;
   onBack: () => void;
 }
 
-const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, settings, onBack }) => {
+const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [showQuiz, setShowQuiz] = useState(false);
-  const [showSummary, setShowSummary] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [cookies, setCookie] = useCookies([COOKIE_NAME]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const localizedContent = getLocalizedPromptContent(prompt, settings.language);
+
+  const getAgeGroupLabel = (age: number) => {
+    if (age >= 5 && age <= 8) return getTranslation(settings.language, 'earlyExplorer');
+    if (age >= 9 && age <= 12) return getTranslation(settings.language, 'juniorScientist');
+    return getTranslation(settings.language, 'teenResearcher');
+  };
+
+  const getCurrentLanguageName = () => {
+    const language = availableLanguages.find(lang => lang.code === settings.language);
+    return language ? language.nativeName : settings.language;
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const getAgeAppropriateContent = (topic: string) => {
-    const lang = settings.language;
-    
-    if (settings.age <= 8) {
-      if (lang === 'es') {
-        return {
-          content: `¡Vamos a aprender sobre ${topic} de una manera divertida!`
-        };
-      } else if (lang === 'hi') {
-        return {
-          content: `आइए ${topic} के बारे में मजेदार तरीके से जानें!`
-        };
-      }
-      return {
-        content: `Let's learn about ${topic} in a fun way!`
-      };
-    }
-
-    return {
-      content: `Let's explore ${topic} together!`
-    };
-  };
-
   useEffect(() => {
-    const topic = localizedContent.title.toLowerCase();
+    const lang = settings.language;
     let welcomeMessage = '';
-    
-    if (settings.age <= 8) {
-      welcomeMessage = `${getTranslation(settings.language, 'earlyLearnerResponse')} ${topic}!`;
-    } else if (settings.age <= 12) {
-      welcomeMessage = `${getTranslation(settings.language, 'juniorLearnerResponse')} ${topic}!`;
-    } else {
-      welcomeMessage = `${getTranslation(settings.language, 'teenLearnerResponse')} ${topic}!`;
+    if (lang === 'es') {
+      welcomeMessage = `¡Hola! ¿Qué quieres aprender hoy?`
+    } else if (lang === 'hi') {
+      welcomeMessage = 'नमस्ते! आज आप क्या सीखना चाहते हैं?'
+    } else if (lang == 'kn') {
+      welcomeMessage = 'ನಮಸ್ಕಾರ! ನೀವು ಇಂದು ಏನು ಕಲಿಯಲು ಬಯಸುತ್ತೀರಿ?'
+    } else if (lang == 'mr') {
+      welcomeMessage = 'नमस्कार! आज तुम्हाला काय शिकायचे आहे?'
     }
-
-    const ageAppropriateContent = getAgeAppropriateContent(topic);
-
+    else {
+      welcomeMessage =`Hello! What do you want to learn today?`
+    };
+    
     setMessages([
       {
         id: '1',
         type: 'assistant',
         content: welcomeMessage,
-        timestamp: new Date()
-      },
-      {
-        id: '2',
-        type: 'assistant',
-        content: ageAppropriateContent.content,
         timestamp: new Date()
       }
     ]);
@@ -145,7 +125,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, settings, onBack 
   return (
     <div className="flex flex-col h-screen bg-gradient-to-b from-sky-50 to-indigo-50">
       <div className="bg-white shadow-sm p-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+        <div className="max-w-12xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <button 
               onClick={onBack}
@@ -154,7 +134,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, settings, onBack 
               <ArrowLeft className="w-5 h-5 mr-2" />
               <span>{getTranslation(settings.language, 'back')}</span>
             </button>
-            <h2 className="font-semibold text-gray-800">{localizedContent.title}</h2>
+            <h2 className="font-semibold text-gray-800">{"Polyglot STEM Buddy"}</h2>
           </div>
           
           <div className="flex items-center gap-2">
@@ -176,15 +156,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, settings, onBack 
               <Brain className="w-4 h-4" />
               <span className="hidden sm:inline">{getTranslation(settings.language, 'readyForQuiz')}</span>
             </Button>
-            <Button
-              onClick={() => setShowSummary(true)}
-              variant="secondary"
-              size="small"
-              className="flex items-center gap-1 bg-purple-50 hover:bg-purple-100 text-purple-700"
-            >
-              <Sparkles className="w-4 h-4" />
-              <span className="hidden sm:inline">{getTranslation(settings.language, 'learnSomethingElse')}</span>
-            </Button>
+            <div className="text-sm text-gray-600">
+              {getAgeGroupLabel(settings.age)} | {getCurrentLanguageName()}
+            </div>
           </div>
         </div>
       </div>
@@ -210,7 +184,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, settings, onBack 
       </div>
 
       <div className="bg-white border-t p-4">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-12x1 mx-auto">
           <div className="flex gap-2">
             <input
               type="text"
@@ -239,19 +213,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ prompt, settings, onBack 
         <QuizModal
           onClose={() => setShowQuiz(false)}
           settings={settings}
-          topic={localizedContent.title}
-        />
-      )}
-
-      {showSummary && (
-        <SummaryModal
-          onClose={() => {
-            setShowSummary(false);
-            onBack();
-          }}
-          messages={messages}
-          settings={settings}
-          topic={localizedContent.title}
+          topic={"hey"}
         />
       )}
     </div>
