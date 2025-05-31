@@ -8,10 +8,8 @@ export interface Language {
 
 // Language groups for better organization
 export const languageGroups = {
-  popular: ['en', 'es', 'hi'],
-  asian: ['zh', 'ja', 'ko'],
-  european: ['fr', 'de', 'it'],
-  // Add more groups as needed
+  popular: ['en', 'es'],
+  asian: ['hi', 'kn', 'mr'],
 };
 
 export const availableLanguages: Language[] = [
@@ -31,29 +29,15 @@ export const availableLanguages: Language[] = [
     nativeName: 'हिन्दी',
     fontFamily: "'Noto Sans Devanagari', system-ui, sans-serif"
   },
-  // New languages can be added here
   {
-    code: 'fr',
-    name: 'French',
-    nativeName: 'Français'
+    code: 'kn',
+    name: 'Kannada',
+    nativeName: 'ಕನ್ನಡ'
   },
   {
-    code: 'de',
-    name: 'German',
-    nativeName: 'Deutsch'
-  },
-  {
-    code: 'zh',
-    name: 'Chinese',
-    nativeName: '中文',
-    fontFamily: "'Noto Sans SC', system-ui, sans-serif"
-  },
-  {
-    code: 'ar',
-    name: 'Arabic',
-    nativeName: 'العربية',
-    direction: 'rtl',
-    fontFamily: "'Noto Sans Arabic', system-ui, sans-serif"
+    code: 'mr',
+    name: 'Marathi',
+    nativeName: 'मराठी'
   }
 ];
 

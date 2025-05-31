@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ChildSettings } from './types';
 import { Sparkles } from 'lucide-react';
 import LandingPage from './components/LandingPage';
-import PromptScreen from './components/PromptScreen';
+import ChatInterface from './components/ChatInterface';
 
 function App() {
   const [settings, setSettings] = useState<ChildSettings | null>(null);
@@ -20,7 +20,7 @@ function App() {
       {!settings ? (
         <LandingPage onStartLearning={handleStartLearning} />
       ) : (
-        <PromptScreen settings={settings} onBackToHome={handleBackToHome} />
+        <ChatInterface settings={settings} onBack={handleBackToHome} />
       )}
     </div>
   );
