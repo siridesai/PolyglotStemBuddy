@@ -9,7 +9,7 @@ const sessionThreadMap = new Map();
 const mapMutex = new Mutex();
 
 // Create or retrieve thread for session
-async function getOrCreateThread(sessionId) {
+export async function getOrCreateThread(sessionId) {
   const release = await mapMutex.acquire();
   
   try {

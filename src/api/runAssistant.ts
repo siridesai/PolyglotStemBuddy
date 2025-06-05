@@ -1,6 +1,7 @@
 export const runAssistant = async (message: string, age?: number, language: string = 'en', sessionId: string ='1234') => {
     try {
         console.log("session id in runAssistant.ts is: " + sessionId);
+        console.log("age: " + age);
         const response = await fetch('/api/runAssistant', {
             method: 'POST',
             headers: {

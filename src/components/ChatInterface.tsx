@@ -5,9 +5,9 @@ import { ArrowLeft, Send, BookOpen, Brain } from 'lucide-react';
 import Button from './ui/Button';
 import QuizModal from './ui/QuizModal';
 import { runAssistant } from '../api/runAssistant';
+import { generateQuestions } from '../api/generateQuestions';
 import { useCookies } from 'react-cookie';
 import { availableLanguages } from '../data/languages';
-
 
 const COOKIE_NAME = 'my_cookie';
 
@@ -16,12 +16,20 @@ interface ChatInterfaceProps {
   onBack: () => void;
 }
 
+interface QuizQuestion {
+  question: string;
+  options: string[];
+  correctAnswer: number;
+  explanation: string;
+}
+
 const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [showQuiz, setShowQuiz] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [cookies, setCookie] = useCookies([COOKIE_NAME]);
+  const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -98,6 +106,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack }) => {
     try {
       const response = await runAssistant(input, settings.age, settings.language, cookies[COOKIE_NAME] );
       
+
       const assistantMessage = {
         id: (Date.now() + 1).toString(),
         type: 'assistant' as const,
@@ -106,6 +115,18 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack }) => {
       };
 
       setMessages(prev => [...prev, assistantMessage]);
+
+      // Generate questions from assistant response
+      const generatedQuestions = await generateQuestions(
+        assistantMessage.content, 
+        settings.age, 
+        settings.language, 
+        cookies[COOKIE_NAME]
+      );
+      
+      
+      setQuizQuestions(generatedQuestions);
+
     } catch (error) {
       console.error('Error getting assistant response:', error);
       
@@ -213,7 +234,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack }) => {
         <QuizModal
           onClose={() => setShowQuiz(false)}
           settings={settings}
-          topic={"hey"}
+          questions={quizQuestions} // Pass generated questions
         />
       )}
     </div>
