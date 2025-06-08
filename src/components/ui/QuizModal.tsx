@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import Button from './Button';
 import { getTranslation } from '../../data/translations';
 import { ChildSettings } from '../../types';
+
+
 
 interface QuizQuestion {
   question: string;
@@ -14,85 +16,43 @@ interface QuizQuestion {
 interface QuizModalProps {
   onClose: () => void;
   settings: ChildSettings;
-  topic: string;
+  questions: QuizQuestion[];
 }
 
-const QuizModal: React.FC<QuizModalProps> = ({ onClose, settings, topic }) => {
+const QuizModal: React.FC<QuizModalProps> = ({ onClose, settings, questions }) => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showExplanation, setShowExplanation] = useState(false);
   const [score, setScore] = useState(0);
   const [quizComplete, setQuizComplete] = useState(false);
 
-  const getAgeAppropriateQuestions = (age: number, topic: string): QuizQuestion[] => {
-    if (age <= 8) {
-      return [
-        {
-          question: `What do you see when light passes through water droplets in the sky?`,
-          options: ['A rainbow', 'A cloud', 'The sun', 'The moon'],
-          correctAnswer: 0,
-          explanation: 'When sunlight passes through water droplets, it splits into different colors, creating a beautiful rainbow!'
-        },
-        {
-          question: 'Which color is at the top of a rainbow?',
-          options: ['Red', 'Blue', 'Green', 'Yellow'],
-          correctAnswer: 0,
-          explanation: 'Red is always at the top of a rainbow, followed by orange, yellow, green, blue, and violet.'
-        }
-      ];
-    } else if (age <= 12) {
-      return [
-        {
-          question: 'What causes the different colors in a rainbow?',
-          options: [
-            'Light refraction and reflection',
-            'Clouds painting the sky',
-            'The wind blowing colors',
-            'The sun heating the air'
-          ],
-          correctAnswer: 0,
-          explanation: 'When light enters a water droplet, it bends (refracts) and reflects, splitting into different wavelengths that we see as colors.'
-        },
-        {
-          question: 'Which color has the longest wavelength?',
-          options: ['Red', 'Green', 'Blue', 'Violet'],
-          correctAnswer: 0,
-          explanation: 'Red light has the longest wavelength of visible light, which is why it bends the least and appears at the top of a rainbow.'
-        }
-      ];
-    } else {
-      return [
-        {
-          question: 'What is the relationship between a light wave\'s frequency and its wavelength?',
-          options: [
-            'They are inversely proportional',
-            'They are directly proportional',
-            'They have no relationship',
-            'They are always equal'
-          ],
-          correctAnswer: 0,
-          explanation: 'As frequency increases, wavelength decreases, and vice versa. This inverse relationship is key to understanding light behavior.'
-        },
-        {
-          question: 'Why do we see white light as white?',
-          options: [
-            'It contains all visible wavelengths',
-            'It has no wavelength',
-            'It has the shortest wavelength',
-            'It has the longest wavelength'
-          ],
-          correctAnswer: 0,
-          explanation: 'White light contains all visible wavelengths of light. When all these colors combine, our eyes perceive it as white.'
-        }
-      ];
-    }
-  };
+  if (!questions || questions.length === 0) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl p-6 max-w-md text-center">
+          <h3 className="text-xl font-bold mb-4">No questions available</h3>
+          <p className="text-gray-600 mb-4">Try completing a lesson first!</p>
+          <Button onClick={onClose} variant="primary">
+            Close
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
-  const questions = getAgeAppropriateQuestions(settings.age, topic);
+  useEffect(() => {
+    setCurrentQuestion(0);
+    setSelectedAnswer(null);
+    setShowExplanation(false);
+    setScore(0);
+    setQuizComplete(false);
+  }, [questions]);  // Reset when questions change
 
   const handleAnswerSelect = (answerIndex: number) => {
     setSelectedAnswer(answerIndex);
     setShowExplanation(true);
+
+    
     
     if (answerIndex === questions[currentQuestion].correctAnswer) {
       setScore(score + 1);
