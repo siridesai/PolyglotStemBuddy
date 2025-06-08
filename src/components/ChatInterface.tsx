@@ -4,10 +4,13 @@ import { getTranslation } from '../data/translations';
 import { ArrowLeft, Send, BookOpen, Brain } from 'lucide-react';
 import Button from './ui/Button';
 import QuizModal from './ui/QuizModal';
+import { fetchThreadID } from '../api/fetchThreadID.ts';
 import { runAssistant } from '../api/runAssistant';
 import { generateQuestions } from '../api/generateQuestions';
 import { useCookies } from 'react-cookie';
 import { availableLanguages } from '../data/languages';
+import { deleteThread } from '../api/deleteThread';
+
 
 const COOKIE_NAME = 'my_cookie';
 
@@ -23,13 +26,38 @@ interface QuizQuestion {
   explanation: string;
 }
 
-const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack }) => {
+const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [showQuiz, setShowQuiz] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [cookies, setCookie] = useCookies([COOKIE_NAME]);
+  const [cookies, setCookie, removeCookie] = useCookies([COOKIE_NAME]);
   const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
+  const [threadId, setThreadId] = useState<string>('');
+
+  useEffect(() => {
+    // Check if the cookie exists
+    if (!cookies[COOKIE_NAME]) {
+      // Set the cookie if missing
+      setCookie(COOKIE_NAME, String(Math.floor(Math.random() * 100) + 1), { path: '/', maxAge: 3600 });
+    }
+    // You can now use cookies[COOKIE_NAME] as the value
+    console.log('Cookie value:', cookies[COOKIE_NAME]);
+  }, [cookies, setCookie]);
+
+   useEffect(() => {
+    if (cookies[COOKIE_NAME] && !threadId) {
+      const getThreadId = async () => {
+        try {
+          const id = await fetchThreadID(cookies[COOKIE_NAME]);
+          if (id) setThreadId(id);
+        } catch (err) {
+          console.error('Failed to fetch thread ID:', err);
+        }
+      };
+      getThreadId();
+    }
+  }, [cookies, threadId]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -78,24 +106,34 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack }) => {
     scrollToBottom();
   }, [messages]);
 
-  useEffect(() => {
-    // Check if the cookie exists
-    if (!cookies[COOKIE_NAME]) {
-      // Set the cookie if missing
-      setCookie(COOKIE_NAME, String(Math.floor(Math.random() * 100) + 1), { path: '/', maxAge: 3600 });
-    }
-    // You can now use cookies[COOKIE_NAME] as the value
-    console.log('Cookie value:', cookies[COOKIE_NAME]);
-  }, [cookies, setCookie]);
-
+  
+ const handleBack = async () => {
+   // Optionally delete the thread if threadId exists
+   const threadId = await fetchThreadID(cookies[COOKIE_NAME]);
+   if (threadId) {
+     try {
+       await deleteThread(threadId);
+       removeCookie(COOKIE_NAME, { path: '/' });
+       console.log('Thread deleted successfully');
+     } catch (err) {
+       console.error('Failed to delete thread:', err);
+     }
+   }
+   onBack();
+  }
+  
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
 
+     const messageToSend = input;
+
+     
+
     const userMessage = {
       id: Date.now().toString(),
       type: 'user' as const,
-      content: input,
+      content: messageToSend,
       timestamp: new Date()
     };
 
@@ -104,8 +142,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack }) => {
     setIsLoading(true);
 
     try {
-      const response = await runAssistant(input, settings.age, settings.language, cookies[COOKIE_NAME] );
-      
+     
+      const threadId = await fetchThreadID(cookies[COOKIE_NAME]);
+      const response = await runAssistant(messageToSend, threadId, settings.age, settings.language, cookies[COOKIE_NAME]);
 
       const assistantMessage = {
         id: (Date.now() + 1).toString(),
@@ -118,13 +157,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack }) => {
 
       // Generate questions from assistant response
       const generatedQuestions = await generateQuestions(
-        assistantMessage.content, 
+        assistantMessage.content,
+        threadId, 
         settings.age, 
         settings.language, 
         cookies[COOKIE_NAME]
       );
-      
-      
+
       setQuizQuestions(generatedQuestions);
 
     } catch (error) {
@@ -143,13 +182,18 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack }) => {
     }
   };
 
+
+  
+
+ 
+
   return (
     <div className="flex flex-col h-screen bg-gradient-to-b from-sky-50 to-indigo-50">
       <div className="bg-white shadow-sm p-4">
         <div className="max-w-12xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <button 
-              onClick={onBack}
+              onClick={handleBack}
               className="flex items-center text-indigo-600 hover:text-indigo-800 transition-colors"
             >
               <ArrowLeft className="w-5 h-5 mr-2" />

@@ -5,16 +5,10 @@ interface QuizQuestion {
   correctAnswer: number;
   explanation: string;
 }
-
-// Helper functions
-const getAgeGroup = (age: number) => {
-  if (age <= 8) return 'basic';
-  if (age <= 12) return 'intermediate';
-  return 'advanced';
-};
 export const generateQuestions = async (
   message: string,
-  age?: number,
+  threadId: string,
+  age: number,
   language: string = 'en',
   sessionId: string = '1234'
 ): Promise<QuizQuestion[]> => {
@@ -26,8 +20,9 @@ export const generateQuestions = async (
         'X-Session-ID': sessionId
       },
       body: JSON.stringify({
-        context: message,
-        ageGroup: getAgeGroup(age || 7),
+        message: message,
+        threadId: threadId,
+        age: age.toString(),
         language
       }),
     });
