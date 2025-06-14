@@ -14,6 +14,7 @@ import { getTokenOrRefresh } from '../token_util.js';
 import * as SpeechSDK from 'microsoft-cognitiveservices-speech-sdk';
 import { ResultReason } from 'microsoft-cognitiveservices-speech-sdk';
 
+
 const COOKIE_NAME = 'my_cookie';
 
 interface ChatInterfaceProps {
@@ -36,6 +37,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
   const [cookies, setCookie, removeCookie] = useCookies([COOKIE_NAME]);
   const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
   const [threadId, setThreadId] = useState<string>('');
+  const playerRef = useRef<SpeechSDK.SpeakerAudioDestination | null>(null);
+
 
   useEffect(() => {
     // Check if the cookie exists
@@ -130,8 +133,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
 
      const messageToSend = input;
 
-     
-
     const userMessage = {
       id: Date.now().toString(),
       type: 'user' as const,
@@ -182,6 +183,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
     } finally {
       setIsLoading(false);
     }
+
   }; 
 
   async function sttFromMic() {
@@ -218,6 +220,80 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
           }
       });
   }
+
+  // Utility to wrap text in SSML for the given language and voice
+  function createSSML(text: string, lang: string, voice: string) {
+    return `
+      <speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="${lang}">
+        <voice name="${voice}">${text}</voice>
+      </speak>
+    `;
+  }
+
+  // Map language to the recommended neural voice
+  const voiceMap: Record<string, string> = {
+    "hi-IN": "hi-IN-SwaraNeural",
+    "mr-IN": "mr-IN-AarohiNeural",
+    "kn-IN": "kn-IN-SapnaNeural",
+    "en-US": "en-US-JennyNeural",
+    "es-ES": "es-ES-ElviraNeural",
+  };
+
+  function findRightLanguageForTTS(langGiven: string) {
+    let language = 'en-US'; // Default to English
+    if (langGiven == 'es') {
+      language = 'es-ES'; // Set the language for TTS
+    }
+    else if (langGiven == 'hi') {
+      language = 'hi-IN'; // Set the language for TTS
+    }
+    else if (langGiven == 'kn') {
+      language = 'kn-IN'; // Set the language for TTS
+    }
+    else if (langGiven == 'mr') {
+      language = 'mr-IN'; 
+    }
+    return language;
+  }
+
+  async function textToSpeech(text: string, lang: string) {
+    const tokenObj = await getTokenOrRefresh(); // Your token refresh logic
+    const speechConfig = SpeechSDK.SpeechConfig.fromAuthorizationToken(
+      tokenObj.authToken,
+      tokenObj.region
+    );
+
+    // Set language and voice explicitly
+    speechConfig.speechSynthesisLanguage = lang;
+    speechConfig.speechSynthesisVoiceName = voiceMap[lang];
+
+    // Create and store the player
+    const myPlayer = new SpeechSDK.SpeakerAudioDestination();
+    playerRef.current = myPlayer;
+    const audioConfig = SpeechSDK.AudioConfig.fromSpeakerOutput(myPlayer);
+
+    const synthesizer = new SpeechSDK.SpeechSynthesizer(speechConfig, audioConfig);
+
+    // Use SSML for best results
+    const ssml = createSSML(text, lang, voiceMap[lang]);
+
+    synthesizer.speakSsmlAsync(
+      ssml,
+      (result) => {
+        if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
+          console.log("Speech synthesized");
+        } else if (result.reason === SpeechSDK.ResultReason.Canceled) {
+          console.error("Synthesis canceled:", result.errorDetails);
+        }
+        synthesizer.close();
+      },
+      (err) => {
+        console.error("Speech synthesis error:", err);
+        synthesizer.close();
+      }
+    );
+  }
+
 
   return (
     <div className="flex flex-col h-screen bg-gradient-to-b from-sky-50 to-indigo-50">
@@ -297,8 +373,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
         {messages.map((message) => (
           <div
             key={message.id}
-            className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+            className={`flex items-end ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
           >
+            {/* The message bubble */}
             <div
               className={`max-w-[80%] rounded-2xl px-4 py-3 ${
                 message.type === 'user'
@@ -308,10 +385,38 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
             >
               <div className="whitespace-pre-wrap">{message.content}</div>
             </div>
+
+            {/* For assistant: icon after bubble, on the right */}
+            {message.type === 'assistant' && (
+              <button
+                className="ml-2 p-1 rounded-full hover:bg-gray-100 transition flex-shrink-0"
+                title="Read aloud"
+                onClick={() => textToSpeech(message.content, findRightLanguageForTTS(settings.language))}
+              >
+                {/* Speaker SVG */}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.5}
+                  stroke="currentColor"
+                  className="w-6 h-6 text-indigo-600"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M11 5.882V18.12a1 1 0 01-1.707.707L5.586 15H3a1 1 0 01-1-1V10a1 1 0 011-1h2.586l3.707-3.828A1 1 0 0111 5.882zm6.364 1.757a9 9 0 010 8.722M17.657 8.343a5 5 0 010 7.314"
+                  />
+                </svg>
+              </button>
+            )}
           </div>
         ))}
         <div ref={messagesEndRef} />
       </div>
+
+
+
 
       {/* Input bar */}
       <div className="bg-white border-t p-4">
