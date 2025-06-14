@@ -10,7 +10,9 @@ import { generateQuestions } from '../api/generateQuestions';
 import { useCookies } from 'react-cookie';
 import { availableLanguages } from '../data/languages';
 import { deleteThread } from '../api/deleteThread';
-
+import { getTokenOrRefresh } from '../token_util.js';
+import * as SpeechSDK from 'microsoft-cognitiveservices-speech-sdk';
+import { ResultReason } from 'microsoft-cognitiveservices-speech-sdk';
 
 const COOKIE_NAME = 'my_cookie';
 
@@ -180,54 +182,117 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }; 
 
+  async function sttFromMic() {
+      const tokenObj = await getTokenOrRefresh();
+      const speechConfig = SpeechSDK.SpeechConfig.fromAuthorizationToken(tokenObj.authToken, tokenObj.region);
+      if (settings.language == 'es') {
+        speechConfig.speechRecognitionLanguage = 'es-ES'; // Set the language for STT
+      }
+      else if (settings.language == 'hi') {
+        speechConfig.speechRecognitionLanguage = 'hi-IN'; // Set the language for STT 
+      }
+      else if (settings.language == 'kn') {
+        speechConfig.speechRecognitionLanguage = 'kn-IN'; // Set the language for STT
+      }
+      else if (settings.language == 'mr') {
+        speechConfig.speechRecognitionLanguage = 'mr-IN'; 
+      }
+      else {
+        speechConfig.speechRecognitionLanguage = 'en-US'; // Default to English
+      }
 
-  
+      const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
+      const recognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
 
- 
+      console.log('Listening...');
+
+      recognizer.recognizeOnceAsync((result: { reason: ResultReason; text: any; }) => {
+          if (result.reason === ResultReason.RecognizedSpeech) {
+              console.log(`RECOGNIZED: ${result.text}`);
+              setInput(result.text);
+              handleSend();
+          } else {
+              console.log(`ERROR: ${result.reason}`);
+          }
+      });
+  }
 
   return (
     <div className="flex flex-col h-screen bg-gradient-to-b from-sky-50 to-indigo-50">
       <div className="bg-white shadow-sm p-4">
-        <div className="max-w-12xl mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-4">
+        <div className="max-w-12xl max-w-full mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          {/* Header Left: Back + Title */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-2">
+            {/* Back Button */}
             <button 
               onClick={handleBack}
               className="flex items-center text-indigo-600 hover:text-indigo-800 transition-colors"
             >
-              <ArrowLeft className="w-5 h-5 mr-2" />
-              <span>{getTranslation(settings.language, 'back')}</span>
+              <ArrowLeft className="w-5 h-5 mr-1 sm:mr-2" />
             </button>
-            <h2 className="font-semibold text-gray-800">{"Polyglot STEM Buddy"}</h2>
+            {/* Title */}
+            <h2 className="font-semibold text-gray-800 text-lg sm:text-xl whitespace-nowrap">
+              {"Polyglot STEM Buddy"}
+            </h2>
           </div>
           
-          <div className="flex items-center gap-2">
+          {/* Header Right: Actions + Info */}
+          <div className="flex flex-wrap items-center gap-2">
             <Button
-              onClick={() => {/* Handle additional resources */}}
+              onClick={() => {/* Handle flashcards */}}
               variant="secondary"
               size="small"
-              className="flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-700"
+              className="flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-700 flex-shrink-0"
+            >
+              {/* Flashcards SVG */}
+              <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="7" width="13" height="10" rx="2" />
+                <rect x="8" y="3" width="13" height="10" rx="2" />
+              </svg>
+              <span className="hidden sm:inline">{getTranslation(settings.language, 'generateFlashcards')}</span>
+            </Button>
+            <Button
+              onClick={() => {/* Summarize */}}
+              variant="secondary"
+              size="small"
+              className="flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-700 flex-shrink-0"
             >
               <BookOpen className="w-4 h-4" />
-              <span className="hidden sm:inline">{getTranslation(settings.language, 'additionalResources')}</span>
+              <span className="hidden sm:inline">{getTranslation(settings.language, 'summarize')}</span>
             </Button>
             <Button
               onClick={() => setShowQuiz(true)}
               variant="secondary"
               size="small"
-              className="flex items-center gap-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700"
+              className="flex items-center gap-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 flex-shrink-0"
             >
               <Brain className="w-4 h-4" />
               <span className="hidden sm:inline">{getTranslation(settings.language, 'readyForQuiz')}</span>
             </Button>
-            <div className="text-sm text-gray-600">
+            <Button
+              onClick={() => {/* Exit lesson */}}
+              variant="secondary"
+              size="small"
+              className="flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-700 flex-shrink-0"
+            >
+              {/* Exit SVG */}
+              <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 16l-4-4 4-4" />
+                <path d="M5 12h12" />
+                <path d="M19 5v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+              </svg>
+              <span className="hidden sm:inline">{getTranslation(settings.language, 'exitLesson')}</span>
+            </Button>
+            <div className="text-xs sm:text-sm text-gray-600 whitespace-nowrap">
               {getAgeGroupLabel(settings.age)} | {getCurrentLanguageName()}
             </div>
           </div>
         </div>
       </div>
 
+      {/* Chat messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
         {messages.map((message) => (
           <div
@@ -248,24 +313,35 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Input bar */}
       <div className="bg-white border-t p-4">
-        <div className="max-w-12x1 mx-auto">
-          <div className="flex gap-2">
+        <div className="max-w-12xl max-w-full mx-auto">
+          <div className="flex flex-wrap gap-2">
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSend()}
               placeholder={getTranslation(settings.language, 'typeMessage')}
-              className="flex-1 border-2 border-gray-200 rounded-xl px-4 py-2 focus:outline-none focus:border-indigo-500"
+              className="flex-1 min-w-[150px] border-2 border-gray-200 rounded-xl px-4 py-2 focus:outline-none focus:border-indigo-500"
               disabled={isLoading}
             />
+            <Button
+              onClick={() => {sttFromMic()}}
+              variant="secondary"
+              size="small"
+              className="flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-700 flex-shrink-0"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none" className="tabler-icon tabler-icon-microphone-filled ">
+                <path d="M19 9a1 1 0 0 1 1 1a8 8 0 0 1 -6.999 7.938l-.001 2.062h3a1 1 0 0 1 0 2h-8a1 1 0 0 1 0 -2h3v-2.062a8 8 0 0 1 -7 -7.938a1 1 0 1 1 2 0a6 6 0 0 0 12 0a1 1 0 0 1 1 -1m-7 -8a4 4 0 0 1 4 4v5a4 4 0 1 1 -8 0v-5a4 4 0 0 1 4 -4"></path>
+              </svg>
+            </Button>
             <Button
               onClick={handleSend}
               disabled={!input.trim() || isLoading}
               variant="primary"
               size="medium"
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 flex-shrink-0"
             >
               <Send className="w-4 h-4" />
               {isLoading ? 'Sending...' : getTranslation(settings.language, 'send')}
