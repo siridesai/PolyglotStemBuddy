@@ -14,7 +14,6 @@ type TranslationKey =
   | 'earlyExplorerRange'
   | 'juniorScientistRange'
   | 'teenResearcherRange'
-  | 'back'
   | 'language'
   | 'searchPrompts'
   | 'science'
@@ -28,7 +27,9 @@ type TranslationKey =
   | 'earlyLearnerResponse'
   | 'juniorLearnerResponse'
   | 'teenLearnerResponse'
-  | 'additionalResources'
+  | 'generateFlashcards'
+  | 'summarize'
+  | 'exitLesson'
   | 'readyForQuiz'
   | 'learnSomethingElse'
   | 'lessonSummary';
@@ -56,7 +57,6 @@ export const translations: TranslationSet = {
     earlyExplorerRange: 'Ages 5-8',
     juniorScientistRange: 'Ages 9-12',
     teenResearcherRange: 'Ages 13-15',
-    back: 'Back',
     language: 'Language',
     searchPrompts: 'Search topics...',
     science: 'Science',
@@ -70,7 +70,9 @@ export const translations: TranslationSet = {
     earlyLearnerResponse: "That's a great topic! Let's explore",
     juniorLearnerResponse: "That's a great topic! Let's dive deeper into",
     teenLearnerResponse: "That's a great topic! Let's investigate",
-    additionalResources: 'Additional Resources',
+    generateFlashcards: 'Generate Flashcards',
+    summarize: 'Summarize',
+    exitLesson: 'Exit Lesson',
     readyForQuiz: 'Ready for Quiz?',
     learnSomethingElse: 'Learn Something Else',
     lessonSummary: 'Lesson Summary'
@@ -89,7 +91,6 @@ export const translations: TranslationSet = {
     earlyExplorerRange: 'Edad: 5-8',
     juniorScientistRange: 'Edad: 9-12',
     teenResearcherRange: 'Edad: 13-15',
-    back: 'Volver',
     language: 'Idioma',
     searchPrompts: 'Buscar temas...',
     science: 'Ciencia',
@@ -103,7 +104,9 @@ export const translations: TranslationSet = {
     earlyLearnerResponse: '¡Excelente tema! Vamos a explorar',
     juniorLearnerResponse: '¡Excelente tema! Profundicemos en',
     teenLearnerResponse: '¡Excelente tema! Investigemos',
-    additionalResources: 'Recursos Adicionales',
+    generateFlashcards: 'Generar Tarjetas Didácticas',
+    summarize: 'Resumir',
+    exitLesson: 'Salir de la Lección',
     readyForQuiz: '¿Listo para el Quiz?',
     learnSomethingElse: 'Aprender Algo Nuevo',
     lessonSummary: 'Resumen de la Lección'
@@ -122,7 +125,6 @@ export const translations: TranslationSet = {
     earlyExplorerRange: 'आयु: 5-8',
     juniorScientistRange: 'आयु: 9-12',
     teenResearcherRange: 'आयु: 13-15',
-    back: 'वापस',
     language: 'भाषा',
     searchPrompts: 'विषय खोजें...',
     science: 'विज्ञान',
@@ -136,7 +138,9 @@ export const translations: TranslationSet = {
     earlyLearnerResponse: 'बहुत अच्छा विषय! चलो खोजते हैं',
     juniorLearnerResponse: 'बहुत अच्छा विषय! चलो गहराई से जानते हैं',
     teenLearnerResponse: 'बहुत अच्छा विषय! चलो जांच करते हैं',
-    additionalResources: 'अतिरिक्त संसाधन',
+    generateFlashcards: 'फ्लैशकार्ड बनाएं',
+    summarize: 'सारांश बनाएं',
+    exitLesson: 'पाठ से बाहर निकलें',
     readyForQuiz: 'क्विज़ के लिए तैयार?',
     learnSomethingElse: 'कुछ और सीखें',
     lessonSummary: 'पाठ सारांश'
@@ -155,7 +159,6 @@ export const translations: TranslationSet = {
     earlyExplorerRange: 'वय: ५-८',
     juniorScientistRange: 'वय: ९-१२',
     teenResearcherRange: 'वय: १३-१५',
-    back: 'परत',
     language: 'भाषा',
     searchPrompts: 'विषय शोधा...',
     science: 'विज्ञान',
@@ -169,7 +172,9 @@ export const translations: TranslationSet = {
     earlyLearnerResponse: 'छान विषय! चला शोधूया',
     juniorLearnerResponse: 'छान विषय! चला थोडं खोलात जाऊया',
     teenLearnerResponse: 'छान विषय! चला तपासून पाहूया',
-    additionalResources: 'अधिक स्रोत',
+    generateFlashcards: 'फ्लॅशकार्ड तयार करा',
+    summarize: 'सारांश तयार करा',
+    exitLesson: 'पाठातून बाहेर पडा',
     readyForQuiz: 'क्विझसाठी तयार आहात का?',
     learnSomethingElse: 'काहीतरी नवीन शिका',
     lessonSummary: 'पाठाचा सारांश'
@@ -188,7 +193,6 @@ export const translations: TranslationSet = {
     earlyExplorerRange: 'ವಯಸ್ಸು: ೫-೮',
     juniorScientistRange: 'ವಯಸ್ಸು: ೯-೧೨',
     teenResearcherRange: 'ವಯಸ್ಸು: ೧೩-೧೫',
-    back: 'ಹಿಂದೆ',
     language: 'ಭಾಷೆ',
     searchPrompts: 'ವಿಷಯ ಹುಡುಕಿ...',
     science: 'ವಿಜ್ಞಾನ',
@@ -202,7 +206,9 @@ export const translations: TranslationSet = {
     earlyLearnerResponse: 'ಉತ್ತಮ ವಿಷಯ! ನೋಡೋಣ ಏನು ಇದೆ',
     juniorLearnerResponse: 'ಅದ್ಭುತ ವಿಷಯ! ಇನ್ನೂ ಒಳಗೆ ಹೋಗೋಣ',
     teenLearnerResponse: 'ದೊಡ್ಡ ವಿಷಯ! ಪರಿಶೀಲನೆ ಮಾಡೋಣ',
-    additionalResources: 'ಹೆಚ್ಚಿನ ಸಂಪತ್ತುಗಳು',
+    generateFlashcards: 'ಫ್ಲಾಶ್‌ಕಾರ್ಡ್‌ಗಳನ್ನು ರಚಿಸಿ',
+    summarize: 'ಸಾರಾಂಶ ರಚಿಸಿ',
+    exitLesson: 'ಪಾಠದಿಂದ ಹೊರಬರಲು',
     readyForQuiz: 'ಪ್ರಶ್ನೆೋತ್ತರಕ್ಕಾಗಿ ಸಿದ್ಧವೆ?',
     learnSomethingElse: 'ಬೇರೇನು ಕಲಿಯಿರಿ',
     lessonSummary: 'ಪಾಠದ ಸಾರಾಂಶ'

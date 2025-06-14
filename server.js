@@ -5,13 +5,14 @@ import { runAssistantBackend } from './src/api/backend.js';
 import { getOrCreateThread } from './src/api/backend.js';
 import { getAssistantClient, initializeAssistantClient } from './src/assistantClient.js';
 import { getAssistant, initializeAssistant } from './src/assistant.js';
-
-
+import axios from 'axios';
+import 'dotenv/config';
 
 dotenv.config();
-
 const app = express();
 const port = 3000;
+const speechKey = process.env.VITE_SPEECH_KEY;
+const speechRegion = process.env.VITE_SPEECH_REGION;
 
 app.use(cors());
 app.use(express.json());
@@ -156,4 +157,27 @@ console.log("Initialization complete");
 
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
+});
+
+app.get('/getSpeechToken', async (req, res, next) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:5173');
+
+    if (speechKey === 'paste-your-speech-key-here' || speechRegion === 'paste-your-speech-region-here') {
+        res.status(400).send('You forgot to add your speech key or region to the .env file.');
+    } else {
+        const headers = { 
+            headers: {
+                'Ocp-Apim-Subscription-Key': speechKey,
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+        };
+
+        try {
+            const tokenResponse = await axios.post(`https://${speechRegion}.api.cognitive.microsoft.com/sts/v1.0/issueToken`, null, headers);
+            res.send({ token: tokenResponse.data, region: speechRegion });
+        } catch (err) {
+            res.status(401).send('There was an error authorizing your speech key.');
+        }
+    }
 });
