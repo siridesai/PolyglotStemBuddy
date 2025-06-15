@@ -32,7 +32,12 @@ type TranslationKey =
   | 'exitLesson'
   | 'readyForQuiz'
   | 'learnSomethingElse'
-  | 'lessonSummary';
+  | 'lessonSummary'
+  | 'close'
+  | 'noQuestionsAvailable'
+  | 'generatingQuiz'
+  | 'quizComplete'
+  | 'quizGenerationFailed';
 
 type Translations = {
   [key in TranslationKey]: string;
@@ -75,7 +80,12 @@ export const translations: TranslationSet = {
     exitLesson: 'Exit Lesson',
     readyForQuiz: 'Ready for Quiz?',
     learnSomethingElse: 'Learn Something Else',
-    lessonSummary: 'Lesson Summary'
+    lessonSummary: 'Lesson Summary',
+    close: 'Close',
+    noQuestionsAvailable: 'No questions available',
+    generatingQuiz: 'Generating your quiz...',
+    quizComplete: 'Quiz Complete!',
+    quizGenerationFailed: 'Failed to generate quiz.'
   },
   es: {
     selectAgeGroup: 'Selecciona grupo de edad',
@@ -109,7 +119,12 @@ export const translations: TranslationSet = {
     exitLesson: 'Salir de la Lección',
     readyForQuiz: '¿Listo para el Quiz?',
     learnSomethingElse: 'Aprender Algo Nuevo',
-    lessonSummary: 'Resumen de la Lección'
+    lessonSummary: 'Resumen de la Lección',
+    close: 'Cerrar',
+    noQuestionsAvailable: 'No hay preguntas disponibles',
+    generatingQuiz: 'Generando tu cuestionario...',
+    quizComplete: '¡Cuestionario completo!',
+    quizGenerationFailed: 'No se pudo generar el cuestionario.'
   },
   hi: {
     selectAgeGroup: 'आयु वर्ग चुनें',
@@ -143,7 +158,12 @@ export const translations: TranslationSet = {
     exitLesson: 'पाठ से बाहर निकलें',
     readyForQuiz: 'क्विज़ के लिए तैयार?',
     learnSomethingElse: 'कुछ और सीखें',
-    lessonSummary: 'पाठ सारांश'
+    lessonSummary: 'पाठ सारांश',
+    close: 'बंद करें',
+    noQuestionsAvailable: 'कोई प्रश्न उपलब्ध नहीं है',
+    generatingQuiz: 'आपका प्रश्नोत्तरी तैयार किया जा रहा है...',
+    quizComplete: 'प्रश्नोत्तरी पूरी हुई!',
+    quizGenerationFailed: 'प्रश्नोत्तरी तैयार करने में विफल!'
   },
   mr: {
     selectAgeGroup: 'वय गट निवडा',
@@ -177,7 +197,12 @@ export const translations: TranslationSet = {
     exitLesson: 'पाठातून बाहेर पडा',
     readyForQuiz: 'क्विझसाठी तयार आहात का?',
     learnSomethingElse: 'काहीतरी नवीन शिका',
-    lessonSummary: 'पाठाचा सारांश'
+    lessonSummary: 'पाठाचा सारांश',
+    close: 'बंद करा',
+    noQuestionsAvailable: 'कोणतेही प्रश्न उपलब्ध नाहीत',
+    generatingQuiz: 'तुमचा क्विझ तयार केला जात आहे...',
+    quizComplete: 'क्विझ पूर्ण झाला!',
+    quizGenerationFailed: 'क्विझ तयार करण्यात अयशस्वी!'
   },
   kn: {
     selectAgeGroup: 'ವಯೋಮಿತಿ ಆಯ್ಕೆಮಾಡಿ',
@@ -211,7 +236,12 @@ export const translations: TranslationSet = {
     exitLesson: 'ಪಾಠದಿಂದ ಹೊರಬರಲು',
     readyForQuiz: 'ಪ್ರಶ್ನೆೋತ್ತರಕ್ಕಾಗಿ ಸಿದ್ಧವೆ?',
     learnSomethingElse: 'ಬೇರೇನು ಕಲಿಯಿರಿ',
-    lessonSummary: 'ಪಾಠದ ಸಾರಾಂಶ'
+    lessonSummary: 'ಪಾಠದ ಸಾರಾಂಶ',
+    close: 'ಬಂದ್ ಮಾಡಿ',
+    noQuestionsAvailable: 'ಯಾವುದೇ ಪ್ರಶ್ನೆಗಳು ಲಭ್ಯವಿಲ್ಲ',
+    generatingQuiz: 'ನಿಮ್ಮ ಪ್ರಶ್ನೆೋತ್ತರವನ್ನು ರಚಿಸಲಾಗುತ್ತಿದೆ...',
+    quizComplete: 'ಕ್ವಿಜ್ ಸಂಪೂರ್ಣವಾಗಿದೆ!',
+    quizGenerationFailed: 'ಕ್ವಿಜ್ ರಚಿಸಲು ವಿಫಲವಾಗಿದೆ!'
   }
 };
 

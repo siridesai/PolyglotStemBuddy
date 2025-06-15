@@ -13,9 +13,13 @@ const app = express();
 const port = 3000;
 const speechKey = process.env.VITE_SPEECH_KEY;
 const speechRegion = process.env.VITE_SPEECH_REGION;
+const minQuestions = 2;
+const maxQuestions = 5;
 
 app.use(cors());
 app.use(express.json());
+
+const threadLocks = new Map(); 
 
 app.post('/runAssistant', async (req, res) => {
     try {
@@ -31,39 +35,65 @@ app.post('/runAssistant', async (req, res) => {
 });
 
 app.post('/generateQuestions', async (req, res) => {
+  
+  const threadId = req.body.threadId;
+  const lockKey = `thread_${threadId}`;
+
+  // Prevent concurrent requests for same thread
+  if (threadLocks.has(lockKey)) {
+    return res.status(429).json({ error: 'Quiz generation already in progress' });
+  }
+  threadLocks.set(lockKey, true);
+
   try {
     const { message, threadId, age, language } = req.body;
-
+    
     if (!threadId || !language) {
-      return res.status(400).json({ error: 'Missing required parameters.' });
+      return res.status(400).json({ error: 'Missing required parameters' });
     }
 
     const assistantClient = getAssistantClient();
-    const assistant = getAssistant(); // <-- Get the assistant object
+    const assistant = getAssistant();
 
-    // 1. Get the messages from the existing thread
-    const messages = await assistantClient.beta.threads.messages.list(threadId);
+   
 
-    // 2. Prepare context for quiz generation
-    const contextMsg = messages.data
-      .map(m => m.content[0]?.text?.value || '')
-      .filter(Boolean)
-      .join('\n');
-      
+    // 2. Wait for cancellation completion
+    let runsStillActive = true;
+    while (runsStillActive) {
+      const currentRuns = await assistantClient.beta.threads.runs.list(threadId, {
+        status: ["queued", "in_progress", "requires_action"]
+      });
+      runsStillActive = currentRuns.data.length > 0;
+      if (runsStillActive) await new Promise(r => setTimeout(r, 1000));
+    }
+
+     const runs = Array.isArray(runsStillActive?.data) ? runsStillActive.data : [];
+     await Promise.all(
+       runs.map(async (run) => {
+         try {
+           await assistantClient.beta.threads.runs.cancel(threadId, run.id);
+         } catch (error) {
+           if (!error.message.includes('Cannot cancel run with status')) {
+             throw error;
+           }
+         }
+       })
+     );
+
 
     // 3. Create a run to generate quiz questions in the same thread
     const run = await assistantClient.beta.threads.runs.create(threadId, {
        assistant_id: assistant.id,
         model: assistant.model,
         tools: [],
-        temperature: 0.1,
-      instructions: ` **User Requirements**
+        temperature: 0,
+        instructions: ` **User Requirements**
         - Age group: ${age} years old
         - Language: ${language}
         - Context: ${message}
         
         **Response Rules**
-        1. Create 3 multiple-choice questions that directly relate to and are EXCLUSIVELY ABOUT: "${message}"
+        1. Based on the following passage, generate between ${minQuestions} and ${maxQuestions} multiple-choice questions that directly relate to and are EXCLUSIVELY ABOUT: "${message}"
         2. Use ${language} suitable for age ${age}
         3. Questions should be strictly age appropriate only relevant to ${age}.
         4. Include fun facts or interesting information related to the questions.
@@ -75,6 +105,8 @@ app.post('/generateQuestions', async (req, res) => {
              explanation: "..."
            }]
         6. NO MARKDOWN FORMATTING - return only pure JSON
+        7. No open-ended or "what's next" questions
+        8. Questions must test understanding of core concepts
     `,
     tools: [{
         type: "code_interpreter" // Required for JSON parsing
@@ -90,13 +122,16 @@ app.post('/generateQuestions', async (req, res) => {
     // 4. Poll for run completion
     let runStatus;
     do {
-      await new Promise(r => setTimeout(r, 1500));
+       await new Promise(r => setTimeout(r, 1500));
       runStatus = await assistantClient.beta.threads.runs.retrieve(threadId, run.id);
-    } while (runStatus.status !== 'completed' && runStatus.status !== 'failed');
+    } while (runStatus.status === 'queued' || runStatus.status === 'in_progress');
 
+    // 5. Process results
     if (runStatus.status === 'failed') {
-      return res.status(500).json({ error: 'Quiz generation failed.' });
+      return res.status(500).json({ error: 'Quiz generation failed' });
     }
+
+    const messages = await assistantClient.beta.threads.messages.list(threadId);
 
     // 5. Retrieve the assistant's response message
     const runMessages = await assistantClient.beta.threads.messages.list(threadId);
@@ -118,6 +153,8 @@ app.post('/generateQuestions', async (req, res) => {
   } catch (error) {
     console.error('Error in /generateQuestions:', error);
     return res.status(500).json({ error: 'Internal server error.' });
+  } finally {
+    threadLocks.delete(lockKey);
   }
 });
 

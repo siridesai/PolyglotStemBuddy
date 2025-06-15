@@ -6,7 +6,6 @@ import Button from './ui/Button';
 import QuizModal from './ui/QuizModal';
 import { fetchThreadID } from '../api/fetchThreadID.ts';
 import { runAssistant } from '../api/runAssistant';
-import { generateQuestions } from '../api/generateQuestions';
 import { useCookies } from 'react-cookie';
 import { availableLanguages } from '../data/languages';
 import { deleteThread } from '../api/deleteThread';
@@ -14,7 +13,6 @@ import { getTokenOrRefresh } from '../token_util.js';
 import * as SpeechSDK from 'microsoft-cognitiveservices-speech-sdk';
 import { ResultReason } from 'microsoft-cognitiveservices-speech-sdk';
 import FlashcardModal from './ui/FlashcardModal.tsx';
-
 
 const COOKIE_NAME = 'my_cookie';
 
@@ -34,27 +32,26 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [showQuiz, setShowQuiz] = useState(false);
+  const [isQuizGenerating, setIsQuizGenerating] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [cookies, setCookie, removeCookie] = useCookies([COOKIE_NAME]);
-  const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
   const [threadId, setThreadId] = useState<string>('');
   const playerRef = useRef<SpeechSDK.SpeakerAudioDestination | null>(null);
   const [showFlashcards, setShowFlashcards] = useState(false);
   const synthesizerRef = useRef<SpeechSDK.SpeechSynthesizer | null>(null);
   const [ttsStatus, setTtsStatus] = useState<'idle' | 'playing' | 'paused'>('idle');
-  const [currentTTS, setCurrentTTS] = useState<string | null>(null); // Track current message content
+  const [currentTTS, setCurrentTTS] = useState<string | null>(null);
+
+  // For flashcards: store last generated questions for this thread
+  const [lastQuizQuestions, setLastQuizQuestions] = useState<QuizQuestion[]>([]);
 
   useEffect(() => {
-    // Check if the cookie exists
     if (!cookies[COOKIE_NAME]) {
-      // Set the cookie if missing
       setCookie(COOKIE_NAME, String(Math.floor(Math.random() * 100) + 1), { path: '/', maxAge: 3600 });
     }
-    // You can now use cookies[COOKIE_NAME] as the value
-    console.log('Cookie value:', cookies[COOKIE_NAME]);
   }, [cookies, setCookie]);
 
-   useEffect(() => {
+  useEffect(() => {
     if (cookies[COOKIE_NAME] && !threadId) {
       const getThreadId = async () => {
         try {
@@ -115,27 +112,24 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
     scrollToBottom();
   }, [messages]);
 
-  
- const handleBack = async () => {
-   // Optionally delete the thread if threadId exists
-   const threadId = await fetchThreadID(cookies[COOKIE_NAME]);
-   if (threadId) {
-     try {
-       await deleteThread(threadId);
-       removeCookie(COOKIE_NAME, { path: '/' });
-       console.log('Thread deleted successfully');
-     } catch (err) {
-       console.error('Failed to delete thread:', err);
-     }
-   }
-   onBack();
+  const handleBack = async () => {
+    const threadId = await fetchThreadID(cookies[COOKIE_NAME]);
+    if (threadId) {
+      try {
+        await deleteThread(threadId);
+        removeCookie(COOKIE_NAME, { path: '/' });
+        console.log('Thread deleted successfully');
+      } catch (err) {
+        console.error('Failed to delete thread:', err);
+      }
+    }
+    onBack();
   }
-  
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
 
-     const messageToSend = input;
+    const messageToSend = input;
 
     const userMessage = {
       id: Date.now().toString(),
@@ -143,13 +137,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
       content: messageToSend,
       timestamp: new Date()
     };
-
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
 
     try {
-     
       const threadId = await fetchThreadID(cookies[COOKIE_NAME]);
       const response = await runAssistant(messageToSend, threadId, settings.age, settings.language, cookies[COOKIE_NAME]);
 
@@ -161,21 +153,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
       };
 
       setMessages(prev => [...prev, assistantMessage]);
-
-      // Generate questions from assistant response
-      const generatedQuestions = await generateQuestions(
-        assistantMessage.content,
-        threadId, 
-        settings.age, 
-        settings.language, 
-        cookies[COOKIE_NAME]
-      );
-
-      setQuizQuestions(generatedQuestions);
+      // No quiz generation here anymore
 
     } catch (error) {
       console.error('Error getting assistant response:', error);
-      
+
       const errorMessage = {
         id: (Date.now() + 1).toString(),
         type: 'assistant' as const,
@@ -187,45 +169,38 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
     } finally {
       setIsLoading(false);
     }
-
-  }; 
+  };
 
   async function sttFromMic() {
-      const tokenObj = await getTokenOrRefresh();
-      const speechConfig = SpeechSDK.SpeechConfig.fromAuthorizationToken(tokenObj.authToken, tokenObj.region);
-      if (settings.language == 'es') {
-        speechConfig.speechRecognitionLanguage = 'es-ES'; // Set the language for STT
-      }
-      else if (settings.language == 'hi') {
-        speechConfig.speechRecognitionLanguage = 'hi-IN'; // Set the language for STT 
-      }
-      else if (settings.language == 'kn') {
-        speechConfig.speechRecognitionLanguage = 'kn-IN'; // Set the language for STT
-      }
-      else if (settings.language == 'mr') {
-        speechConfig.speechRecognitionLanguage = 'mr-IN'; 
-      }
-      else {
-        speechConfig.speechRecognitionLanguage = 'en-US'; // Default to English
-      }
+    const tokenObj = await getTokenOrRefresh();
+    const speechConfig = SpeechSDK.SpeechConfig.fromAuthorizationToken(tokenObj.authToken, tokenObj.region);
+    if (settings.language == 'es') {
+      speechConfig.speechRecognitionLanguage = 'es-ES';
+    }
+    else if (settings.language == 'hi') {
+      speechConfig.speechRecognitionLanguage = 'hi-IN';
+    }
+    else if (settings.language == 'kn') {
+      speechConfig.speechRecognitionLanguage = 'kn-IN';
+    }
+    else if (settings.language == 'mr') {
+      speechConfig.speechRecognitionLanguage = 'mr-IN';
+    }
+    else {
+      speechConfig.speechRecognitionLanguage = 'en-US';
+    }
 
-      const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
-      const recognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
+    const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
+    const recognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
 
-      console.log('Listening...');
-
-      recognizer.recognizeOnceAsync((result: { reason: ResultReason; text: any; }) => {
-          if (result.reason === ResultReason.RecognizedSpeech) {
-              console.log(`RECOGNIZED: ${result.text}`);
-              setInput(result.text);
-              handleSend();
-          } else {
-              console.log(`ERROR: ${result.reason}`);
-          }
-      });
+    recognizer.recognizeOnceAsync((result: { reason: ResultReason; text: any; }) => {
+      if (result.reason === ResultReason.RecognizedSpeech) {
+        setInput(result.text);
+        handleSend();
+      }
+    });
   }
 
-  // Utility to wrap text in SSML for the given language and voice
   function createSSML(text: string, lang: string, voice: string) {
     return `
       <speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="${lang}">
@@ -234,7 +209,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
     `;
   }
 
-  // Map language to the recommended neural voice
   const voiceMap: Record<string, string> = {
     "hi-IN": "hi-IN-SwaraNeural",
     "mr-IN": "mr-IN-AarohiNeural",
@@ -244,24 +218,23 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
   };
 
   function findRightLanguageForTTS(langGiven: string) {
-    let language = 'en-US'; // Default to English
+    let language = 'en-US';
     if (langGiven == 'es') {
-      language = 'es-ES'; // Set the language for TTS
+      language = 'es-ES';
     }
     else if (langGiven == 'hi') {
-      language = 'hi-IN'; // Set the language for TTS
+      language = 'hi-IN';
     }
     else if (langGiven == 'kn') {
-      language = 'kn-IN'; // Set the language for TTS
+      language = 'kn-IN';
     }
     else if (langGiven == 'mr') {
-      language = 'mr-IN'; 
+      language = 'mr-IN';
     }
     return language;
   }
 
   async function textToSpeech(text: string, lang: string) {
-    // If the same message is playing, pause or resume
     if (currentTTS === text && playerRef.current) {
       if (ttsStatus === 'playing') {
         playerRef.current.pause();
@@ -274,8 +247,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
         return;
       }
     }
-
-    // If a different message is requested, stop previous playback
     if (playerRef.current) {
       try { playerRef.current.pause(); } catch {}
       playerRef.current = null;
@@ -286,7 +257,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
     }
     setTtsStatus('idle');
 
-    // Start new playback
     setCurrentTTS(text);
 
     const tokenObj = await getTokenOrRefresh();
@@ -320,8 +290,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
         playerRef.current = null;
       }
     );
-    }
+  }
 
+  // For flashcards: convert quiz questions to flashcards
   const convertQuestiontoFlashcard = (question: QuizQuestion) => {
     return {
       question: question.question,
@@ -329,26 +300,30 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
     };
   };
 
+  // When QuizModal closes, save the questions for flashcards
+  const handleQuizModalClose = (questionsFromQuiz: QuizQuestion[] | undefined) => {
+    setShowQuiz(false);
+    setIsQuizGenerating(false);
+    if (questionsFromQuiz && questionsFromQuiz.length > 0) {
+      setLastQuizQuestions(questionsFromQuiz);
+    }
+  };
+
   return (
     <div className="flex flex-col h-screen bg-gradient-to-b from-sky-50 to-indigo-50">
       <div className="bg-white shadow-sm p-4">
         <div className="max-w-12xl max-w-full mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          {/* Header Left: Back + Title */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-2">
-            {/* Back Button */}
             <button 
               onClick={handleBack}
               className="flex items-center text-indigo-600 hover:text-indigo-800 transition-colors"
             >
               <ArrowLeft className="w-5 h-5 mr-1 sm:mr-2" />
             </button>
-            {/* Title */}
             <h2 className="font-semibold text-gray-800 text-lg sm:text-xl whitespace-nowrap">
               {"Polyglot STEM Buddy"}
             </h2>
           </div>
-          
-          {/* Header Right: Actions + Info */}
           <div className="flex flex-wrap items-center gap-2">
             <Button
               onClick={() => {setShowFlashcards(true)}}
@@ -356,7 +331,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
               size="small"
               className="flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-700 flex-shrink-0"
             >
-              {/* Flashcards SVG */}
               <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="7" width="13" height="10" rx="2" />
                 <rect x="8" y="3" width="13" height="10" rx="2" />
@@ -372,22 +346,29 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
               <BookOpen className="w-4 h-4" />
               <span className="hidden sm:inline">{getTranslation(settings.language, 'summarize')}</span>
             </Button>
-            <Button
-              onClick={() => setShowQuiz(true)}
-              variant="secondary"
-              size="small"
-              className="flex items-center gap-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 flex-shrink-0"
-            >
-              <Brain className="w-4 h-4" />
-              <span className="hidden sm:inline">{getTranslation(settings.language, 'readyForQuiz')}</span>
-            </Button>
+           <Button
+            onClick={() => {
+              if (!isQuizGenerating) {
+                setIsQuizGenerating(true);
+                setShowQuiz(true);
+              }
+            }}
+            disabled={isQuizGenerating}
+            variant="secondary"
+            size="small"
+            className="flex items-center gap-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 flex-shrink-0"
+          >
+            <Brain className="w-4 h-4" />
+            <span className="hidden sm:inline">
+              {isQuizGenerating ? "Generating..." : getTranslation(settings.language, 'readyForQuiz')}
+            </span>
+          </Button>
             <Button
               onClick={() => {/* Exit lesson */}}
               variant="secondary"
               size="small"
               className="flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-700 flex-shrink-0"
             >
-              {/* Exit SVG */}
               <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M9 16l-4-4 4-4" />
                 <path d="M5 12h12" />
@@ -402,14 +383,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
         </div>
       </div>
 
-      {/* Chat messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
         {messages.map((message) => (
           <div
             key={message.id}
             className={`flex items-end ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
           >
-            {/* The message bubble */}
             <div
               className={`max-w-[80%] rounded-2xl px-4 py-3 ${
                 message.type === 'user'
@@ -419,8 +398,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
             >
               <div className="whitespace-pre-wrap">{message.content}</div>
             </div>
-
-            {/* For assistant: icon after bubble, on the right */}
             {message.type === 'assistant' && (
               <button
                 className="ml-2 p-1 rounded-full hover:bg-gray-100 transition flex-shrink-0"
@@ -435,7 +412,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
                 }
                 onClick={() => textToSpeech(message.content, findRightLanguageForTTS(settings.language))}
               >
-                {/* Speaker SVG */}
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
@@ -456,8 +432,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
         ))}
         <div ref={messagesEndRef} />
       </div>
-
-      {/* Input bar */}
       <div className="bg-white border-t p-4">
         <div className="max-w-12xl max-w-full mx-auto">
           <div className="flex flex-wrap gap-2">
@@ -496,18 +470,19 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
 
       {showQuiz && (
         <QuizModal
-          onClose={() => setShowQuiz(false)}
+          onClose={(questionsFromQuiz?: QuizQuestion[]) => handleQuizModalClose(questionsFromQuiz)}
           settings={settings}
-          questions={quizQuestions} // Pass generated questions
+          threadId={threadId}
+          userId={cookies[COOKIE_NAME]}
+          messages={messages}
         />
       )}
       {showFlashcards && (
         <FlashcardModal
-          flashcards={quizQuestions.map(convertQuestiontoFlashcard)}
+          flashcards={lastQuizQuestions.map(convertQuestiontoFlashcard)}
           onClose={() => setShowFlashcards(false)}
         />
       )}
-
     </div>
   );
 };

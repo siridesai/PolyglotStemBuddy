@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import Button from './Button';
 import { getTranslation } from '../../data/translations';
-import { ChildSettings } from '../../types';
+import { ChildSettings, Message } from '../../types';
+import { generateQuestions } from '../../api/generateQuestions';
+
 
 interface QuizQuestion {
   question: string;
@@ -12,54 +14,138 @@ interface QuizQuestion {
 }
 
 interface QuizModalProps {
-  onClose: () => void;
+  onClose: (questions?: QuizQuestion[]) => void;
   settings: ChildSettings;
-  questions: QuizQuestion[];
+  threadId: string;
+  userId: string;
+  messages: Message[];
 }
 
-const QuizModal: React.FC<QuizModalProps> = ({ onClose, settings, questions }) => {
+const QuizModal: React.FC<QuizModalProps> = ({ onClose, settings, threadId, userId, messages }) => {
+  const [questions, setQuestions] = useState<QuizQuestion[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Quiz state
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showExplanation, setShowExplanation] = useState(false);
   const [score, setScore] = useState(0);
   const [quizComplete, setQuizComplete] = useState(false);
+  const hasGenerated = useRef(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
-  if (!questions || questions.length === 0) {
+  console.log("QuizModal mounted");
+
+  useEffect(() => {
+  console.log("QuizModal useEffect running");
+    setIsLoading(true);
+    setError(null);
+    setQuestions([]);
+    setCurrentQuestion(0);
+    setSelectedAnswer(null);
+    setShowExplanation(false);
+    setScore(0);
+    setQuizComplete(false);
+
+    let isMounted = true;
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
+    const fetchQuestions = async () => {
+      if (hasGenerated.current) return;
+      hasGenerated.current = true;
+      
+      setIsLoading(true);
+      setError(null);
+      try {
+        const contextForQuiz = messages.map(m => m.content).join('\n');
+        const generatedQuestions = await generateQuestions(
+          contextForQuiz,
+          threadId,
+          settings.age,
+          settings.language,
+          userId,
+          { signal: abortController.signal } // Pass abort signal
+        );
+        if (isMounted) setQuestions(generatedQuestions);
+        
+      } catch (err) {
+        if (isMounted && !abortController.signal.aborted) {
+          setError('Failed to generate quiz');
+          setError(getTranslation(settings.language, 'quizGenerationFailed') || 'Failed to generate quiz.');
+        }
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    };
+
+    fetchQuestions();
+    return () => {
+      abortController.abort();
+      hasGenerated.current = false;
+    };
+  }, [threadId, userId, settings.age, settings.language]);
+
+  
+
+
+  // Loading state
+  if (isLoading) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl p-6 max-w-md text-center">
-          <h3 className="text-xl font-bold mb-4">No questions available</h3>
-          <p className="text-gray-600 mb-4">Try completing a lesson first!</p>
-          <Button onClick={onClose} variant="primary">
-            Close
+          <h3 className="text-xl font-bold mb-4">
+            {getTranslation(settings.language, 'generatingQuiz') || 'Generating your quiz...'}
+          </h3>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl p-6 max-w-md text-center">
+          <h3 className="text-xl font-bold mb-4">{error}</h3>
+          <Button onClick={() => onClose()} variant="primary">
+            {getTranslation(settings.language, 'close') || 'Close'}
           </Button>
         </div>
       </div>
     );
   }
 
-  useEffect(() => {
-    setCurrentQuestion(0);
-    setSelectedAnswer(null);
-    setShowExplanation(false);
-    setScore(0);
-    setQuizComplete(false);
-  }, [questions]);  // Reset when questions change
+  // No questions state
+  if (!questions || questions.length === 0) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl p-6 max-w-md text-center">
+          <h3 className="text-xl font-bold mb-4">
+            {getTranslation(settings.language, 'noQuestionsAvailable') || 'No questions available'}
+          </h3>
+          <Button onClick={() => onClose()} variant="primary">
+            {getTranslation(settings.language, 'close') || 'Close'}
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
+  // Quiz logic
   const handleAnswerSelect = (answerIndex: number) => {
     setSelectedAnswer(answerIndex);
     setShowExplanation(true);
-
-    
-    
     if (answerIndex === questions[currentQuestion].correctAnswer) {
-      setScore(score + 1);
+      setScore(s => s + 1);
     }
   };
 
   const handleNextQuestion = () => {
     if (currentQuestion < questions.length - 1) {
-      setCurrentQuestion(currentQuestion + 1);
+      setCurrentQuestion(q => q + 1);
       setSelectedAnswer(null);
       setShowExplanation(false);
     } else {
@@ -84,8 +170,9 @@ const QuizModal: React.FC<QuizModalProps> = ({ onClose, settings, questions }) =
               {quizComplete ? "Quiz Complete!" : `Question ${currentQuestion + 1} of ${questions.length}`}
             </h2>
             <button
-              onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              onClick={() => onClose(questions)}
+              className="p-3 hover:bg-gray-100 rounded-full transition-colors text-xl"
+              aria-label="Close"
             >
               <X className="w-6 h-6 text-gray-500" />
             </button>
@@ -146,7 +233,7 @@ const QuizModal: React.FC<QuizModalProps> = ({ onClose, settings, questions }) =
               </h3>
               <p className="text-lg text-gray-600">{getScoreMessage()}</p>
               <div className="pt-4">
-                <Button onClick={onClose} variant="primary" size="large">
+                <Button onClick={() => onClose(questions)} variant="primary" size="large">
                   Continue Learning
                 </Button>
               </div>
