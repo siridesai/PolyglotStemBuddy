@@ -32,7 +32,12 @@ type TranslationKey =
   | 'exitLesson'
   | 'readyForQuiz'
   | 'learnSomethingElse'
-  | 'lessonSummary';
+  | 'lessonSummary'
+  | 'summaryGenerationFailed'
+  | 'generatingSummary'
+  | 'downloadPDF'
+  | 'noSummaryAvailable'
+  ;
 
 type Translations = {
   [key in TranslationKey]: string;
@@ -75,7 +80,11 @@ export const translations: TranslationSet = {
     exitLesson: 'Exit Lesson',
     readyForQuiz: 'Ready for Quiz?',
     learnSomethingElse: 'Learn Something Else',
-    lessonSummary: 'Lesson Summary'
+    lessonSummary: 'Lesson Summary',
+    summaryGenerationFailed: 'Failed to generate summary.',
+    generatingSummary: 'Generating summary...',
+    downloadPDF: 'Download PDF',
+    noSummaryAvailable: 'No summary available right now.'
   },
   es: {
     selectAgeGroup: 'Selecciona grupo de edad',
@@ -109,7 +118,11 @@ export const translations: TranslationSet = {
     exitLesson: 'Salir de la Lección',
     readyForQuiz: '¿Listo para el Quiz?',
     learnSomethingElse: 'Aprender Algo Nuevo',
-    lessonSummary: 'Resumen de la Lección'
+    lessonSummary: 'Resumen de la Lección',
+    summaryGenerationFailed: 'No se pudo generar el resumen.',
+    generatingSummary: 'Generando resumen...',
+    downloadPDF: 'Descargar PDF',
+    noSummaryAvailable: 'No hay resumen disponible en este momento.'
   },
   hi: {
     selectAgeGroup: 'आयु वर्ग चुनें',
@@ -143,7 +156,11 @@ export const translations: TranslationSet = {
     exitLesson: 'पाठ से बाहर निकलें',
     readyForQuiz: 'क्विज़ के लिए तैयार?',
     learnSomethingElse: 'कुछ और सीखें',
-    lessonSummary: 'पाठ सारांश'
+    lessonSummary: 'पाठ सारांश',
+    summaryGenerationFailed: 'सारांश उत्पन्न करने में विफल रहा।',
+    generatingSummary: 'सारांश उत्पन्न हो रहा है...',
+    downloadPDF: 'पीडीएफ डाउनलोड करें',
+    noSummaryAvailable: 'अभी कोई सारांश उपलब्ध नहीं है।'
   },
   mr: {
     selectAgeGroup: 'वय गट निवडा',
@@ -177,7 +194,11 @@ export const translations: TranslationSet = {
     exitLesson: 'पाठातून बाहेर पडा',
     readyForQuiz: 'क्विझसाठी तयार आहात का?',
     learnSomethingElse: 'काहीतरी नवीन शिका',
-    lessonSummary: 'पाठाचा सारांश'
+    lessonSummary: 'पाठाचा सारांश',
+    summaryGenerationFailed: 'सारांश तयार करण्यात अयशस्वी.',
+    generatingSummary: 'सारांश तयार केला जात आहे...',
+    downloadPDF: 'पीडीएफ डाउनलोड करा',
+    noSummaryAvailable: 'आताच सारांश उपलब्ध नाही.'
   },
   kn: {
     selectAgeGroup: 'ವಯೋಮಿತಿ ಆಯ್ಕೆಮಾಡಿ',
@@ -199,7 +220,7 @@ export const translations: TranslationSet = {
     technology: 'ತಂತ್ರಜ್ಞಾನ',
     engineering: 'ಅಭಿಯಾಂತ್ರಿಕೆ',
     math: 'ಗಣಿತ',
-    searchPlaceholder: 'ಇಂದು ನೀವು 무엇 ಕಲಿಯಲು ಇಚ್ಛಿಸುತ್ತೀರಿ?',
+    searchPlaceholder: 'ಇಂದು ನೀವು ಏನು ಕಲಿಯಲು ಇಚ್ಛಿಸುತ್ತೀರಿ?',
     wantToLearnAbout: 'ಇದಿನ ಬಗ್ಗೆ ಕಲಿಯಲು ಇಚ್ಛೆ...',
     typeMessage: 'ನಿಮ್ಮ ಸಂದೇಶವನ್ನು ಬರೆಯಿರಿ...',
     send: 'ಕಳುಹಿಸಿ',
@@ -211,7 +232,11 @@ export const translations: TranslationSet = {
     exitLesson: 'ಪಾಠದಿಂದ ಹೊರಬರಲು',
     readyForQuiz: 'ಪ್ರಶ್ನೆೋತ್ತರಕ್ಕಾಗಿ ಸಿದ್ಧವೆ?',
     learnSomethingElse: 'ಬೇರೇನು ಕಲಿಯಿರಿ',
-    lessonSummary: 'ಪಾಠದ ಸಾರಾಂಶ'
+    lessonSummary: 'ಪಾಠದ ಸಾರಾಂಶ',
+    summaryGenerationFailed: 'ಸಾರಾಂಶ ರಚಿಸಲು ವಿಫಲವಾಗಿದೆ.',
+    generatingSummary: 'ಸಾರಾಂಶ ರಚಿಸಲಾಗುತ್ತಿದೆ...',
+    downloadPDF: 'ಪಿಡಿಎಫ್ ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ',
+    noSummaryAvailable: 'ಈಗಾಗಲೇ ಯಾವುದೇ ಸಾರಾಂಶ ಲಭ್ಯವಿಲ್ಲ.'
   }
 };
 

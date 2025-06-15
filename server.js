@@ -41,23 +41,12 @@ app.post('/generateQuestions', async (req, res) => {
     const assistantClient = getAssistantClient();
     const assistant = getAssistant(); // <-- Get the assistant object
 
-    // 1. Get the messages from the existing thread
-    const messages = await assistantClient.beta.threads.messages.list(threadId);
-
-    // 2. Prepare context for quiz generation
-    const contextMsg = messages.data
-      .map(m => m.content[0]?.text?.value || '')
-      .filter(Boolean)
-      .join('\n');
-      
-
     // 3. Create a run to generate quiz questions in the same thread
     const run = await assistantClient.beta.threads.runs.create(threadId, {
        assistant_id: assistant.id,
         model: assistant.model,
-        tools: [],
         temperature: 0.1,
-      instructions: ` **User Requirements**
+        instructions: ` **User Requirements**
         - Age group: ${age} years old
         - Language: ${language}
         - Context: ${message}
@@ -180,4 +169,97 @@ app.get('/getSpeechToken', async (req, res, next) => {
             res.status(401).send('There was an error authorizing your speech key.');
         }
     }
+});
+
+app.post('/generateSummary', async (req, res) => {
+  try {
+    const { message, threadId, age, language } = req.body;
+
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const formattedDate = `${yyyy}-${mm}-${dd}`;
+
+    if (!threadId || !language) {
+      return res.status(400).json({ error: 'Missing required parameters.' });
+    }
+
+    const assistantClient = getAssistantClient();
+    const assistant = getAssistant();
+
+    // Get conversation context
+    const messages = await assistantClient.beta.threads.messages.list(threadId, {
+      order: 'asc'
+    });
+
+    // Create enhanced instructions
+    const instructions = `**User Requirements**
+    - Age group: ${age} years old
+    - Language: ${language}
+    - Message: ${message}
+
+    **Response Rules**
+    1. Generate title in format: "[Topic] - ${formattedDate}" and return in JSON as title
+    2. Create 3-5 paragraph summaryExplanation that is representative of all of ${message}; return in JSON as summaryExplanation
+    3. Use ${language} for age ${age}
+    4. Include text-based diagrams/examples
+    5. Ensure the JSON is not nested inside another JSON object
+    6. Return ONLY raw JSON without any Markdown formatting :
+    {
+      "title": "...",
+      "summaryExplanation": "..."
+    }`;
+
+    // Create the run
+    const run = await assistantClient.beta.threads.runs.create(threadId, {
+      assistant_id: assistant.id,
+      model: assistant.model,
+      temperature: 0.1,
+      instructions: instructions,
+      tools: [{ type: "code_interpreter" }],
+      metadata: {
+        age_optimization: age,
+        language_constraints: `${language}-only`
+      }
+    });
+
+    // Poll for completion
+    let runStatus;
+    do {
+      await new Promise(r => setTimeout(r, 1500));
+      runStatus = await assistantClient.beta.threads.runs.retrieve(threadId, run.id);
+    } while (runStatus.status === 'queued' || runStatus.status === 'in_progress');
+
+    if (runStatus.status === 'failed') {
+      return res.status(500).json({ error: 'Summary generation failed.' });
+    }
+
+    // Process response
+    const runMessages = await assistantClient.beta.threads.messages.list(threadId);
+    const lastMessage = runMessages.data
+      .find(m => m.run_id === run.id && m.role === 'assistant');
+
+    if (!lastMessage?.content?.[0]?.text?.value) {
+      return res.status(500).json({ error: 'No summary generated.' });
+    }
+
+    try {
+      // Parse JSON response
+      const summary = JSON.parse(lastMessage.content[0].text.value);
+      console.log(summary);
+      return res.json(summary);
+    } catch (error) {
+      // Fallback for text-based response
+      const [title, ...summaryParts] = lastMessage.content[0].text.value.split('\n\n');
+      return res.json({
+        title: title.replace('Title: ', '').trim(),
+        summaryExplanation: summaryParts.join('\n\n').trim()
+      });
+    }
+
+  } catch (error) {
+    console.error('Error in /generateSummary:', error);
+    return res.status(500).json({ error: error.message || 'Internal server error.' });
+  }
 });
