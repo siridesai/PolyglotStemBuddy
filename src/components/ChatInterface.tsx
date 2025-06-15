@@ -13,6 +13,7 @@ import { deleteThread } from '../api/deleteThread';
 import { getTokenOrRefresh } from '../token_util.js';
 import * as SpeechSDK from 'microsoft-cognitiveservices-speech-sdk';
 import { ResultReason } from 'microsoft-cognitiveservices-speech-sdk';
+import FlashcardModal from './ui/FlashcardModal.tsx';
 
 
 const COOKIE_NAME = 'my_cookie';
@@ -38,7 +39,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
   const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
   const [threadId, setThreadId] = useState<string>('');
   const playerRef = useRef<SpeechSDK.SpeakerAudioDestination | null>(null);
-
+  const [showFlashcards, setShowFlashcards] = useState(false);
+  const synthesizerRef = useRef<SpeechSDK.SpeechSynthesizer | null>(null);
+  const [ttsStatus, setTtsStatus] = useState<'idle' | 'playing' | 'paused'>('idle');
+  const [currentTTS, setCurrentTTS] = useState<string | null>(null); // Track current message content
 
   useEffect(() => {
     // Check if the cookie exists
@@ -96,7 +100,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
     else {
       welcomeMessage =`Hello! What do you want to learn today?`
     };
-    
+
     setMessages([
       {
         id: '1',
@@ -257,43 +261,73 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
   }
 
   async function textToSpeech(text: string, lang: string) {
-    const tokenObj = await getTokenOrRefresh(); // Your token refresh logic
-    const speechConfig = SpeechSDK.SpeechConfig.fromAuthorizationToken(
-      tokenObj.authToken,
-      tokenObj.region
-    );
+    // If the same message is playing, pause or resume
+    if (currentTTS === text && playerRef.current) {
+      if (ttsStatus === 'playing') {
+        playerRef.current.pause();
+        setTtsStatus('paused');
+        return;
+      }
+      if (ttsStatus === 'paused') {
+        playerRef.current.resume();
+        setTtsStatus('playing');
+        return;
+      }
+    }
 
-    // Set language and voice explicitly
+    // If a different message is requested, stop previous playback
+    if (playerRef.current) {
+      try { playerRef.current.pause(); } catch {}
+      playerRef.current = null;
+    }
+    if (synthesizerRef.current) {
+      try { synthesizerRef.current.close(); } catch {}
+      synthesizerRef.current = null;
+    }
+    setTtsStatus('idle');
+
+    // Start new playback
+    setCurrentTTS(text);
+
+    const tokenObj = await getTokenOrRefresh();
+    const speechConfig = SpeechSDK.SpeechConfig.fromAuthorizationToken(tokenObj.authToken, tokenObj.region);
     speechConfig.speechSynthesisLanguage = lang;
     speechConfig.speechSynthesisVoiceName = voiceMap[lang];
 
-    // Create and store the player
     const myPlayer = new SpeechSDK.SpeakerAudioDestination();
     playerRef.current = myPlayer;
     const audioConfig = SpeechSDK.AudioConfig.fromSpeakerOutput(myPlayer);
-
     const synthesizer = new SpeechSDK.SpeechSynthesizer(speechConfig, audioConfig);
+    synthesizerRef.current = synthesizer;
 
-    // Use SSML for best results
+    setTtsStatus('playing');
+
     const ssml = createSSML(text, lang, voiceMap[lang]);
-
     synthesizer.speakSsmlAsync(
       ssml,
-      (result) => {
-        if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
-          console.log("Speech synthesized");
-        } else if (result.reason === SpeechSDK.ResultReason.Canceled) {
-          console.error("Synthesis canceled:", result.errorDetails);
-        }
+      () => {
+        setTtsStatus('idle');
+        setCurrentTTS(null);
         synthesizer.close();
+        synthesizerRef.current = null;
+        playerRef.current = null;
       },
-      (err) => {
-        console.error("Speech synthesis error:", err);
+      () => {
+        setTtsStatus('idle');
+        setCurrentTTS(null);
         synthesizer.close();
+        synthesizerRef.current = null;
+        playerRef.current = null;
       }
     );
-  }
+    }
 
+  const convertQuestiontoFlashcard = (question: QuizQuestion) => {
+    return {
+      question: question.question,
+      answer: question.explanation
+    };
+  };
 
   return (
     <div className="flex flex-col h-screen bg-gradient-to-b from-sky-50 to-indigo-50">
@@ -317,7 +351,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
           {/* Header Right: Actions + Info */}
           <div className="flex flex-wrap items-center gap-2">
             <Button
-              onClick={() => {/* Handle flashcards */}}
+              onClick={() => {setShowFlashcards(true)}}
               variant="secondary"
               size="small"
               className="flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-700 flex-shrink-0"
@@ -390,7 +424,15 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
             {message.type === 'assistant' && (
               <button
                 className="ml-2 p-1 rounded-full hover:bg-gray-100 transition flex-shrink-0"
-                title="Read aloud"
+                title={
+                  currentTTS === message.content
+                    ? ttsStatus === 'playing'
+                      ? "Pause audio"
+                      : ttsStatus === 'paused'
+                      ? "Resume audio"
+                      : "Read aloud"
+                    : "Read aloud"
+                }
                 onClick={() => textToSpeech(message.content, findRightLanguageForTTS(settings.language))}
               >
                 {/* Speaker SVG */}
@@ -414,9 +456,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
         ))}
         <div ref={messagesEndRef} />
       </div>
-
-
-
 
       {/* Input bar */}
       <div className="bg-white border-t p-4">
@@ -462,6 +501,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
           questions={quizQuestions} // Pass generated questions
         />
       )}
+      {showFlashcards && (
+        <FlashcardModal
+          flashcards={quizQuestions.map(convertQuestiontoFlashcard)}
+          onClose={() => setShowFlashcards(false)}
+        />
+      )}
+
     </div>
   );
 };

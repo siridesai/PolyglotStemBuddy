@@ -4,8 +4,6 @@ import Button from './Button';
 import { getTranslation } from '../../data/translations';
 import { ChildSettings } from '../../types';
 
-
-
 interface QuizQuestion {
   question: string;
   options: string[];

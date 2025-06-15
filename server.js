@@ -161,7 +161,7 @@ app.listen(port, () => {
 
 app.get('/getSpeechToken', async (req, res, next) => {
     res.setHeader('Content-Type', 'application/json');
-    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:5173');
+    
 
     if (speechKey === 'paste-your-speech-key-here' || speechRegion === 'paste-your-speech-region-here') {
         res.status(400).send('You forgot to add your speech key or region to the .env file.');
