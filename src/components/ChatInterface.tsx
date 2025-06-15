@@ -14,7 +14,8 @@ import { getTokenOrRefresh } from '../token_util.js';
 import * as SpeechSDK from 'microsoft-cognitiveservices-speech-sdk';
 import { ResultReason } from 'microsoft-cognitiveservices-speech-sdk';
 import FlashcardModal from './ui/FlashcardModal.tsx';
-
+import SummaryModal from './ui/SummaryModal.tsx';
+import { generateSummary } from '../api/generateSummary.ts';
 
 const COOKIE_NAME = 'my_cookie';
 
@@ -30,6 +31,11 @@ interface QuizQuestion {
   explanation: string;
 }
 
+interface Summary {
+  title: string;
+  summaryExplanation: string;
+}
+
 const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -43,6 +49,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
   const synthesizerRef = useRef<SpeechSDK.SpeechSynthesizer | null>(null);
   const [ttsStatus, setTtsStatus] = useState<'idle' | 'playing' | 'paused'>('idle');
   const [currentTTS, setCurrentTTS] = useState<string | null>(null); // Track current message content
+  const [showSummary, setShowSummary] = useState(false);
+  const [summary, setSummary] = useState<Summary | null>(null);
 
   useEffect(() => {
     // Check if the cookie exists
@@ -131,6 +139,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
    onBack();
   }
   
+  
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
@@ -171,7 +180,30 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
         cookies[COOKIE_NAME]
       );
 
-      setQuizQuestions(generatedQuestions);
+  const summaryResult = await generateSummary(
+    assistantMessage.content,
+    threadId, 
+    settings.age, 
+    settings.language, 
+    cookies[COOKIE_NAME]
+  );
+  setShowSummary(false);
+
+  setQuizQuestions(generatedQuestions);
+  // Parse summaryResult if it's a string
+  let data: Summary | null = null;
+  try {
+    data = typeof summaryResult === 'string' ? JSON.parse(summaryResult) : summaryResult;
+  } catch (e) {
+    console.error('Failed to parse summary:', summaryResult);
+  }
+  // Validate and set summary
+  if (data?.title && data?.summaryExplanation) {
+    setSummary(data);
+   
+  } else {
+    console.error('Invalid summary format:', data);
+  }
 
     } catch (error) {
       console.error('Error getting assistant response:', error);
@@ -364,7 +396,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
               <span className="hidden sm:inline">{getTranslation(settings.language, 'generateFlashcards')}</span>
             </Button>
             <Button
-              onClick={() => {/* Summarize */}}
+              onClick={() => setShowSummary(true)}
               variant="secondary"
               size="small"
               className="flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-700 flex-shrink-0"
@@ -507,7 +539,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
           onClose={() => setShowFlashcards(false)}
         />
       )}
-
+      {showSummary && summary && (
+        <SummaryModal 
+          onClose={() => setShowSummary(false)}
+          settings={settings}
+          summary={summary}  // Pass the whole Summary object
+        />
+      )}
     </div>
   );
 };
