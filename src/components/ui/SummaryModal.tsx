@@ -59,7 +59,15 @@ const SummaryModal: React.FC<SummaryModalProps> = ({
     const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
 
     pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-    pdf.save(`${sanitizeFilename(summary.title)}-summary.pdf`);
+
+    // Get today's date and format as YYYY-MM-DD
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const formattedDate = `${yyyy}-${mm}-${dd}`;
+
+    pdf.save(`${sanitizeFilename(summary.title)}-${formattedDate}-summary.pdf`);
   };
 
   // Handle null summary case
