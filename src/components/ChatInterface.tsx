@@ -16,6 +16,7 @@ import { ResultReason } from 'microsoft-cognitiveservices-speech-sdk';
 import FlashcardModal from './ui/FlashcardModal.tsx';
 import SummaryModal from './ui/SummaryModal.tsx';
 import { generateSummary } from '../api/generateSummary.ts';
+import ExitLessonModal from './ui/ExitLessonModal.tsx';
 
 const COOKIE_NAME = 'my_cookie';
 
@@ -51,6 +52,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
   const [currentTTS, setCurrentTTS] = useState<string | null>(null); // Track current message content
   const [showSummary, setShowSummary] = useState(false);
   const [summary, setSummary] = useState<Summary | null>(null);
+  const [exitLessonFeedback, setShowExitLessonFeedback] =  useState(false);
 
   useEffect(() => {
     // Check if the cookie exists
@@ -124,7 +126,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
   }, [messages]);
 
   
- const handleBack = async () => {
+  const handleBack = async () => {
    // Optionally delete the thread if threadId exists
    const threadId = await fetchThreadID(cookies[COOKIE_NAME]);
    if (threadId) {
@@ -138,8 +140,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
    }
    onBack();
   }
-  
-  
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
@@ -414,7 +414,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
               <span className="hidden sm:inline">{getTranslation(settings.language, 'readyForQuiz')}</span>
             </Button>
             <Button
-              onClick={() => {/* Exit lesson */}}
+              onClick={() => setShowExitLessonFeedback(true)}
               variant="secondary"
               size="small"
               className="flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-700 flex-shrink-0"
@@ -544,6 +544,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
           onClose={() => setShowSummary(false)}
           settings={settings}
           summary={summary}  // Pass the whole Summary object
+        />
+      )}
+      {exitLessonFeedback && (
+        <ExitLessonModal
+          onClose={() => setShowExitLessonFeedback(false)}
+          onBack={() => handleBack()}
         />
       )}
     </div>
