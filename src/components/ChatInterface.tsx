@@ -17,6 +17,7 @@ import FlashcardModal from './ui/FlashcardModal.tsx';
 import SummaryModal from './ui/SummaryModal.tsx';
 import { generateSummary } from '../api/generateSummary.ts';
 import ExitLessonModal from './ui/ExitLessonModal.tsx';
+import MermaidDiagram from './ui/MermaidDiagram';
 
 const COOKIE_NAME = 'my_cookie';
 
@@ -166,8 +167,20 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
         id: (Date.now() + 1).toString(),
         type: 'assistant' as const,
         content: response,
-        timestamp: new Date()
+        timestamp: new Date(),
+        mermaidCode: extractMermaidCode(response)
       };
+
+      function extractMermaidCode(text: string): string | undefined {
+        // Match code blocks like ```mermaid ... ```
+        const mermaidRegex = /```mermaid\s*([\s\S]*?)```/m;
+        const match = text.match(mermaidRegex);
+        console.log(text);
+        console.log(match ? match[1].trim() : undefined);
+        return match ? match[1].trim() : undefined;
+    }
+
+
 
       setMessages(prev => [...prev, assistantMessage]);
 
@@ -449,7 +462,17 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
                   : 'bg-white shadow-md text-gray-800'
               }`}
             >
-              <div className="whitespace-pre-wrap">{message.content}</div>
+              {/* Message content without Mermaid code */}
+              <div className="whitespace-pre-wrap">
+                {message.content.replace(/``````/g, '')}
+              </div>
+
+              {/* Mermaid diagram */}
+              {message.mermaidCode && (
+                <div className="mt-4 p-4 bg-white rounded-lg shadow-md">
+                  <MermaidDiagram chart={message.mermaidCode} />
+                </div>
+              )}
             </div>
 
             {/* For assistant: icon after bubble, on the right */}

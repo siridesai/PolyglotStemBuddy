@@ -8,6 +8,7 @@ export interface Message {
   type: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+  mermaidCode?: string; 
 }
 
 export interface Prompt {
