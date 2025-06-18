@@ -162,11 +162,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
      
       const threadId = await fetchThreadID(cookies[COOKIE_NAME]);
       const response = await runAssistant(messageToSend, threadId, settings.age, settings.language, cookies[COOKIE_NAME]);
+      
 
       const assistantMessage = {
         id: (Date.now() + 1).toString(),
         type: 'assistant' as const,
-        content: response,
+        content:  removeMermaidCode(response),
         timestamp: new Date(),
         mermaidCode: extractMermaidCode(response)
       };
@@ -180,7 +181,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
         return match ? match[1].trim() : undefined;
     }
 
-
+      function removeMermaidCode(text: string): string {
+        // Regex to match mermaid code blocks
+        const pattern =  /```mermaid\s*([\s\S]*?)```/m;
+        // Remove mermaid code blocks and trim whitespace
+        return text.replace(pattern, '').trim();
+    }
+     
 
       setMessages(prev => [...prev, assistantMessage]);
 
