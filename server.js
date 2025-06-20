@@ -202,7 +202,7 @@ app.post('/generateSummary', async (req, res) => {
 
     **Response Rules**
     1. Generate title strictly based on the topic in format: "[Topic] - ${formattedDate}" and return in JSON as title
-    2. Generate a summary of the content discussed using ${message} only; return in JSON as summaryExplanation including markdown
+    2. Summarize the entire content discussed ${message}; return in JSON as summaryExplanation including any markdown 
     3. Use ${language} for age ${age}
     4. Retain the mermaid code in ${message}**
     5. Ensure the JSON is not nested inside another JSON object

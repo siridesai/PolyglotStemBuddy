@@ -81,9 +81,9 @@ export const runAssistantBackend = async (message, threadId, age, language = 'en
 
                       Instructions for Every Response:
 
-                     First include a Mermaid diagram that illustrates the concept at the beginning for ${age} age for the first response only**
+                     Include a Mermaid diagram that illustrates the concept only if it is relevant for ${age} age and the first response only**
 
-                      The Mermaid diagram must be inside a markdown code block, labeled with "mermaid".
+                      If mermaid code is present, it  must be inside a markdown code block, labeled with "mermaid".
 
                       Ensure all nodes are defined before they are being used to avoid any syntax errors.
 
