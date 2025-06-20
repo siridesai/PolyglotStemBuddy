@@ -192,6 +192,7 @@ app.post('/generateSummary', async (req, res) => {
     const messages = await assistantClient.beta.threads.messages.list(threadId, {
       order: 'asc'
     });
+    console.log(message);
 
     // Create enhanced instructions
     const instructions = `**User Requirements**
@@ -200,12 +201,13 @@ app.post('/generateSummary', async (req, res) => {
     - Message: ${message}
 
     **Response Rules**
-    1. Generate title in format: "[Topic] - ${formattedDate}" and return in JSON as title
-    2. Create 3-5 paragraph summaryExplanation that is representative of all of ${message}; return in JSON as summaryExplanation
+    1. Generate title strictly based on the topic in format: "[Topic] - ${formattedDate}" and return in JSON as title
+    2. Summarize the entire content discussed ${message}; return in JSON as summaryExplanation including any markdown 
     3. Use ${language} for age ${age}
-    4. Include text-based diagrams/examples
+    4. Retain the mermaid code in ${message}**
     5. Ensure the JSON is not nested inside another JSON object
-    6. Return ONLY raw JSON without any Markdown formatting :
+    6. Exclude the follow up questions asked at the end.
+  
     {
       "title": "...",
       "summaryExplanation": "..."

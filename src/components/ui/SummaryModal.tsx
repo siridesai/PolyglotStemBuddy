@@ -5,6 +5,8 @@ import { getTranslation } from '../../data/translations';
 import { ChildSettings } from '../../types';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
+import MermaidDiagram from './MermaidDiagram';
+import LatexRender from './LatexCodeRender';
 
 interface Summary {
   title: string;
@@ -14,16 +16,21 @@ interface Summary {
 interface SummaryModalProps {
   onClose: () => void;
   settings: ChildSettings;
-  summary: Summary | null; // Allow null in props
+  summary: Summary | null;
 }
 
-const cleanSummary = (raw: string | null): string => {
-  if (!raw) return '';
-  return raw
-    .replace(/Ø<ß|Ø=Üd/g, '')
-    .replace(/\s{2,}/g, ' ')
-    .trim();
-};
+// Extract the first Mermaid code block
+function extractMermaidCode(text: string): string | undefined {
+  const mermaidRegex = /```mermaid\s*([\s\S]*?)```/m;
+  const match = text.match(mermaidRegex);
+  return match ? match[1].trim() : undefined;
+}
+
+// Remove all Mermaid code blocks
+function removeMermaidCode(text: string): string {
+  const pattern = /```mermaid\s*([\s\S]*?)```/m;
+  return text.replace(pattern, '').trim();
+}
 
 const sanitizeFilename = (name: string) =>
   name.replace(/[<>:"/\\|?*\x00-\x1F]/g, '').replace(/\s+/g, '_').slice(0, 50);
@@ -36,8 +43,7 @@ const SummaryModal: React.FC<SummaryModalProps> = ({
   const summaryRef = useRef<HTMLDivElement>(null);
 
   const generatePdf = async () => {
-    if (!summaryRef.current || !summary) return; // Add null check
-
+    if (!summaryRef.current || !summary) return;
     const pdfContent = summaryRef.current.cloneNode(true) as HTMLElement;
     pdfContent.style.fontSize = '14px';
     pdfContent.style.padding = '20px';
@@ -60,7 +66,6 @@ const SummaryModal: React.FC<SummaryModalProps> = ({
 
     pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
 
-    // Get today's date and format as YYYY-MM-DD
     const today = new Date();
     const yyyy = today.getFullYear();
     const mm = String(today.getMonth() + 1).padStart(2, '0');
@@ -70,7 +75,6 @@ const SummaryModal: React.FC<SummaryModalProps> = ({
     pdf.save(`${sanitizeFilename(summary.title)}-${formattedDate}-summary.pdf`);
   };
 
-  // Handle null summary case
   if (!summary) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
@@ -83,7 +87,9 @@ const SummaryModal: React.FC<SummaryModalProps> = ({
     );
   }
 
-  const cleanedSummary = cleanSummary(summary.summaryExplanation);
+  // Extract Mermaid diagram and cleaned summary text
+  const mermaidCode = extractMermaidCode(summary.summaryExplanation);
+  const textWithoutMermaid = removeMermaidCode(summary.summaryExplanation);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
@@ -106,48 +112,48 @@ const SummaryModal: React.FC<SummaryModalProps> = ({
               <h3 className="text-xl font-semibold mb-4 text-gray-900">
                 {summary.title}
               </h3>
-              {cleanedSummary && (
-                <div
-                  className="summary-content"
-                  style={{
-                    fontFamily: '"Segoe UI Emoji", "Noto Color Emoji", "Apple Color Emoji", Arial, Helvetica, sans-serif',
-                    lineHeight: 1.6,
-                    whiteSpace: 'pre-wrap',
-                    color: '#1e293b',
-                  }}
-                  dangerouslySetInnerHTML={{ __html: cleanedSummary }}
-                />
+              {/* Mermaid diagram */}
+              {mermaidCode && (
+                <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+                  <MermaidDiagram chart={mermaidCode} />
+                </div>
               )}
+              {/* Text with LaTeX equations */}
+              <div
+                className="summary-content"
+                style={{
+                  fontFamily: '"Segoe UI Emoji", "Noto Color Emoji", "Apple Color Emoji", Arial, Helvetica, sans-serif',
+                  lineHeight: 1.6,
+                  whiteSpace: 'pre-wrap',
+                  color: '#1e293b',
+                }}
+              >
+                <LatexRender content={textWithoutMermaid} />
+              </div>
             </div>
 
-            {cleanedSummary ? (
-              <div className="flex justify-end gap-2 mt-4">
-                <Button
-                  onClick={generatePdf}
-                  variant="primary"
-                  className="flex items-center gap-2"
+            <div className="flex justify-end gap-2 mt-4">
+              <Button
+                onClick={generatePdf}
+                variant="primary"
+                className="flex items-center gap-2"
+              >
+                <span>{getTranslation(settings.language, 'downloadPDF') || 'Download PDF'}</span>
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
                 >
-                  <span>{getTranslation(settings.language, 'downloadPDF') || 'Download PDF'}</span>
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    />
-                  </svg>
-                </Button>
-              </div>
-            ) : (
-              <div className="text-center text-gray-500 py-8">
-                {getTranslation(settings.language, 'noSummaryAvailable') || 'No summary available right now.'}
-              </div>
-            )}
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+              </Button>
+            </div>
           </div>
         </div>
       </div>
