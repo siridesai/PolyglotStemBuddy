@@ -8,23 +8,16 @@ export const generateSummary = async (
   threadId: string,
   age: number,
   language: string = 'en',
-  sessionId: string = '1234'
+  sessionId: string = '1234',
+  signal?: AbortSignal // Add abort signal
 ): Promise<Summary> => {
   try {
     const response = await fetch('/api/generateSummary', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Session-ID': sessionId
-      },
-      body: JSON.stringify({
-        message: message,
-        threadId: threadId,
-        age: age.toString(),
-        language
-      }),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message, threadId, age, language, sessionId }),
+      signal // Pass to fetch
     });
-
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }

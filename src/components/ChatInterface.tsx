@@ -15,10 +15,10 @@ import * as SpeechSDK from 'microsoft-cognitiveservices-speech-sdk';
 import { ResultReason } from 'microsoft-cognitiveservices-speech-sdk';
 import FlashcardModal from './ui/FlashcardModal.tsx';
 import SummaryModal from './ui/SummaryModal.tsx';
-import { generateSummary } from '../api/generateSummary.ts';
 import ExitLessonModal from './ui/ExitLessonModal.tsx';
 import MermaidDiagram from './ui/MermaidDiagram';
 import LatexRender from './ui/LatexCodeRender.tsx';
+
 
 const COOKIE_NAME = 'my_cookie';
 
@@ -34,10 +34,6 @@ interface QuizQuestion {
   explanation: string;
 }
 
-interface Summary {
-  title: string;
-  summaryExplanation: string;
-}
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -53,8 +49,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
   const [ttsStatus, setTtsStatus] = useState<'idle' | 'playing' | 'paused'>('idle');
   const [currentTTS, setCurrentTTS] = useState<string | null>(null); // Track current message content
   const [showSummary, setShowSummary] = useState(false);
-  const [summary, setSummary] = useState<Summary | null>(null);
+
   const [exitLessonFeedback, setShowExitLessonFeedback] =  useState(false);
+  const [currentRunId, setCurrentRunId] = useState<string | null>(null);
 
   useEffect(() => {
     // Check if the cookie exists
@@ -113,6 +110,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
       welcomeMessage =`Hello! What do you want to learn today?`
     };
 
+    
+
     setMessages([
       {
         id: '1',
@@ -158,22 +157,21 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
+    
 
     try {
      
       const threadId = await fetchThreadID(cookies[COOKIE_NAME]);
-      const response = await runAssistant(messageToSend, threadId, settings.age, settings.language, cookies[COOKIE_NAME]);
-
-
-     
-      
+      const { result, runId } = await runAssistant(messageToSend, threadId, settings.age, settings.language, cookies[COOKIE_NAME]);
+      setCurrentRunId(runId);
+      console.log(result);
 
       const assistantMessage = {
         id: (Date.now() + 1).toString(),
         type: 'assistant' as const,
-        content:  removeMermaidCode(response),
+        content:  removeMermaidCode(result),
         timestamp: new Date(),
-        mermaidCode: extractMermaidCode(response)
+        mermaidCode: extractMermaidCode(result)
       };
 
       function extractMermaidCode(text: string): string | undefined {
@@ -206,19 +204,20 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
 
    
 
-  const summaryResult = await generateSummary(
-    response, // Pass entire conversation
+  /*const summaryResult = await generateSummary(
+    result, // Pass entire conversation
     threadId,
     settings.age,
     settings.language,
     cookies[COOKIE_NAME]
-  );     
+  ); 
+  */    
 
-  setShowSummary(false);
+  //setShowSummary(false);
 
   setQuizQuestions(generatedQuestions);
   // Parse summaryResult if it's a string
-  let data: Summary | null = null;
+  /*let data: Summary | null = null;
   try {
     data = typeof summaryResult === 'string' ? JSON.parse(summaryResult) : summaryResult;
   } catch (e) {
@@ -243,8 +242,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
       };
 
       setMessages(prev => [...prev, errorMessage]);
+      */
     } finally {
       setIsLoading(false);
+      
+      setCurrentRunId(null); // Clear runId when done
     }
 
   }; 
@@ -578,13 +580,16 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
           onClose={() => setShowFlashcards(false)}
         />
       )}
-      {showSummary && summary && (
-        <SummaryModal 
-          onClose={() => setShowSummary(false)}
-          settings={settings}
-          summary={summary}  // Pass the whole Summary object
-        />
-      )}
+      {showSummary && (
+      <SummaryModal 
+        onClose={() => setShowSummary(false)}
+        settings={settings}
+        messages={messages}
+        threadId={threadId}
+        cookie={cookies[COOKIE_NAME]}
+        
+      /> )}
+    
       {exitLessonFeedback && (
         <ExitLessonModal
           onClose={() => setShowExitLessonFeedback(false)}

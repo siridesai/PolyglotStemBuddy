@@ -37,6 +37,7 @@ type TranslationKey =
   | 'generatingSummary'
   | 'downloadPDF'
   | 'noSummaryAvailable'
+  
   ;
 
 type Translations = {

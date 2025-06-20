@@ -17,13 +17,25 @@ const speechRegion = process.env.VITE_SPEECH_REGION;
 app.use(cors());
 app.use(express.json());
 
+const sessionRunMap = new Map();
+
 app.post('/runAssistant', async (req, res) => {
     try {
-        //const sessionId = req.sessionID;
-        const {  message,threadId, age, language, sessionId} = req.body;
-        console.log("Session id in server.js is: " + sessionId) ; 
-        const result = await runAssistantBackend(message,threadId, age, language, sessionId);
-        res.json({ result });
+        const { message, threadId, age, language, sessionId } = req.body;
+        console.log("Session id in server.js is: " + sessionId);
+        
+        
+        // Modify runAssistantBackend to return both result and runId
+        const { result, runId } = await runAssistantBackend(
+            message,
+            threadId,
+            age,
+            language,
+            sessionId
+        );
+        sessionRunMap.set(sessionId, { threadId, runId });
+        
+        res.json({ result, runId }); // Return both values
     } catch (error) {
         console.error("Backend API error:", error);
         res.status(500).json({ error: error.message });
@@ -173,7 +185,7 @@ app.get('/getSpeechToken', async (req, res, next) => {
 
 app.post('/generateSummary', async (req, res) => {
   try {
-    const { message, threadId, age, language } = req.body;
+    const { message, threadId, age, language, sessionId } = req.body;
 
     const today = new Date();
     const yyyy = today.getFullYear();
@@ -181,12 +193,42 @@ app.post('/generateSummary', async (req, res) => {
     const dd = String(today.getDate()).padStart(2, '0');
     const formattedDate = `${yyyy}-${mm}-${dd}`;
 
-    if (!threadId || !language) {
-      return res.status(400).json({ error: 'Missing required parameters.' });
-    }
+    console.log(`[generateSummary] sessionId: ${sessionId}, threadId: ${threadId}`);
 
+    // Validate thread exists
     const assistantClient = getAssistantClient();
     const assistant = getAssistant();
+    try {
+      await assistantClient.beta.threads.retrieve(threadId);
+    } catch (err) {
+      return res.status(404).json({ error: `Thread ${threadId} not found` });
+    }
+
+    // Check for active run - handle undefined case
+    const runInfo = sessionRunMap.get(sessionId);
+    console.log(`[generateSummary] runInfo: ${JSON.stringify(runInfo)}`);
+    
+    if (runInfo && runInfo.threadId === threadId) {
+      try {
+        // Check run status before cancellation
+        const runStatus = await assistantClient.beta.threads.runs.retrieve(
+          runInfo.threadId, 
+          runInfo.runId
+        );
+        
+        if (['queued', 'in_progress'].includes(runStatus.status)) {
+          console.log(`Cancelling active run ${runInfo.runId}`);
+          await assistantClient.beta.threads.runs.cancel(
+            runInfo.threadId, 
+            runInfo.runId
+          );
+          // Wait for cancellation to propagate
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+      } catch (cancelError) {
+        console.warn('Run cancellation failed (possibly already completed):', cancelError.message);
+      }
+    }
 
     // Get conversation context
     const messages = await assistantClient.beta.threads.messages.list(threadId, {
@@ -202,9 +244,8 @@ app.post('/generateSummary', async (req, res) => {
 
     **Response Rules**
     1. Generate title strictly based on the topic in format: "[Topic] - ${formattedDate}" and return in JSON as title
-    2. Summarize the entire content discussed ${message}; return in JSON as summaryExplanation including any markdown 
+    2. Display entire content strictly discussed ${message}; return in JSON as summaryExplanation including any markdown 
     3. Use ${language} for age ${age}
-    4. Retain the mermaid code in ${message}**
     5. Ensure the JSON is not nested inside another JSON object
     6. Exclude the follow up questions asked at the end.
   
@@ -225,6 +266,8 @@ app.post('/generateSummary', async (req, res) => {
         language_constraints: `${language}-only`
       }
     });
+    sessionRunMap.set(sessionId, { threadId, runId: run.id });
+    console.log(`Set new run in sessionRunMap: ${sessionId} -> ${run.id}`);
 
     // Poll for completion
     let runStatus;
@@ -249,7 +292,7 @@ app.post('/generateSummary', async (req, res) => {
     try {
       // Parse JSON response
       const summary = JSON.parse(lastMessage.content[0].text.value);
-      console.log(summary);
+      console.log("SUmmary is " , summary);
       return res.json(summary);
     } catch (error) {
       // Fallback for text-based response
@@ -261,7 +304,40 @@ app.post('/generateSummary', async (req, res) => {
     }
 
   } catch (error) {
-    console.error('Error in /generateSummary:', error);
-    return res.status(500).json({ error: error.message || 'Internal server error.' });
+    return res.json({
+    title: "Summary Error",
+    summaryExplanation: "Could not generate summary. Please try again."
+  });
+  }
+});
+
+app.post('/cancelAssistantRun', async (req, res) => {
+  const { threadId, runId, sessionId } = req.body;
+  
+  try {
+    const assistantsClient = getAssistantClient();
+    
+    // 1. Check if run exists and is cancellable
+    let runStatus;
+    try {
+      runStatus = await assistantsClient.beta.threads.runs.retrieve(threadId, runId);
+    } catch (err) {
+      return res.json({ 
+        success: true, 
+        message: 'Run not found - already completed or expired' 
+      });
+    }
+
+    // 2. Only cancel if run is active
+    if (['queued', 'in_progress', 'requires_action'].includes(runStatus.status)) {
+      await assistantsClient.beta.threads.runs.cancel(threadId, runId);
+    }
+    
+    // 3. Always clear from session map
+    sessionRunMap.delete(sessionId);
+    
+    return res.json({ success: true });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
   }
 });
