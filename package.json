@@ -21,6 +21,7 @@
     "dotenv": "^16.3.1",
     "express": "^4.21.2",
     "html2canvas": "^1.4.1",
+    "implement-js": "^0.0.31",
     "js-cookie": "^3.0.5",
     "jspdf": "^3.0.1",
     "katex": "^0.16.22",
@@ -34,7 +35,7 @@
     "react-katex": "^3.1.0",
     "react-router-dom": "^7.6.2",
     "reactstrap": "^9.2.0",
-    "universal-cookie": "^4.0.4",
+    "universal-cookie": "^8.0.1",
     "web-vitals": "^3.3.2"
   },
   "devDependencies": {
@@ -52,7 +53,7 @@
     "postcss": "^8.4.31",
     "tailwindcss": "^3.3.5",
     "typescript": "^5.2.2",
-    "vite": "^5.0.0",
-    "vite-plugin-node-polyfills": "^0.17.0"
+    "vite": "^6.3.5",
+    "vite-plugin-node-polyfills": "^0.23.0"
   }
 }
