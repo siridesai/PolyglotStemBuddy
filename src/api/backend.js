@@ -89,12 +89,13 @@ export const runAssistantBackend = async (
       Instructions for Every Response:
 
       Include a Mermaid diagram that illustrates the concept only if it is relevant for ${age} age and the first response only**
+      All explanantion should be in ${language} ONLY. Use scientific vocabulary**.
 
       If mermaid code is present, it must be inside a markdown code block, labeled with "mermaid".
 
       Ensure all nodes are defined before they are being used to avoid any syntax errors.
 
-      All labels should be enclosed within double quotes and should be in ${language} language.
+      All labels should be enclosed within double quotes and should be in ${language} language**
 
       In every Mermaid diagram, always use classDef and class to add pastel background colors and style nodes. 
       Assign a unique class to each node or group of nodes and define its style using pastel colors. One class assignment per line**
@@ -111,7 +112,7 @@ export const runAssistantBackend = async (
 
       In the end, offer age-appropriate follow-up questions related to the concept for ${age}, with questions becoming more challenging and open-ended for older students**
 
-      If the topic is not directly related to Science, Technology, Engineering, or Math, kindly state that the topic is irrelevant to STEM and prompt the user to bring the conversation back to something STEM-related.`,
+      If the topic is not directly related to Science (phsyics, chemistry, biology, computer science, etc.), Technology, Engineering, or Math, kindly state that the topic is irrelevant to STEM and prompt the user to bring the conversation back to something STEM-related.`,
       model: assistant.model
     });
 

@@ -52,6 +52,8 @@ app.post('/generateQuestions', async (req, res) => {
 
     const assistantClient = getAssistantClient();
     const assistant = getAssistant(); // <-- Get the assistant object
+    const contextString = message.map(m => m.content).join('\n\n');
+
 
     // 3. Create a run to generate quiz questions in the same thread
     const run = await assistantClient.beta.threads.runs.create(threadId, {
@@ -61,11 +63,11 @@ app.post('/generateQuestions', async (req, res) => {
         instructions: ` **User Requirements**
         - Age group: ${age} years old
         - Language: ${language}
-        - Context: ${message}
+        - Context: ${contextString}
         
         **Response Rules**
-        1. Create 3 multiple-choice questions that directly relate to and are EXCLUSIVELY ABOUT: "${message}"
-        2. Use ${language} suitable for age ${age}
+        1. Create 3 multiple-choice questions that directly relate to and are EXCLUSIVELY ABOUT ALL OF: "${contextString}". The questions **cannot** be subjective; for example, do not ask any questions like, "What's your favorite color?". Ensure that the questions generated are not the same as the ones that are asked by the chatbot in ${contextString}. **
+        2. Use ${language} suitable for age ${age}.
         3. Questions should be strictly age appropriate only relevant to ${age}.
         4. Include fun facts or interesting information related to the questions.
         5. Format response as: 
@@ -81,7 +83,7 @@ app.post('/generateQuestions', async (req, res) => {
         type: "code_interpreter" // Required for JSON parsing
     }],
     metadata: {
-        age_optimization: age,
+        age_optimization: age.toString(),
         language_constraints: `${language}-only`,
         strict_context: "enabled"
         
@@ -106,11 +108,14 @@ app.post('/generateQuestions', async (req, res) => {
       .pop();
 
     let quizQuestions = [];
+    // Backend: /generateQuestions endpoint
     if (lastMessage) {
       try {
-        const content = lastMessage.content[0]?.text?.value || '';
+        // Correct content extraction:
+        const content = lastMessage.content.find(c => c.type === 'text')?.text?.value || '';
         quizQuestions = JSON.parse(content);
       } catch (err) {
+        console.error('JSON parse error:', err, 'Content:', content);
         return res.status(500).json({ error: 'Failed to parse quiz JSON.' });
       }
     }
@@ -244,10 +249,12 @@ app.post('/generateSummary', async (req, res) => {
 
     **Response Rules**
     1. Generate title strictly based on the topic in format: "[Topic] - ${formattedDate}" and return in JSON as title
-    2. Display entire content strictly discussed ${message}; return in JSON as summaryExplanation including any markdown 
+    2. Display entire content strictly discussed ${message}; return in JSON as summaryExplanation including any markdown **
     3. Use ${language} for age ${age}
     5. Ensure the JSON is not nested inside another JSON object
     6. Exclude the follow up questions asked at the end.
+    7. Remember to include diagrams in ${message}. Only include the extracted, rendered mermaid diageam, not the mermaid code. **
+    8. Remember to cover every key topic in the discussion. (For example, **do not** just talk about the first or last message - summarize the entire conversation.)
   
     {
       "title": "...",
@@ -262,7 +269,7 @@ app.post('/generateSummary', async (req, res) => {
       instructions: instructions,
       tools: [{ type: "code_interpreter" }],
       metadata: {
-        age_optimization: age,
+        age_optimization: age.toString(),
         language_constraints: `${language}-only`
       }
     });

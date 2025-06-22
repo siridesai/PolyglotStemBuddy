@@ -70,7 +70,7 @@ const SummaryModal: React.FC<SummaryModalProps> = ({
           .map(msg => {
             let text = `${msg.type === 'user' ? 'User' : 'Assistant'}: ${msg.content}`;
             if (msg.mermaidCode) {
-              text += `\nMermaid Diagram:\n\`\`\`mermaid\n${msg.mermaidCode}\n\`\`\``;
+              text += `\`\`mermaid\n${msg.mermaidCode}\n\`\`\``;
             }
             return text;
           })

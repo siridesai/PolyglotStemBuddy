@@ -6,9 +6,8 @@ import Button from './ui/Button';
 import QuizModal from './ui/QuizModal';
 import { fetchThreadID } from '../api/fetchThreadID.ts';
 import { runAssistant } from '../api/runAssistant';
-import { generateQuestions } from '../api/generateQuestions';
 import { useCookies } from 'react-cookie';
-import { availableLanguages } from '../data/languages';
+import { availableLanguages, languageGroups } from '../data/languages';
 import { deleteThread } from '../api/deleteThread';
 import { getTokenOrRefresh } from '../token_util.js';
 import * as SpeechSDK from 'microsoft-cognitiveservices-speech-sdk';
@@ -18,6 +17,7 @@ import SummaryModal from './ui/SummaryModal.tsx';
 import ExitLessonModal from './ui/ExitLessonModal.tsx';
 import MermaidDiagram from './ui/MermaidDiagram';
 import LatexRender from './ui/LatexCodeRender.tsx';
+import AgeSelector from './ui/AgeSelector.tsx';
 
 
 const COOKIE_NAME = 'my_cookie';
@@ -52,6 +52,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
 
   const [exitLessonFeedback, setShowExitLessonFeedback] =  useState(false);
   const [currentRunId, setCurrentRunId] = useState<string | null>(null);
+
+  let welcomeMessage = '';
+
+  
+  const buttonsEnabled = hasUserStartedConversation(messages) && !isLoading;;
+
+  console.log(settings.age);
+  console.log(settings.language);
 
   useEffect(() => {
     // Check if the cookie exists
@@ -96,7 +104,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
 
   useEffect(() => {
     const lang = settings.language;
-    let welcomeMessage = '';
+    
     if (lang === 'es') {
       welcomeMessage = `¡Hola! ¿Qué quieres aprender hoy?`
     } else if (lang === 'hi') {
@@ -193,56 +201,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
 
       setMessages(prev => [...prev, assistantMessage]);
 
-      // Generate questions from assistant response
-      const generatedQuestions = await generateQuestions(
-        assistantMessage.content,
-        threadId, 
-        settings.age, 
-        settings.language, 
-        cookies[COOKIE_NAME]
-      );
-
-   
-
-  /*const summaryResult = await generateSummary(
-    result, // Pass entire conversation
-    threadId,
-    settings.age,
-    settings.language,
-    cookies[COOKIE_NAME]
-  ); 
-  */    
-
-  //setShowSummary(false);
-
-  setQuizQuestions(generatedQuestions);
-  // Parse summaryResult if it's a string
-  /*let data: Summary | null = null;
-  try {
-    data = typeof summaryResult === 'string' ? JSON.parse(summaryResult) : summaryResult;
-  } catch (e) {
-    console.error('Failed to parse summary:', summaryResult);
-  }
-  // Validate and set summary
-  if (data?.title && data?.summaryExplanation) {
-    setSummary(data);
-   
-  } else {
-    console.error('Invalid summary format:', data);
-  }
-
-    } catch (error) {
-      console.error('Error getting assistant response:', error);
-      
-      const errorMessage = {
-        id: (Date.now() + 1).toString(),
-        type: 'assistant' as const,
-        content: 'I apologize, but I encountered an error. Please try again.',
-        timestamp: new Date()
-      };
-
-      setMessages(prev => [...prev, errorMessage]);
-      */
     } finally {
       setIsLoading(false);
       
@@ -250,6 +208,29 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
     }
 
   }; 
+
+  function hasUserStartedConversation(messages: Message[]) {
+
+    const normalizedWelcome = welcomeMessage.trim().toLowerCase();
+
+    const hasUser = messages.some(
+      m =>
+        m.type === 'user' &&
+        m.content.trim().toLowerCase() !== normalizedWelcome
+    );
+
+    const hasAssistant = messages.some(
+      m =>
+        m.type === 'assistant' &&
+        m.content.trim().toLowerCase() !== normalizedWelcome
+    );
+
+    return hasUser && hasAssistant;
+
+  
+
+  
+}
 
   async function sttFromMic() {
       const tokenObj = await getTokenOrRefresh();
@@ -322,6 +303,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
   }
 
   async function textToSpeech(text: string, lang: string) {
+
+     text = text.replace(/[^\p{L}\p{N}\p{P}\p{Z}\p{M}]/gu, '');
     // If the same message is playing, pause or resume
     if (currentTTS === text && playerRef.current) {
       if (ttsStatus === 'playing') {
@@ -383,12 +366,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
     );
     }
 
-  const convertQuestiontoFlashcard = (question: QuizQuestion) => {
-    return {
-      question: question.question,
-      answer: question.explanation
-    };
-  };
+
 
   return (
     <div className="flex flex-col h-screen bg-gradient-to-b from-sky-50 to-indigo-50">
@@ -412,10 +390,15 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
           {/* Header Right: Actions + Info */}
           <div className="flex flex-wrap items-center gap-2">
             <Button
-              onClick={() => {setShowFlashcards(true)}}
+              onClick={() => { setShowFlashcards(true); }}
               variant="secondary"
               size="small"
-              className="flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-700 flex-shrink-0"
+              disabled={!buttonsEnabled}
+              className={`flex items-center gap-1 flex-shrink-0
+                ${buttonsEnabled
+                  ? "bg-blue-50 hover:bg-blue-100 text-blue-700"
+                  : "bg-gray-200 text-gray-400 cursor-not-allowed"}
+              `}
             >
               {/* Flashcards SVG */}
               <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -428,7 +411,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
               onClick={() => setShowSummary(true)}
               variant="secondary"
               size="small"
-              className="flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-700 flex-shrink-0"
+              disabled={!buttonsEnabled}
+              className={`flex items-center gap-1 flex-shrink-0
+                ${buttonsEnabled
+                  ? "bg-blue-50 hover:bg-blue-100 text-blue-700"
+                  : "bg-gray-200 text-gray-400 cursor-not-allowed"}
+              `}
             >
               <BookOpen className="w-4 h-4" />
               <span className="hidden sm:inline">{getTranslation(settings.language, 'summarize')}</span>
@@ -437,7 +425,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
               onClick={() => setShowQuiz(true)}
               variant="secondary"
               size="small"
-              className="flex items-center gap-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 flex-shrink-0"
+              disabled={!buttonsEnabled}
+              className={`flex items-center gap-1 flex-shrink-0
+                ${buttonsEnabled
+                  ? "bg-emerald-50 hover:bg-emerald-100 text-emerald-700"
+                  : "bg-gray-200 text-gray-400 cursor-not-allowed"}
+              `}
             >
               <Brain className="w-4 h-4" />
               <span className="hidden sm:inline">{getTranslation(settings.language, 'readyForQuiz')}</span>
@@ -571,13 +564,18 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
         <QuizModal
           onClose={() => setShowQuiz(false)}
           settings={settings}
-          questions={quizQuestions} // Pass generated questions
+          messages={messages}
+          threadId={threadId}
+          cookie={cookies[COOKIE_NAME]}
         />
       )}
       {showFlashcards && (
         <FlashcardModal
-          flashcards={quizQuestions.map(convertQuestiontoFlashcard)}
           onClose={() => setShowFlashcards(false)}
+          settings={settings}
+          messages={messages}
+          threadId={threadId}
+          cookie={cookies[COOKIE_NAME]}
         />
       )}
       {showSummary && (
