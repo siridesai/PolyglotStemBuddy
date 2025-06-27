@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { ChildSettings } from '../types';
-import { availableLanguages } from '../data/languages';
+import { ChildSettings } from '../../utils/assistantMessageType.ts';
+import { availableLanguages } from '../../data/languages';
 import { Sparkles } from 'lucide-react';
-import Button from './ui/Button';
-import AgeSelector from './ui/AgeSelector';
-import LanguageSelector from './ui/LanguageSelector';
-import { getTranslation } from '../data/translations';
+import Button from './Button';
+import AgeSelector from './AgeSelector';
+import LanguageSelector from './LanguageSelector';
+import { getTranslation } from '../../data/translations';
 
 interface LandingPageProps {
   onStartLearning: (settings: ChildSettings) => void;

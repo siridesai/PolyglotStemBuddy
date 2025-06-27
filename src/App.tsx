@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
-import { ChildSettings } from './types';
-import { Sparkles } from 'lucide-react';
-import LandingPage from './components/LandingPage';
-import ChatInterface from './components/ChatInterface';
+import { useState } from 'react';
+import { ChildSettings } from './utils/assistantMessageType.ts';
+import LandingPage from './components/ui/LandingPage';
+import ChatInterface from './components/ui/ChatInterface';
 
 function App() {
   const [settings, setSettings] = useState<ChildSettings | null>(null);

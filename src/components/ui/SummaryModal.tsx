@@ -2,12 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
-import { ChildSettings, Message } from '../../types';
+import { ChildSettings, Message } from '../../utils/assistantMessageType.ts';
 import { getTranslation } from '../../data/translations';
 import Button from './Button';
 import MermaidDiagram from './MermaidDiagram';
 import LatexRender from './LatexCodeRender';
 import { generateSummary } from '../../api/generateSummary';
+import { extractMermaidCode, removeMermaidCode } from '../../utils/mermaidCodeUtils';
 
 interface Summary {
   title: string;
@@ -26,22 +27,6 @@ interface SummaryModalProps {
 const sanitizeFilename = (name: string) =>
   name.replace(/[<>:"/\\|?*\x00-\x1F]/g, '').replace(/\s+/g, '_').slice(0, 50);
 
- function extractMermaidCode(text: string): string | undefined {
-        // Match code blocks like ```mermaid ... ```
-        const mermaidRegex = /```mermaid\s*([\s\S]*?)```/m;
-        const match = text.match(mermaidRegex);
-        console.log(text);
-        console.log(match ? match[1].trim() : undefined);
-        return match ? match[1].trim() : undefined;
-    }
-
-      function removeMermaidCode(text: string): string {
-        // Regex to match mermaid code blocks
-        const pattern =  /```mermaid\s*([\s\S]*?)```/m;
-        // Remove mermaid code blocks and trim whitespace
-        return text.replace(pattern, '').trim();
-    }
-
 const SummaryModal: React.FC<SummaryModalProps> = ({
   onClose,
   settings,
@@ -53,17 +38,17 @@ const SummaryModal: React.FC<SummaryModalProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const summaryRef = useRef<HTMLDivElement>(null);
-  const abortControllerRef = useRef<AbortController | null>(null);
+  const hasFetched = useRef(false);
+  
 
   useEffect(() => {
-    abortControllerRef.current = new AbortController();
-    const signal = abortControllerRef.current.signal;
+    if (hasFetched.current) return;
+    hasFetched.current = true;
 
     const fetchSummary = async () => {
       setLoading(true);
       setError(null);
 
-      
 
       try {
         const conversationText = messages
@@ -83,10 +68,7 @@ const SummaryModal: React.FC<SummaryModalProps> = ({
           settings.age,
           settings.language,
           cookie,
-          signal // Pass abort signal to API
         );
-
-        if (signal.aborted) return;
 
         // Parse and validate response
         let data: Summary | null = null;
@@ -108,15 +90,13 @@ const SummaryModal: React.FC<SummaryModalProps> = ({
           console.error('Summary generation failed:', err);
         }
       } finally {
-        if (!signal.aborted) setLoading(false);
+        setLoading(false);
       }
     };
 
     fetchSummary();
 
-    return () => {
-      abortControllerRef.current?.abort();
-    };
+    return () => {};
   }, [messages, threadId, settings, cookie]);
 
   const generatePdf = async () => {
@@ -161,8 +141,6 @@ const SummaryModal: React.FC<SummaryModalProps> = ({
 
   const mermaidCode = summary ? extractMermaidCode(summary.summaryExplanation) : undefined;
   const textWithoutMermaid = summary ? removeMermaidCode(summary.summaryExplanation) : '';
-
-  console.log(mermaidCode);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">

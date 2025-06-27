@@ -1,3 +1,4 @@
+
 export const runAssistant = async (
   message: string,
   threadId: string,
@@ -16,8 +17,7 @@ export const runAssistant = async (
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const data = await response.json();
-    console.log("API response in runAssistant:", data);
+    const data = await response.json();;
     return { result: data.result, runId: data.runId };
   } catch (error) {
     console.error('Error calling backend API:', error);

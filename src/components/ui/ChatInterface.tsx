@@ -1,37 +1,29 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Message, ChildSettings } from '../types';
-import { getTranslation } from '../data/translations';
+import { Message, ChildSettings } from '../../utils/assistantMessageType.ts';
+import { getTranslation } from '../../data/translations.ts';
 import { ArrowLeft, Send, BookOpen, Brain } from 'lucide-react';
-import Button from './ui/Button';
-import QuizModal from './ui/QuizModal';
-import { fetchThreadID } from '../api/fetchThreadID.ts';
-import { runAssistant } from '../api/runAssistant';
+import Button from './Button.tsx';
+import QuizModal from './QuizModal.tsx';
+import { fetchThreadID } from '../../api/fetchThreadID.ts';
+import { runAssistant } from '../../api/runAssistant.ts';
 import { useCookies } from 'react-cookie';
-import { availableLanguages, languageGroups } from '../data/languages';
-import { deleteThread } from '../api/deleteThread';
-import { getTokenOrRefresh } from '../token_util.js';
+import { availableLanguages } from '../../data/languages.ts';
+import { deleteThread } from '../../api/deleteThread.ts';
+import { getTokenOrRefresh } from '../../utils/speechTokenUtils.js';
 import * as SpeechSDK from 'microsoft-cognitiveservices-speech-sdk';
 import { ResultReason } from 'microsoft-cognitiveservices-speech-sdk';
-import FlashcardModal from './ui/FlashcardModal.tsx';
-import SummaryModal from './ui/SummaryModal.tsx';
-import ExitLessonModal from './ui/ExitLessonModal.tsx';
-import MermaidDiagram from './ui/MermaidDiagram';
-import LatexRender from './ui/LatexCodeRender.tsx';
-import AgeSelector from './ui/AgeSelector.tsx';
-
+import FlashcardModal from './FlashcardModal.tsx';
+import SummaryModal from './SummaryModal.tsx';
+import ExitLessonModal from './ExitLessonModal.tsx';
+import MermaidDiagram from './MermaidDiagram.tsx';
+import LatexRender from './LatexCodeRender.tsx';
+import { extractMermaidCode, removeMermaidCode } from '../../utils/mermaidCodeUtils.ts';
 
 const COOKIE_NAME = 'my_cookie';
 
 interface ChatInterfaceProps {
   settings: ChildSettings;
   onBack: () => void;
-}
-
-interface QuizQuestion {
-  question: string;
-  options: string[];
-  correctAnswer: number;
-  explanation: string;
 }
 
 
@@ -41,7 +33,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
   const [showQuiz, setShowQuiz] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [cookies, setCookie, removeCookie] = useCookies([COOKIE_NAME]);
-  const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
   const [threadId, setThreadId] = useState<string>('');
   const playerRef = useRef<SpeechSDK.SpeakerAudioDestination | null>(null);
   const [showFlashcards, setShowFlashcards] = useState(false);
@@ -49,6 +40,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
   const [ttsStatus, setTtsStatus] = useState<'idle' | 'playing' | 'paused'>('idle');
   const [currentTTS, setCurrentTTS] = useState<string | null>(null); // Track current message content
   const [showSummary, setShowSummary] = useState(false);
+  const [recording, setRecording] = useState(false);
 
   const [exitLessonFeedback, setShowExitLessonFeedback] =  useState(false);
   const [currentRunId, setCurrentRunId] = useState<string | null>(null);
@@ -58,8 +50,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
   
   const buttonsEnabled = hasUserStartedConversation(messages) && !isLoading;;
 
-  console.log(settings.age);
-  console.log(settings.language);
 
   useEffect(() => {
     // Check if the cookie exists
@@ -172,7 +162,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
       const threadId = await fetchThreadID(cookies[COOKIE_NAME]);
       const { result, runId } = await runAssistant(messageToSend, threadId, settings.age, settings.language, cookies[COOKIE_NAME]);
       setCurrentRunId(runId);
-      console.log(result);
+  
 
       const assistantMessage = {
         id: (Date.now() + 1).toString(),
@@ -181,23 +171,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
         timestamp: new Date(),
         mermaidCode: extractMermaidCode(result)
       };
-
-      function extractMermaidCode(text: string): string | undefined {
-        // Match code blocks like ```mermaid ... ```
-        const mermaidRegex = /```mermaid\s*([\s\S]*?)```/m;
-        const match = text.match(mermaidRegex);
-        console.log(text);
-        console.log(match ? match[1].trim() : undefined);
-        return match ? match[1].trim() : undefined;
-    }
-
-      function removeMermaidCode(text: string): string {
-        // Regex to match mermaid code blocks
-        const pattern =  /```mermaid\s*([\s\S]*?)```/m;
-        // Remove mermaid code blocks and trim whitespace
-        return text.replace(pattern, '').trim();
-    }
-      
 
       setMessages(prev => [...prev, assistantMessage]);
 
@@ -233,6 +206,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
 }
 
   async function sttFromMic() {
+      setRecording(true); // Start recording (mic turns red)
       const tokenObj = await getTokenOrRefresh();
       const speechConfig = SpeechSDK.SpeechConfig.fromAuthorizationToken(tokenObj.authToken, tokenObj.region);
       if (settings.language == 'es') {
@@ -257,6 +231,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
       console.log('Listening...');
 
       recognizer.recognizeOnceAsync((result: { reason: ResultReason; text: any; }) => {
+          setRecording(false); // Stop recording (mic returns to blue)
           if (result.reason === ResultReason.RecognizedSpeech) {
               console.log(`RECOGNIZED: ${result.text}`);
               setInput(result.text);
@@ -536,16 +511,26 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
               className="flex-1 min-w-[150px] border-2 border-gray-200 rounded-xl px-4 py-2 focus:outline-none focus:border-indigo-500"
               disabled={isLoading}
             />
-            <Button
-              onClick={() => {sttFromMic()}}
-              variant="secondary"
-              size="small"
-              className="flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-700 flex-shrink-0"
+          <Button
+            onClick={sttFromMic}
+            variant="secondary"
+            size="small"
+            className={`flex items-center gap-1 flex-shrink-0 transition-all duration-200
+              ${recording ? "bg-red-100 hover:bg-red-200 text-red-700 scale-110" : "bg-blue-50 hover:bg-blue-100 text-blue-700"}
+            `}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill={recording ? "#dc2626" : "currentColor"}
+              stroke="none"
+              className="tabler-icon tabler-icon-microphone-filled"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none" className="tabler-icon tabler-icon-microphone-filled ">
-                <path d="M19 9a1 1 0 0 1 1 1a8 8 0 0 1 -6.999 7.938l-.001 2.062h3a1 1 0 0 1 0 2h-8a1 1 0 0 1 0 -2h3v-2.062a8 8 0 0 1 -7 -7.938a1 1 0 1 1 2 0a6 6 0 0 0 12 0a1 1 0 0 1 1 -1m-7 -8a4 4 0 0 1 4 4v5a4 4 0 1 1 -8 0v-5a4 4 0 0 1 4 -4"></path>
-              </svg>
-            </Button>
+              <path d="M19 9a1 1 0 0 1 1 1a8 8 0 0 1 -6.999 7.938l-.001 2.062h3a1 1 0 0 1 0 2h-8a1 1 0 0 1 0 -2h3v-2.062a8 8 0 0 1 -7 -7.938a1 1 0 1 1 2 0a6 6 0 0 0 12 0a1 1 0 0 1 1 -1m-7 -8a4 4 0 0 1 4 4v5a4 4 0 1 1 -8 0v-5a4 4 0 0 1 4 -4"></path>
+            </svg>
+          </Button>
             <Button
               onClick={handleSend}
               disabled={!input.trim() || isLoading}

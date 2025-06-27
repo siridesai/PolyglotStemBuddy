@@ -1,12 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { ChildSettings, Message } from '../../types';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { ChildSettings, Message } from '../../utils/assistantMessageType.ts';
 import { generateQuestions } from '../../api/generateQuestions';
 import { getTranslation } from '../../data/translations';
 
-interface Flashcard {
-  question: string;
-  answer: string;
-}
 
 interface FlashcardModalProps {
   onClose: () => void;
@@ -36,6 +32,7 @@ const FlashcardModal: React.FC<FlashcardModalProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [noValidContent, setNoValidContent] = useState(false);
+  const hasFetched = useRef(false);
 
   // Filter out initial prompt messages
   const filterMessages = useCallback(() => {
@@ -90,6 +87,8 @@ const FlashcardModal: React.FC<FlashcardModalProps> = ({
   }, [filterMessages, threadId, settings.age, settings.language, cookie]);
 
   useEffect(() => {
+    if (hasFetched.current) return;
+    hasFetched.current = true;
     fetchQuestions();
   }, [fetchQuestions]);
 

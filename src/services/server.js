@@ -1,10 +1,10 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { runAssistantBackend } from './src/api/backend.js';
-import { getOrCreateThread } from './src/api/backend.js';
-import { getAssistantClient, initializeAssistantClient } from './src/assistantClient.js';
-import { getAssistant, initializeAssistant } from './src/assistant.js';
+import { runAssistantBackend } from '../services/runAssistant.js';
+import { getOrCreateThread } from '../services/threadManager.js';
+import { getAssistantClient, initializeAssistantClient } from '../services/assistantClient.js';
+import { getAssistant, initializeAssistant } from '../services/assistant.js';
 import axios from 'axios';
 import 'dotenv/config';
 
@@ -13,6 +13,11 @@ const app = express();
 const port = 3000;
 const speechKey = process.env.VITE_SPEECH_KEY;
 const speechRegion = process.env.VITE_SPEECH_REGION;
+
+
+const POLL_INTERVAL = 3000;  // Reduced polling frequency
+const RUN_TIMEOUT = 30000;    // 30s timeout (down from 60s)
+const MAX_MESSAGE_LENGTH = 1500;  // Truncate long messages
 
 app.use(cors());
 app.use(express.json());
@@ -25,7 +30,7 @@ app.post('/runAssistant', async (req, res) => {
         console.log("Session id in server.js is: " + sessionId);
         
         
-        // Modify runAssistantBackend to return both result and runId
+      
         const { result, runId } = await runAssistantBackend(
             message,
             threadId,
@@ -188,6 +193,8 @@ app.get('/getSpeechToken', async (req, res, next) => {
     }
 });
 
+
+
 app.post('/generateSummary', async (req, res) => {
   try {
     const { message, threadId, age, language, sessionId } = req.body;
@@ -248,18 +255,21 @@ app.post('/generateSummary', async (req, res) => {
     - Message: ${message}
 
     **Response Rules**
-    1. Generate title strictly based on the topic in format: "[Topic] - ${formattedDate}" and return in JSON as title
+    1. Generate title strictly based on the topic in format: "[Topic] - ${formattedDate}" and return in JSON as title with first letter capitalized**
     2. Display entire content strictly discussed ${message}; return in JSON as summaryExplanation including any markdown **
     3. Use ${language} for age ${age}
     5. Ensure the JSON is not nested inside another JSON object
     6. Exclude the follow up questions asked at the end.
-    7. Remember to include diagrams in ${message}. Only include the extracted, rendered mermaid diageam, not the mermaid code. **
+    7. Use mermaid markdown code in ${message} to render the diagram. Do not include the mermaid markdown text in the summary explanation **
     8. Remember to cover every key topic in the discussion. (For example, **do not** just talk about the first or last message - summarize the entire conversation.)
-  
-    {
-      "title": "...",
-      "summaryExplanation": "..."
-    }`;
+    9. Return ONLY valid, minified JSON. DO NOT use json markdown
+      
+
+{"title": "Topic - ${formattedDate}", "summaryExplanation": "..."}
+
+Conversation:
+${message.substring(0, 1500)}
+`;
 
     // Create the run
     const run = await assistantClient.beta.threads.runs.create(threadId, {
@@ -299,7 +309,6 @@ app.post('/generateSummary', async (req, res) => {
     try {
       // Parse JSON response
       const summary = JSON.parse(lastMessage.content[0].text.value);
-      console.log("SUmmary is " , summary);
       return res.json(summary);
     } catch (error) {
       // Fallback for text-based response
@@ -317,6 +326,7 @@ app.post('/generateSummary', async (req, res) => {
   });
   }
 });
+
 
 app.post('/cancelAssistantRun', async (req, res) => {
   const { threadId, runId, sessionId } = req.body;

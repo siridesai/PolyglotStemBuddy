@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef} from 'react';
 import { X } from 'lucide-react';
 import Button from './Button';
 import { getTranslation } from '../../data/translations';
-import { ChildSettings, Message } from '../../types';
+import { ChildSettings, Message } from '../../utils/assistantMessageType.ts';
 import { generateQuestions } from '../../api/generateQuestions';
 
 interface QuizQuestion {
@@ -35,9 +35,13 @@ const QuizModal: React.FC<QuizModalProps> = ({
   const [quizComplete, setQuizComplete] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const hasFetched = useRef(false);
 
   // Fetch questions when modal opens or dependencies change
   useEffect(() => {
+    if (hasFetched.current) return;
+    hasFetched.current = true;
+
     setLoading(true);
     setError(null);
     generateQuestions(
@@ -56,7 +60,7 @@ const QuizModal: React.FC<QuizModalProps> = ({
         }
         setLoading(false);
       })
-      .catch((err) => {
+      .catch(() => {
         setError('Failed to load quiz questions.');
         setLoading(false);
       });

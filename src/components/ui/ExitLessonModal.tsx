@@ -32,7 +32,7 @@ const VALUE_MAP = {
   }
 };
 
-const ExitLessonModal: React.FC<ExitLessonProps> = ({ onClose, onBack, settings }) => {
+const ExitLessonModal: React.FC<ExitLessonProps> = ({  onBack, settings }) => {
   // Build pre-filled URL
   const formUrl = `https://forms.office.com/Pages/ResponsePage.aspx?id=DQSIkWdsW0yxEjajBLZtrQAAAAAAAAAAAAO__RbLz6NUMkFORzFEUDI4NjNTT0w5UEFSVFFCVlZSMi4u&${FIELD_IDS.LANGUAGE}=%22${VALUE_MAP.language[settings.language]}%22&${FIELD_IDS.AGE_GROUP}=%22${VALUE_MAP.age[settings.age]}%22`;
 
