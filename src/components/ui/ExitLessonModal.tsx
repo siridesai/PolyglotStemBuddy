@@ -49,18 +49,23 @@ const ExitLessonModal: React.FC<ExitLessonProps> = ({  onBack, settings }) => {
         </button>
         */}
         
-        <h3 className="text-xl font-bold mb-4">{getTranslation(settings.language, 'feedbackSurvey')}</h3>
+       {/* <h3 className="text-xl font-bold mb-4">{getTranslation(settings.language, 'feedbackSurvey')}</h3>*/}
         
         <iframe
-          width="640px"
-          height="480px"
-          src={formUrl}
-          frameBorder="0"
-          marginWidth={0}
-          marginHeight={0}
-          style={{ border: 'none', maxWidth: '100%', maxHeight: '100vh' }}
-          allowFullScreen={true}
-          title="Feedback Form"
+            src={formUrl}
+            frameBorder="0"
+            marginWidth={0}
+            marginHeight={0}
+            style={{
+              width: '100%',
+              height: '85vh', // or use '100%' for full container height
+              minHeight: 320,
+              border: 'none',
+              maxWidth: '100%',
+              maxHeight: '100vh'
+            }}
+            allowFullScreen={true}
+            title="Feedback Form"
         />
         
         <button
