@@ -33,6 +33,7 @@ type TranslationKey =
   | 'noFlashcardAvailable'
   | 'summarize'
   | 'exitLesson'
+  | 'feedbackSurvey'
   | 'readyForQuiz'
   | 'loadingQuiz'
   | 'learnSomethingElse'
@@ -97,6 +98,7 @@ export const translations: TranslationSet = {
     noLessonContent: 'No lesson content available.',
     summarize: 'Summarize',
     exitLesson: 'Exit Lesson',
+    feedbackSurvey: 'Feedback Survey',
     readyForQuiz: 'Ready for Quiz?',
     loadingQuiz: 'Loading quiz',
     learnSomethingElse: 'Learn Something Else',
@@ -151,6 +153,7 @@ export const translations: TranslationSet = {
     noLessonContent: 'No hay contenido de lección disponible.',
     summarize: 'Resumir',
     exitLesson: 'Salir de la Lección',
+     feedbackSurvey: 'Encuesta de Retroalimentación',
     readyForQuiz: '¿Listo para el Quiz?',
     loadingQuiz: 'Cargando cuestionario',
     learnSomethingElse: 'Aprender Algo Nuevo',
@@ -206,6 +209,7 @@ export const translations: TranslationSet = {
     noLessonContent: 'कोई पाठ सामग्री उपलब्ध नहीं है।',
     summarize: 'सारांश बनाएं',
     exitLesson: 'पाठ से बाहर निकलें',
+    feedbackSurvey: 'प्रतिक्रिया सर्वेक्षण',
     readyForQuiz: 'क्विज़ के लिए तैयार?',
     loadingQuiz: 'क्विज़ लोड हो रहा है',
     learnSomethingElse: 'कुछ और सीखें',
@@ -261,6 +265,7 @@ export const translations: TranslationSet = {
     noLessonContent: 'कोणतीही पाठ्य सामग्री उपलब्ध नाही.',
     summarize: 'सारांश तयार करा',
     exitLesson: 'पाठातून बाहेर पडा',
+    feedbackSurvey: 'अभिप्राय सर्वेक्षण',
     readyForQuiz: 'क्विझसाठी तयार आहात का?',
     loadingQuiz: 'क्विझ लोड करत आहे',
     learnSomethingElse: 'काहीतरी नवीन शिका',
@@ -316,6 +321,7 @@ export const translations: TranslationSet = {
     noLessonContent: 'ಪಾಠದ ವಿಷಯ ಲಭ್ಯವಿಲ್ಲ.',
     summarize: 'ಸಾರಾಂಶ ರಚಿಸಿ',
     exitLesson: 'ಪಾಠದಿಂದ ಹೊರಬರಲು',
+    feedbackSurvey: 'ಪ್ರತಿಕ್ರಿಯೆ ಸಮೀಕ್ಷೆ',
     readyForQuiz: 'ಪ್ರಶ್ನೆೋತ್ತರಕ್ಕಾಗಿ ಸಿದ್ಧವೆ?',
     loadingQuiz: 'ಕ್ವಿಜ್ ಲೋಡ್ ಮಾಡಲಾಗುತ್ತಿದೆ',
     learnSomethingElse: 'ಬೇರೇನು ಕಲಿಯಿರಿ',

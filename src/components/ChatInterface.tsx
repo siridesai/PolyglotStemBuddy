@@ -592,6 +592,26 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
         <ExitLessonModal
           onClose={() => setShowExitLessonFeedback(false)}
           onBack={() => handleBack()}
+          settings={{
+            age:
+              settings.age >= 5 && settings.age <= 8
+                ? 'Early Explorer'
+                : settings.age >= 9 && settings.age <= 12
+                ? 'Junior Scientist'
+                : 'Teen Researcher',
+            language:
+              settings.language === 'en'
+                ? 'English'
+                : settings.language === 'es'
+                ? 'Español'
+                : settings.language === 'hi'
+                ? 'हिंदी'
+                : settings.language === 'kn'
+                ? 'ಕನ್ನಡ'
+                : settings.language === 'mr'
+                ? 'मराठी'
+                : 'English'
+          }}
         />
       )}
     </div>
