@@ -1,4 +1,5 @@
 import express from 'express';
+import path from 'path';
 import generateQuestionsRouter from './routes/generateQuestions.js';
 import generateSummaryRouter from './routes/generateSummary.js';
 import cancelAssistantRunRouter from './routes/cancelAssistantRun.js';
@@ -27,6 +28,11 @@ const MAX_MESSAGE_LENGTH = 1500;  // Truncate long messages
 
 app.use(cors());
 app.use(express.json());
+app.use(express.static(path.join(__dirname, 'dist')));
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+});
 
 const sessionRunMap = new Map();
 
