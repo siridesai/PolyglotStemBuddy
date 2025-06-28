@@ -6,35 +6,36 @@ import cancelAssistantRunRouter from './routes/cancelAssistantRun.js';
 import getSpeechTokenRouter from './routes/getSpeechToken.js';
 import deleteThreadRouter from './routes/deleteThread.js';
 import threadIDRouter from './routes/threadID.js';
-
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { runAssistantBackend } from '../services/runAssistant.js';
 import { getOrCreateThread } from '../services/threadManager.js';
 import { getAssistantClient, initializeAssistantClient } from '../services/assistantClient.js';
 import { getAssistant, initializeAssistant } from '../services/assistant.js';
-import axios from 'axios';
-import 'dotenv/config';
+import { fileURLToPath } from 'url';
 
 dotenv.config();
 const app = express();
-const port = 3000;
-const speechKey = process.env.VITE_SPEECH_KEY;
-const speechRegion = process.env.VITE_SPEECH_REGION;
+const port = process.env.PORT || 3000;  // Use environment variable for port
 
-const POLL_INTERVAL = 3000;  // Reduced polling frequency
-const RUN_TIMEOUT = 30000;    // 30s timeout (down from 60s)
-const MAX_MESSAGE_LENGTH = 1500;  // Truncate long messages
+// Initialize assistants first
+initializeAssistantClient();
+initializeAssistant();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 app.use(cors());
 app.use(express.json());
 
+// Session tracking
 const sessionRunMap = new Map();
 
-app.post('/runAssistant', async (req, res) => {
+// API Routes (MUST COME BEFORE STATIC FILES)
+app.post('/api/runAssistant', async (req, res) => {
     try {
         const { message, threadId, age, language, sessionId } = req.body;
-        console.log("Session id in server.js is: " + sessionId);
+        console.log("Session id:", sessionId);
         const { result, runId } = await runAssistantBackend(
             message,
             threadId,
@@ -43,34 +44,29 @@ app.post('/runAssistant', async (req, res) => {
             sessionId
         );
         sessionRunMap.set(sessionId, { threadId, runId });
-        
-        res.json({ result, runId }); // Return both values
+        res.json({ result, runId });
     } catch (error) {
         console.error("Backend API error:", error);
         res.status(500).json({ error: error.message });
     }
 });
 
-app.use('/', generateQuestionsRouter);
+// Mount all routers under /api
+app.use('/api', generateQuestionsRouter);
+app.use('/api', deleteThreadRouter);
+app.use('/api', threadIDRouter);
+app.use('/api', getSpeechTokenRouter);
+app.use('/api', generateSummaryRouter);
+app.use('/api', cancelAssistantRunRouter);
 
-app.use('/', deleteThreadRouter);
+// Static files (MUST COME AFTER API ROUTES)
+app.use(express.static(path.join(__dirname, '../../dist')));
 
-// Generate new thread ID if none exists
-app.use('/', threadIDRouter);
-
-initializeAssistantClient();
-initializeAssistant();
-
-app.use('/', getSpeechTokenRouter);
-
-app.use('/', generateSummaryRouter);
-
-app.use('/', cancelAssistantRunRouter);
-
-console.log("Initialization complete");
-
-app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
+// SPA catch-all (MUST BE LAST)
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../../dist', 'index.html'));
 });
 
-
+app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+});

@@ -5,8 +5,8 @@ import axios from 'axios'; // Add this at the top
 
 const router = express.Router();
 
-const speechKey = process.env.VITE_SPEECH_KEY;
-const speechRegion = process.env.VITE_SPEECH_REGION;
+const speechKey = process.env.SPEECH_KEY;
+const speechRegion = process.env.SPEECH_REGION;
 
 router.get('/getSpeechToken', async (req, res, next) => {
     res.setHeader('Content-Type', 'application/json');
