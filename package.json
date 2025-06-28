@@ -8,8 +8,7 @@
     "build": "tsc && vite build",
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "server": "node src/services/server.js",
-    "start": "node src/services/server.js"
+    "server": "node src/services/server.js"
   },
   "dependencies": {
     "@testing-library/jest-dom": "^5.16.5",
