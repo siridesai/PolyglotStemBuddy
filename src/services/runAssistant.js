@@ -10,7 +10,6 @@ const sessionThreadMap = new Map();
 const mapMutex = new Mutex();
 const sessionRunMap = new Map();
 
-
 export const runAssistantBackend = async (
   message,
   threadId,

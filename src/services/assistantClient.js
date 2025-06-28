@@ -3,8 +3,8 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const azureOpenAIKey = process.env.VITE_AZURE_OPENAI_KEY;
-const azureOpenAIEndpoint = process.env.VITE_AZURE_OPENAI_ENDPOINT;
+const azureOpenAIKey = process.env.AZURE_OPENAI_KEY;
+const azureOpenAIEndpoint = process.env.AZURE_OPENAI_ENDPOINT;
 const azureOpenAIVersion = "2024-05-01-preview";
 
 if (!azureOpenAIKey || !azureOpenAIEndpoint) {
