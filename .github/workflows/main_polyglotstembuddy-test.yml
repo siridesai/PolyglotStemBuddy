@@ -62,10 +62,6 @@ jobs:
           # Copy built frontend
           cp -r dist deploy-package/
 
-          # Copy node_modules for production
-          cp -r node_modules deploy-package/
-
-
       - name: Login to Azure
         uses: azure/login@v2
         with:
