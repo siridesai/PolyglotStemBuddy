@@ -19,9 +19,10 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set up Node.js version
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '~22'
+          cache: 'npm'
 
       - name: npm install, build, and test
         run: |
@@ -48,6 +49,23 @@ jobs:
         with:
           name: node-app
       
+      - name: Create deployment package
+        run: |
+          # Create clean deployment directory
+          mkdir deploy-package 
+
+          # Copy server files 
+          cp -r src/services deploy-package/
+          cp package.json deploy-package/
+          cp web.config deploy-package/
+
+          # Copy built frontend
+          cp -r dist deploy-package/
+
+          # Copy node_modules for production
+          cp -r node_modules deploy-package/
+
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -60,6 +78,5 @@ jobs:
         id: deploy-to-webapp
         with:
           app-name: 'PolyglotSTEMBuddy-test'
-          slot-name: 'Production'
-          package: .
+          package: ./deploy-package
           

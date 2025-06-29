@@ -13,6 +13,11 @@ export default defineConfig({
       protocolImports: true,
     })
   ],
+  build: {
+    outDir: 'dist',       // Output directory for build files
+    emptyOutDir: true,    // Empties the output directory before building
+    // ...other build options
+  },
   server: {
     proxy: {
       '/api': {
