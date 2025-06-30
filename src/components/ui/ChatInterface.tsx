@@ -55,7 +55,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
     // Check if the cookie exists
     if (!cookies[COOKIE_NAME]) {
       // Set the cookie if missing
-      setCookie(COOKIE_NAME, String(Math.floor(Math.random() * 100) + 1), { path: '/', maxAge: 3600 });
+      setCookie(COOKIE_NAME, crypto.randomUUID(), { path: '/', maxAge: 3600 });
     }
     // You can now use cookies[COOKIE_NAME] as the value
     console.log('Cookie value:', cookies[COOKIE_NAME]);
