@@ -1,5 +1,4 @@
-import { Settings } from "lucide-react";
-import { ChildSettings } from "../utils/assistantMessageType";
+
 import { getTranslation } from "../data/translations";
 
 export const runAssistant = async (
