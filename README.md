@@ -1,4 +1,4 @@
-# Polyglot Stem Buddy 🌱🔬
+# Polyglot STEM Buddy 🌱🔬
 
 An AI-powered educational chatbot that teaches STEM concepts to kids in multiple languages. Users select their age and language, then interact with the chatbot to learn science topics. After learning, they can generate study materials like flashcards, quizzes, and downloadable PDF summaries.
 
