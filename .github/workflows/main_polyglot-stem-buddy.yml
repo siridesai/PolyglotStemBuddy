@@ -3,6 +3,11 @@
 
 name: Build and deploy Node.js app to Azure Web App - polyglot-stem-buddy
 
+env:
+  VITE_FEEDBACK_FORM_BASE_URL: ${{ secrets.VITE_FEEDBACK_FORM_BASE_URL }} # Pull from GitHub Secrets
+  VITE_FEEDBACK_FORM_FIELD_AGE_GROUP: ${{ secrets.VITE_FEEDBACK_FORM_FIELD_AGE_GROUP }} 
+  VITE_FEEDBACK_FORM_FIELD_LANGUAGE: ${{ secrets.VITE_FEEDBACK_FORM_FIELD_LANGUAGE }} 
+
 on:
   push:
     branches:
