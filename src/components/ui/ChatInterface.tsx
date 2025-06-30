@@ -108,8 +108,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
       welcomeMessage =`Hello! What do you want to learn today?`
     };
 
-    
-
     setMessages([
       {
         id: '1',
@@ -143,7 +141,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
 
-     const messageToSend = input;
+    const messageToSend = input;
 
     const userMessage = {
       id: Date.now().toString(),
@@ -155,32 +153,47 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
-    
 
     try {
-     
       const threadId = await fetchThreadID(cookies[COOKIE_NAME]);
-      const { result, runId } = await runAssistant(messageToSend, threadId, settings.age, settings.language, cookies[COOKIE_NAME]);
+      const response = await runAssistant(
+        messageToSend,
+        threadId,
+        settings.age,
+        settings.language,
+        cookies[COOKIE_NAME]
+      );
+
+      // If rate limited, show a friendly assistant message
+      if (response.error) {
+        const assistantMessage = {
+          id: (Date.now() + 1).toString(),
+          type: 'assistant' as const,
+          content: getTranslation(settings.language, 'tooManyRequests'),
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, assistantMessage]);
+        return;
+      }
+
+      // Normal response
+      const { result, runId } = response;
       setCurrentRunId(runId);
-  
 
       const assistantMessage = {
         id: (Date.now() + 1).toString(),
         type: 'assistant' as const,
-        content:  removeMermaidCode(result),
+        content: removeMermaidCode(result),
         timestamp: new Date(),
         mermaidCode: extractMermaidCode(result)
       };
 
       setMessages(prev => [...prev, assistantMessage]);
-
     } finally {
       setIsLoading(false);
-      
-      setCurrentRunId(null); // Clear runId when done
+      setCurrentRunId(null);
     }
-
-  }; 
+  };
 
   function hasUserStartedConversation(messages: Message[]) {
 
@@ -539,7 +552,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
               className="flex items-center gap-2 flex-shrink-0"
             >
               <Send className="w-4 h-4" />
-              {isLoading ? 'Sending...' : getTranslation(settings.language, 'send')}
+              {isLoading ? getTranslation(settings.language, 'sending') : getTranslation(settings.language, 'send')}
             </Button>
           </div>
         </div>

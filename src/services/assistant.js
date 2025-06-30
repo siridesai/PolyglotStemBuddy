@@ -1,6 +1,5 @@
 import { getAssistantClient } from './assistantClient.js';
 
-
 let assistant = null;
 
    export const initializeAssistant = async() => {

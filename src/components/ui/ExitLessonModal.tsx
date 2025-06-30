@@ -1,6 +1,7 @@
 import React from 'react';
 import { getTranslation } from '../../data/translations';
 
+
 interface ExitLessonProps {
   onClose: () => void;
   onBack: () => void;
@@ -35,7 +36,9 @@ const VALUE_MAP = {
 const ExitLessonModal: React.FC<ExitLessonProps> = ({  onBack, settings }) => {
   // Build pre-filled URL
   const formUrl = `https://forms.office.com/Pages/ResponsePage.aspx?id=DQSIkWdsW0yxEjajBLZtrQAAAAAAAAAAAAO__RbLz6NUMkFORzFEUDI4NjNTT0w5UEFSVFFCVlZSMi4u&${FIELD_IDS.LANGUAGE}=%22${VALUE_MAP.language[settings.language]}%22&${FIELD_IDS.AGE_GROUP}=%22${VALUE_MAP.age[settings.age]}%22`;
-
+  const exitLesson = getTranslation(settings.language, 'exitLesson');
+  console.log(settings.language);
+  console.log(exitLesson);
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md sm:max-w-lg md:max-w-xl p-6 sm:p-8 relative flex flex-col items-center">
@@ -72,7 +75,7 @@ const ExitLessonModal: React.FC<ExitLessonProps> = ({  onBack, settings }) => {
           onClick={onBack}
           className="mt-2 px-6 py-2 bg-indigo-600 text-white rounded-lg text-base font-semibold shadow hover:bg-indigo-700 transition"
         >
-          {getTranslation(settings.language, 'exitLesson')}
+          {exitLesson}
         </button>
       </div>
     </div>

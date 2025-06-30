@@ -1,5 +1,3 @@
-import { Language } from './languages';
-
 type TranslationKey = 
   | 'selectAgeGroup'
   | 'chooseLanguage'
@@ -54,6 +52,19 @@ type TranslationKey =
   | 'startConversation'
   | 'completeLesson'
   | 'card'
+  | 'sending'
+  | 'nextQuestion'
+  | 'finishQuiz'
+  | 'quizComplete'
+  | 'perfectScore'
+  | 'greatJob'
+  | 'goodEffort'
+  | 'keepPracticing'
+  | 'yourScore'
+  | 'question'
+  | 'of'
+  | 'tooManyRequests'
+  | 'errorMessage'
   ;
 
 type Translations = {
@@ -118,7 +129,20 @@ export const translations: TranslationSet = {
     continueLearning: 'Continue Learning',
     startConversation: 'Start a conversation to generate study materials!',
     completeLesson: 'Complete a lesson to generate study materials!',
-    card: 'Card'
+    card: 'Card',
+    sending: 'Sending . . .',
+    nextQuestion: 'Next Question',
+    finishQuiz: 'Finish Quiz',
+    quizComplete: 'Quiz Complete!',
+    perfectScore: 'Perfect score! You\'re amazing! 🌟',
+    greatJob: 'Great job! You\'ve learned a lot! 🎉',
+    goodEffort: 'Good effort! Keep learning! 📚',
+    keepPracticing: 'Keep practicing! You\'re getting better! 💪',
+    yourScore: 'Your Score',
+    question: 'Question',
+    of: 'of',
+    tooManyRequests: 'Too many requests. Please try again in a couple of minutes.',
+    errorMessage: 'Something went wrong. Please try again.'
   },
   es: {
     selectAgeGroup: 'Selecciona grupo de edad',
@@ -153,7 +177,7 @@ export const translations: TranslationSet = {
     noLessonContent: 'No hay contenido de lección disponible.',
     summarize: 'Resumir',
     exitLesson: 'Salir de la Lección',
-     feedbackSurvey: 'Encuesta de Retroalimentación',
+    feedbackSurvey: 'Encuesta de Retroalimentación',
     readyForQuiz: '¿Listo para el Quiz?',
     loadingQuiz: 'Cargando cuestionario',
     learnSomethingElse: 'Aprender Algo Nuevo',
@@ -174,7 +198,19 @@ export const translations: TranslationSet = {
     startConversation: '¡Inicia una conversación para generar materiales de estudio!',
     completeLesson: '¡Completa una lección para generar materiales de estudio!',
     card: 'Tarjeta',
-  
+    sending: 'Enviando . . .',
+    nextQuestion: 'Siguiente pregunta',
+    finishQuiz: 'Terminar cuestionario',
+    quizComplete: '¡Cuestionario completado!',
+    perfectScore: '¡Puntaje perfecto! ¡Eres increíble! 🌟',
+    greatJob: '¡Buen trabajo! ¡Has aprendido mucho! 🎉',
+    goodEffort: '¡Buen esfuerzo! ¡Sigue aprendiendo! 📚',
+    keepPracticing: '¡Sigue practicando! ¡Estás mejorando! 💪',
+    yourScore: 'Tu Puntuación',
+    question: 'Pregunta',
+    of: 'de',
+    tooManyRequests: 'Demasiadas solicitudes. Por favor, inténtalo de nuevo en unos minutos.',
+    errorMessage: 'Algo salió mal. Por favor, inténtalo de nuevo.'
   },
   hi: {
     selectAgeGroup: 'आयु वर्ग चुनें',
@@ -230,7 +266,19 @@ export const translations: TranslationSet = {
     startConversation: 'अध्ययन सामग्री उत्पन्न करने के लिए बातचीत शुरू करें!',
     completeLesson: 'अध्ययन सामग्री तैयार करने के लिए एक पाठ पूरा करें!',
     card: 'कार्ड',
-
+    sending: 'भेज रहा है . . .',
+    nextQuestion: 'अगला प्रश्न',
+    finishQuiz: 'क्विज़ समाप्त करें',
+    quizComplete: 'क्विज़ पूर्ण हुआ!',
+    perfectScore: 'शानदार स्कोर! आप कमाल हैं! 🌟',
+    greatJob: 'बढ़िया काम! आपने बहुत कुछ सीखा है! 🎉',
+    goodEffort: 'अच्छा प्रयास! सीखते रहिए! 📚',
+    keepPracticing: 'अभ्यास करते रहिए! आप बेहतर हो रहे हैं! 💪',
+    yourScore: 'आपका स्कोर',
+    question: 'प्रश्न',
+    of: 'में से',
+    tooManyRequests: 'बहुत ज़्यादा अनुरोध किए गए हैं। कृपया कुछ मिनटों बाद पुनः प्रयास करें।',
+    errorMessage: 'कुछ गलत हो गया। कृपया पुनः प्रयास करें।'
   },
   mr: {
     selectAgeGroup: 'वय गट निवडा',
@@ -286,7 +334,19 @@ export const translations: TranslationSet = {
     startConversation: 'अध्ययन सामग्री तयार करण्यासाठी संभाषण सुरू करा!',
     completeLesson: 'अभ्यास साहित्य तयार करण्यासाठी एक धडा पूर्ण करा!',
     card: 'कार्ड',
-
+    sending: 'पाठवत आहे . . . ',
+    nextQuestion: 'पुढील प्रश्न',
+    finishQuiz: 'क्विझ पूर्ण करा',
+    quizComplete: 'क्विझ पूर्ण झाला!',
+    perfectScore: 'परिपूर्ण गुण! तू कमाल आहेस! 🌟',
+    greatJob: 'छान काम! तू खूप काही शिकला/शिकलास! 🎉',
+    goodEffort: 'चांगला प्रयत्न! शिकत रहा! 📚',
+    keepPracticing: 'सराव करत राहा! तू प्रगती करत आहेस! 💪',
+    yourScore: 'तुमचा गुण',
+    question: 'प्रश्न',
+    of: 'पैकी',
+    tooManyRequests: 'खूप विनंत्या झाल्या आहेत. कृपया काही मिनिटांनी पुन्हा प्रयत्न करा.',
+    errorMessage: 'काहीतरी चुकले. कृपया पुन्हा प्रयत्न करा.'
   },
   kn: {
     selectAgeGroup: 'ವಯೋಮಿತಿ ಆಯ್ಕೆಮಾಡಿ',
@@ -342,10 +402,37 @@ export const translations: TranslationSet = {
     startConversation: 'ಅಧ್ಯಯನ ಸಾಮಗ್ರಿಗಳನ್ನು ರಚಿಸಲು ಸಂಭಾಷಣೆಯನ್ನು ಪ್ರಾರಂಭಿಸಿ!',
     completeLesson: 'ಅಧ್ಯಯನ ಸಾಮಗ್ರಿಗಳನ್ನು ರಚಿಸಲು ಪಾಠವನ್ನು ಪೂರ್ಣಗೊಳಿಸಿ!',
     card: 'ಕಾರ್ಡ್',
-
+    sending: 'ಕಳುಹಿಸಲಾಗುತ್ತಿದೆ . . .',
+    nextQuestion: 'ಮುಂದಿನ ಪ್ರಶ್ನೆ',
+    finishQuiz: 'ಕ್ವಿಜ್ ಮುಗಿಸಿ',
+    quizComplete: 'ಕ್ವಿಜ್ ಪೂರ್ಣವಾಗಿದೆ!',
+    perfectScore: 'ಪರಿಪೂರ್ಣ ಅಂಕಗಳು! ನೀನು ಅದ್ಭುತವಾಡೆ! 🌟',
+    greatJob: 'ಬಹುತೆಕ ಕೆಲಸ! ನೀನು ತುಂಬಾ ಕಲಿತೆ! 🎉',
+    goodEffort: 'ಉತ್ತಮ ಪ್ರಯತ್ನ! ಕಲಿಯುತ್ತೆ ಇರು! 📚',
+    keepPracticing: 'ಅಭ್ಯಾಸ ಮುಂದುವರಿಸು! ನೀನು ಉತ್ತಮವಾಗುತ್ತಿದ್ದೀಯ! 💪',
+    yourScore: 'ನಿನ್ನ ಅಂಕಗಳ',
+    question: 'ಪ್ರಶ್ನೆ',
+    of: 'ಇಂದ',
+    tooManyRequests: 'ಅತಿಯಾದ ವಿನಂತಿಗಳು ಮಾಡಲಾಗಿದೆ. ದಯವಿಟ್ಟು ಕೆಲ ನಿಮಿಷಗಳಲ್ಲಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.',
+    errorMessage: 'ಏನೋ ತಪ್ಪಾಗಿದೆ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.'
   }
 };
 
 export const getTranslation = (language: string, key: TranslationKey): string => {
+  if (language == 'English') {
+    language = 'en'
+  }
+  if (language == 'Español') {
+    language = 'es'
+  }
+  else if (language ==  'हिंदी') {
+    language = 'hi'
+  }
+  else if (language == 'मराठी') {
+    language = 'mr'
+  }
+  else if (language ==  'ಕನ್ನಡ') {
+    language = 'kn'
+  }
   return translations[language]?.[key] || translations['en'][key];
 };
