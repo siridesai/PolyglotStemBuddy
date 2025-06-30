@@ -24,14 +24,14 @@ An AI-powered educational chatbot that teaches STEM concepts to kids in multiple
 - **PDF Generation**: jsPDF + html2canvas
 
 ## Installation
-*Clone repository*
+*Clone repository*:
 git clone https://github.com/yourusername/polyglot-stem-buddy.git
 
-*Install dependencies*
+*Install dependencies*:
 cd polyglot-stem-buddy
 npm install
 
-*Set environment variables*
+*Set environment variables*:
 cp .env.example .env
     
 *Add your Azure credentials to `.env`:*
@@ -40,10 +40,10 @@ VITE_SPEECH_KEY=your_azure_speech_key
 VITE_SPEECH_REGION=your_azure_region
 
 ## Usage
-*Start development server*
+*Start development server*:
 npm run dev
 
-*Build for production*
+*Build for production*:
 npm run build
 
 Visit `http://localhost:3000` and:
