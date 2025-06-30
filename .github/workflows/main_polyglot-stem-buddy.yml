@@ -3,10 +3,6 @@
 
 name: Build and deploy Node.js app to Azure Web App - polyglot-stem-buddy
 
-env:
-  VITE_FEEDBACK_FORM_BASE_URL: ${{ secrets.VITE_FEEDBACK_FORM_BASE_URL }} # Pull from GitHub Secrets
-  VITE_FEEDBACK_FORM_FIELD_AGE_GROUP: ${{ secrets.VITE_FEEDBACK_FORM_FIELD_AGE_GROUP }} 
-  VITE_FEEDBACK_FORM_FIELD_LANGUAGE: ${{ secrets.VITE_FEEDBACK_FORM_FIELD_LANGUAGE }} 
 
 on:
   push:
@@ -32,8 +28,11 @@ jobs:
       - name: npm install, build, and test
         run: |
           npm install
-          npm run build --if-present
-          npm run test --if-present
+          npm run build 
+        env:
+          VITE_FEEDBACK_FORM_BASE_URL: ${{ secrets.VITE_FEEDBACK_FORM_BASE_URL }} # Pull from GitHub Secrets
+          VITE_FEEDBACK_FORM_FIELD_AGE_GROUP: ${{ secrets.VITE_FEEDBACK_FORM_FIELD_AGE_GROUP }} 
+          VITE_FEEDBACK_FORM_FIELD_LANGUAGE: ${{ secrets.VITE_FEEDBACK_FORM_FIELD_LANGUAGE }} 
       
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
