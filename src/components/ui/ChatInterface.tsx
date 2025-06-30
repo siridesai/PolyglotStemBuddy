@@ -290,37 +290,31 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
     return language;
   }
 
-  async function textToSpeech(text: string, lang: string) {
+ async function textToSpeech(text: string, lang: string) {
+  const cleanedText = text.replace(/[^\p{L}\p{N}\p{P}\p{Z}\p{M}]/gu, '');
 
-     text = text.replace(/[^\p{L}\p{N}\p{P}\p{Z}\p{M}]/gu, '');
-    // If the same message is playing, pause or resume
-    if (currentTTS === text && playerRef.current) {
-      if (ttsStatus === 'playing') {
+  // Handle same-text playback control
+  if (currentTTS === cleanedText && playerRef.current) {
+    switch (ttsStatus) {
+      case 'playing':
         playerRef.current.pause();
         setTtsStatus('paused');
         return;
-      }
-      if (ttsStatus === 'paused') {
+      case 'paused':
         playerRef.current.resume();
         setTtsStatus('playing');
         return;
-      }
     }
+  }
 
-    // If a different message is requested, stop previous playback
-    if (playerRef.current) {
-      try { playerRef.current.pause(); } catch {}
-      playerRef.current = null;
-    }
-    if (synthesizerRef.current) {
-      try { synthesizerRef.current.close(); } catch {}
-      synthesizerRef.current = null;
-    }
-    setTtsStatus('idle');
+  // Stop previous playback
+  stopCurrentPlayback();
 
-    // Start new playback
-    setCurrentTTS(text);
+  // Start new synthesis
+  setCurrentTTS(cleanedText);
+  setTtsStatus('playing');
 
+  try {
     const tokenObj = await getTokenOrRefresh();
     const speechConfig = SpeechSDK.SpeechConfig.fromAuthorizationToken(tokenObj.authToken, tokenObj.region);
     speechConfig.speechSynthesisLanguage = lang;
@@ -333,26 +327,54 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
     synthesizerRef.current = synthesizer;
 
     setTtsStatus('playing');
-
-    const ssml = createSSML(text, lang, voiceMap[lang]);
+    
+    const ssml = createSSML(cleanedText, lang, voiceMap[lang]);
+    
     synthesizer.speakSsmlAsync(
       ssml,
-      () => {
-        setTtsStatus('idle');
-        setCurrentTTS(null);
-        synthesizer.close();
-        synthesizerRef.current = null;
-        playerRef.current = null;
-      },
-      () => {
-        setTtsStatus('idle');
-        setCurrentTTS(null);
-        synthesizer.close();
-        synthesizerRef.current = null;
-        playerRef.current = null;
-      }
+      () => handleSynthesisComplete(),
+      (error) => handleSynthesisError(error)
     );
+  } catch (error) {
+    handleSynthesisError(error);
+  }
+}
+
+// Helper functions
+function stopCurrentPlayback() {
+  if (playerRef.current) {
+    try { playerRef.current.pause(); } catch {}
+    playerRef.current = null;
+  }
+  if (synthesizerRef.current) {
+    try { synthesizerRef.current.close(); } catch {}
+    synthesizerRef.current = null;
+  }
+  setTtsStatus('idle');
+}
+
+function handleSynthesisComplete() {
+  setTtsStatus('idle');
+  setCurrentTTS(null);
+
+}
+
+function handleSynthesisError(error: any) {
+  console.error('TTS Error:', error);
+  setTtsStatus('idle');
+  
+}
+
+useEffect(() => {
+  return () => {
+    if (synthesizerRef.current) {
+      synthesizerRef.current.close();
+      synthesizerRef.current = null; 
     }
+    playerRef.current = null;
+  };
+}, []);
+
 
 
 
