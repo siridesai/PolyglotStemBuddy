@@ -1,11 +1,13 @@
 import express from 'express';
 import { getAssistantClient, initializeAssistantClient } from '../assistantClient.js';
 import { getAssistant, initializeAssistant } from '../assistant.js';
-const router = express.Router();
+import appInsights from 'applicationinsights';
 
+const router = express.Router();
 const sessionRunMap = new Map();
 
 router.post('/generateSummary', async (req, res) => {
+  const appInsightsClient = appInsights.defaultClient;
   try {
     const { message, threadId, age, language, sessionId } = req.body;
 
@@ -23,34 +25,19 @@ router.post('/generateSummary', async (req, res) => {
     try {
       await assistantClient.beta.threads.retrieve(threadId);
     } catch (err) {
+      appInsightsClient.trackEvent({
+        name: "SummaryEvent",
+        properties: {
+          p_age: age,
+          p_language: language,
+          p_sessionId: sessionId, 
+          p_threadId: threadId,
+          p_status: "failure",
+          p_errcode: "ThreadNotFound"
+        }
+      })
       return res.status(404).json({ error: `Thread ${threadId} not found` });
     }
-
-    /*Check for active run - handle undefined case
-    const runInfo = sessionRunMap.get(sessionId);
-    console.log(`[generateSummary] runInfo: ${JSON.stringify(runInfo)}`);
-    
-    if (runInfo && runInfo.threadId === threadId) {
-      try {
-        // Check run status before cancellation
-        const runStatus = await assistantClient.beta.threads.runs.retrieve(
-          runInfo.threadId, 
-          runInfo.runId
-        );
-        
-        if (['queued', 'in_progress'].includes(runStatus.status)) {
-          console.log(`Cancelling active run ${runInfo.runId}`);
-          await assistantClient.beta.threads.runs.cancel(
-            runInfo.threadId, 
-            runInfo.runId
-          );
-          // Wait for cancellation to propagate
-          await new Promise(resolve => setTimeout(resolve, 500));
-        }
-      } catch (cancelError) {
-        console.warn('Run cancellation failed (possibly already completed):', cancelError.message);
-      }
-    }*/
 
     // Get conversation context
     const messages = await assistantClient.beta.threads.messages.list(threadId, {
@@ -104,6 +91,17 @@ ${message.substring(0, 1500)}
     } while (runStatus.status === 'queued' || runStatus.status === 'in_progress');
 
     if (runStatus.status === 'failed') {
+      appInsightsClient.trackEvent({
+        name: "SummaryEvent",
+        properties: {
+          p_age: age,
+          p_language: language,
+          p_sessionId: sessionId, 
+          p_threadId: threadId,
+          p_status: "failure",
+          p_errcode: "SummaryGenFailed"
+        }
+      })
       return res.status(500).json({ error: 'Summary generation failed.' });
     }
 
@@ -113,16 +111,48 @@ ${message.substring(0, 1500)}
       .find(m => m.run_id === run.id && m.role === 'assistant');
 
     if (!lastMessage?.content?.[0]?.text?.value) {
+      appInsightsClient.trackEvent({
+        name: "SummaryEvent",
+        properties: {
+          p_age: age,
+          p_language: language,
+          p_sessionId: sessionId, 
+          p_threadId: threadId,
+          p_status: "failure",
+          p_errcode: "NoSummaryGenerated"
+        }
+      })
       return res.status(500).json({ error: 'No summary generated.' });
     }
 
     try {
       // Parse JSON response
       const summary = JSON.parse(lastMessage.content[0].text.value);
+      appInsightsClient.trackEvent({
+        name: "SummaryEvent",
+        properties: {
+          p_age: age,
+          p_language: language,
+          p_sessionId: sessionId, 
+          p_threadId: threadId,
+          p_status: "success"
+        }
+      })
       return res.json(summary);
     } catch (error) {
       // Fallback for text-based response
       const [title, ...summaryParts] = lastMessage.content[0].text.value.split('\n\n');
+      appInsightsClient.trackEvent({
+        name: "SummaryEvent",
+        properties: {
+          p_age: age,
+          p_language: language,
+          p_sessionId: sessionId, 
+          p_threadId: threadId,
+          p_status: "failure",
+          p_errcode: "JSONParseError"
+        }
+      })
       return res.json({
         title: title.replace('Title: ', '').trim(),
         summaryExplanation: summaryParts.join('\n\n').trim()
@@ -130,6 +160,17 @@ ${message.substring(0, 1500)}
     }
 
   } catch (error) {
+    appInsightsClient.trackEvent({
+      name: "SummaryEvent",
+      properties: {
+        p_age: age,
+        p_language: language,
+        p_sessionId: sessionId, 
+        p_threadId: threadId,
+        p_status: "failure",
+        p_errcode: "UnknownError"
+      }
+    })
     return res.json({
     title: "Summary Error",
     summaryExplanation: "Could not generate summary. Please try again."

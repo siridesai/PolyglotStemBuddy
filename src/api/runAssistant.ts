@@ -1,3 +1,6 @@
+import { Settings } from "lucide-react";
+import { ChildSettings } from "../utils/assistantMessageType";
+import { getTranslation } from "../data/translations";
 
 export const runAssistant = async (
   message: string,
@@ -5,13 +8,18 @@ export const runAssistant = async (
   age?: number,
   language: string = 'en',
   sessionId: string = '1234'
-): Promise<{ result: string; runId: string }> => {
+): Promise<{ result: string; runId: string; error?: boolean }> => {
   try {
     const response = await fetch('/api/runAssistant', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message, threadId, age, language, sessionId }),
     });
+
+    if (response.status === 429) {
+      // Rate limit hit
+      return {result: getTranslation(language, 'tooManyRequests'), runId: '', error: true};
+    }
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);

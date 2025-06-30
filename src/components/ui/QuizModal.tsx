@@ -99,10 +99,10 @@ const QuizModal: React.FC<QuizModalProps> = ({
   const getScoreMessage = () => {
     if (!questions || questions.length === 0) return '';
     const percentage = (score / questions.length) * 100;
-    if (percentage === 100) return "Perfect score! You're amazing! 🌟";
-    if (percentage >= 75) return "Great job! You've learned a lot! 🎉";
-    if (percentage >= 50) return "Good effort! Keep learning! 📚";
-    return "Keep practicing! You're getting better! 💪";
+    if (percentage === 100) return getTranslation(settings.language, 'perfectScore');
+    if (percentage >= 75) return getTranslation(settings.language, 'greatJob');
+    if (percentage >= 50) return getTranslation(settings.language, 'goodEffort');
+    return getTranslation(settings.language, 'keepPracticing');
   };
 
   // UI RENDERING
@@ -157,8 +157,8 @@ const QuizModal: React.FC<QuizModalProps> = ({
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-gray-800">
               {quizComplete
-                ? "Quiz Complete!"
-                : `Question ${currentQuestion + 1} of ${questions.length}`}
+                ? getTranslation(settings.language, 'quizComplete')
+                : `${getTranslation(settings.language, 'question')} ${currentQuestion + 1} ${getTranslation(settings.language, 'of')}  ${questions.length}`}
             </h2>
             <button
               onClick={onClose}
@@ -212,8 +212,8 @@ const QuizModal: React.FC<QuizModalProps> = ({
                     size="medium"
                   >
                     {currentQuestion < questions.length - 1
-                      ? 'Next Question'
-                      : 'Finish Quiz'}
+                      ? getTranslation(settings.language, 'nextQuestion')
+                      : getTranslation(settings.language, 'finishQuiz')}
                   </Button>
                 </div>
               )}
@@ -222,7 +222,7 @@ const QuizModal: React.FC<QuizModalProps> = ({
             <div className="text-center space-y-6">
               <div className="text-6xl mb-4">🎓</div>
               <h3 className="text-2xl font-bold text-gray-800">
-                Your Score: {score}/{questions.length}
+                {getTranslation(settings.language, 'yourScore')}: {score}/{questions.length}
               </h3>
               <p className="text-lg text-gray-600">{getScoreMessage()}</p>
               <div className="pt-4">
