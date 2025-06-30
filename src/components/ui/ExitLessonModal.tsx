@@ -1,7 +1,6 @@
 import React from 'react';
 import { getTranslation } from '../../data/translations';
 
-
 interface ExitLessonProps {
   onClose: () => void;
   onBack: () => void;
@@ -11,11 +10,10 @@ interface ExitLessonProps {
   };
 }
 
-// Field IDs from your URL
-const FIELD_IDS = {
-  LANGUAGE: 'r1149b32b01a74db4bfbf9b99ee2c0e17',
-  AGE_GROUP: 'r294e0403e7454056865dc2263f67f4ff'
-};
+const FORM_BASE_URL = import.meta.env.VITE_FEEDBACK_FORM_BASE_URL;
+const FIELD_LANGUAGE = import.meta.env.VITE_FEEDBACK_FORM_FIELD_LANGUAGE;
+const FIELD_AGE_GROUP = import.meta.env.VITE_FEEDBACK_FORM_FIELD_AGE_GROUP;
+
 
 // Value mappings
 const VALUE_MAP = {
@@ -33,9 +31,9 @@ const VALUE_MAP = {
   }
 };
 
-const ExitLessonModal: React.FC<ExitLessonProps> = ({  onBack, settings }) => {
-  // Build pre-filled URL
-  const formUrl = `https://forms.office.com/Pages/ResponsePage.aspx?id=DQSIkWdsW0yxEjajBLZtrQAAAAAAAAAAAAO__RbLz6NUMkFORzFEUDI4NjNTT0w5UEFSVFFCVlZSMi4u&${FIELD_IDS.LANGUAGE}=%22${VALUE_MAP.language[settings.language]}%22&${FIELD_IDS.AGE_GROUP}=%22${VALUE_MAP.age[settings.age]}%22`;
+const ExitLessonModal: React.FC<ExitLessonProps> = ({  onBack, settings }) => { 
+
+  const formUrl = `${FORM_BASE_URL}&${FIELD_LANGUAGE}=%22${VALUE_MAP.language[settings.language]}%22&${FIELD_AGE_GROUP}=%22${VALUE_MAP.age[settings.age]}%22`;
   const exitLesson = getTranslation(settings.language, 'exitLesson');
   console.log(settings.language);
   console.log(exitLesson);
@@ -49,7 +47,7 @@ const ExitLessonModal: React.FC<ExitLessonProps> = ({  onBack, settings }) => {
             marginHeight={0}
             style={{
               width: '100%',
-              height: '85vh', // or use '100%' for full container height
+              height: '85vh', 
               minHeight: 320,
               border: 'none',
               maxWidth: '100%',
