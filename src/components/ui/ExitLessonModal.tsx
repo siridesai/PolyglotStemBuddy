@@ -42,18 +42,6 @@ const ExitLessonModal: React.FC<ExitLessonProps> = ({  onBack, settings }) => {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md sm:max-w-lg md:max-w-xl p-6 sm:p-8 relative flex flex-col items-center">
-        {/* Close Button 
-        <button
-          className="absolute top-3 right-3 w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-indigo-600 text-2xl font-bold shadow transition"
-          onClick={onClose}
-          aria-label="Close"
-        >
-          <span aria-hidden="true">&times;</span>
-        </button>
-        */}
-        
-       {/* <h3 className="text-xl font-bold mb-4">{getTranslation(settings.language, 'feedbackSurvey')}</h3>*/}
-        
         <iframe
             src={formUrl}
             frameBorder="0"

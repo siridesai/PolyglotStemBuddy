@@ -4,7 +4,7 @@ import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import { ChildSettings, Message } from '../../utils/assistantMessageType.ts';
 import { getTranslation } from '../../data/translations';
-import Button from './Button';
+import Button from './Button'; 
 import MermaidDiagram from './MermaidDiagram';
 import LatexRender from './LatexCodeRender';
 import { generateSummary } from '../../api/generateSummary';
