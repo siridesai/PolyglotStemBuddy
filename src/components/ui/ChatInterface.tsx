@@ -15,9 +15,9 @@ import { ResultReason } from 'microsoft-cognitiveservices-speech-sdk';
 import FlashcardModal from './FlashcardModal.tsx';
 import SummaryModal from './SummaryModal.tsx';
 import ExitLessonModal from './ExitLessonModal.tsx';
-import MermaidDiagram from './MermaidDiagram.tsx';
-import LatexRender from './LatexCodeRender.tsx';
+import MessageContent from './MessageContent.tsx';
 import { extractMermaidCode, removeMermaidCode } from '../../utils/mermaidCodeUtils.ts';
+
 
 const COOKIE_NAME = 'my_cookie';
 
@@ -183,7 +183,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
       const assistantMessage = {
         id: (Date.now() + 1).toString(),
         type: 'assistant' as const,
-        content: removeMermaidCode(result),
+        content: result,
         timestamp: new Date(),
         mermaidCode: extractMermaidCode(result)
       };
@@ -211,11 +211,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
         m.content.trim().toLowerCase() !== normalizedWelcome
     );
 
-    return hasUser && hasAssistant;
-
-  
-
-  
+    return hasUser && hasAssistant;  
 }
 
   async function sttFromMic() {
@@ -290,8 +286,35 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
     return language;
   }
 
- async function textToSpeech(text: string, lang: string) {
-  const cleanedText = text.replace(/[^\p{L}\p{N}\p{P}\p{Z}\p{M}]/gu, '');
+  function cleanLaTeXForTTS(text: string): string {
+  return text
+    // Remove LaTeX block markers ($$...$$)
+    .replace(/\$\$([\s\S]*?)\$\$/g, '$1')
+    // Remove inline LaTeX markers ($...$)
+    .replace(/\$([^\$]+)\$/g, '$1')
+    // Convert subscripts (_2 → 2)
+    .replace(/_({)?(\d+)(})?/g, '$2')
+    // Convert LaTeX arrows to words
+    .replace(/\\rightarrow|→/g, ' goes to ')
+    // Remove LaTeX spacing commands
+    .replace(/\\ /g, ' ')
+    // Remove 'text'
+    .replace(/\\text\s*{([^}]*)}/g, '$1')
+    // Remove curly braces
+    .replace(/[{}]/g, '')
+  }
+
+async function textToSpeech(text: string, lang: string) {
+  // 1. Remove Mermaid code blocks
+  const noMermaid = removeMermaidCode(text);
+  
+  // 2. Clean LaTeX formulas for natural reading
+  const cleanLaTeX = cleanLaTeXForTTS(noMermaid);
+  
+  // 3. Final sanitization (remove non-text characters)
+  const cleanedText = cleanLaTeX.replace(/[^\p{L}\p{N}\p{P}\p{Z}\p{M}\+\-=]/gu, '');
+
+  console.log(cleanedText);
 
   // Handle same-text playback control
   if (currentTTS === cleanedText && playerRef.current) {
@@ -374,9 +397,6 @@ useEffect(() => {
     playerRef.current = null;
   };
 }, []);
-
-
-
 
   return (
     <div className="flex flex-col h-screen bg-gradient-to-b from-sky-50 to-indigo-50">
@@ -481,27 +501,20 @@ useEffect(() => {
                   : 'bg-white shadow-md text-gray-800'
               }`}
             >
-              {/* Mermaid diagram */}
-              {message.mermaidCode && (
-                <div className="mt-4 p-4 bg-white rounded-lg">
-                  <MermaidDiagram chart={message.mermaidCode} />
-                </div>
-              )}
+              
+           <MessageContent content={message.content} />
 
-              {/* Message content without Mermaid code */}
-              <div className="whitespace-pre-wrap">
-                <LatexRender content={message.content.replace(/``````/g, '')} />
-              </div>
 
               
             </div>
 
             {/* For assistant: icon after bubble, on the right */}
             {message.type === 'assistant' && (
+          
               <button
                 className="ml-2 p-1 rounded-full hover:bg-gray-100 transition flex-shrink-0"
                 title={
-                  currentTTS === message.content
+                  currentTTS === removeMermaidCode(message.content)
                     ? ttsStatus === 'playing'
                       ? "Pause audio"
                       : ttsStatus === 'paused'
@@ -509,7 +522,7 @@ useEffect(() => {
                       : "Read aloud"
                     : "Read aloud"
                 }
-                onClick={() => textToSpeech(message.content, findRightLanguageForTTS(settings.language))}
+                onClick={() => textToSpeech(removeMermaidCode(message.content), findRightLanguageForTTS(settings.language))}
               >
                 {/* Speaker SVG */}
                 <svg

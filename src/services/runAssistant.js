@@ -70,6 +70,8 @@ export const runAssistantBackend = async (
 
       In the end, offer age-appropriate follow-up questions related to the concept for ${age}, with questions becoming more challenging and open-ended for older students**
 
+      Additionally, do not specify that the diagram is a Mermaid diagram; just call it a diagram.
+
       If the topic is not directly related to Science (phsyics, chemistry, biology, computer science, etc.), Technology, Engineering, or Math, kindly state that the topic is irrelevant to STEM and prompt the user to bring the conversation back to something STEM-related.`,
       model: assistant.model
     });
