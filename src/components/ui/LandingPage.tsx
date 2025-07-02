@@ -25,9 +25,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartLearning }) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="w-full max-w-2xl bg-white rounded-3xl shadow-lg">
-        <div className="bg-gradient-to-r from-blue-500 to-indigo-600 py-8 px-6 md:px-10">
+    <div className="bg-sketch-doodles min-h-screen flex items-center justify-center p-4">
+      <div className="w-full max-w-3xl bg-white rounded-3xl shadow-lg">
+        <div className="bg-gradient-to-r from-blue-500 to-indigo-600 py-8 px-6 md:px-10 rounded-t-3xl">
           <div className="flex flex-col items-center justify-center space-y-2">
             <div className="flex items-center">
               <Sparkles className="w-10 h-10 text-yellow-300 mr-3" />
@@ -44,7 +44,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartLearning }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             {/* Age Selection */}
             <div>
-              <h2 className="text-xl font-bold text-gray-800 mb-3">
+              <h2 className="text-lg font-bold text-gray-800 mb-3">
                 {getTranslation(selectedLanguage, 'selectAgeGroup')}
               </h2>
               <AgeSelector 
@@ -73,7 +73,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartLearning }) => {
             
             {/* Language Selection */}
             <div>
-              <h2 className="text-xl font-bold text-gray-800 mb-3">
+              <h2 className="text-lg font-bold text-gray-800 mb-3">
                 {getTranslation(selectedLanguage, 'chooseLanguage')}
               </h2>
               <LanguageSelector
