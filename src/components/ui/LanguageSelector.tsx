@@ -43,7 +43,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
     <div ref={dropdownRef} className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full h-14 flex items-center justify-between px-4 bg-white border-2 
+        className="w-full flex items-center justify-between px-4 bg-white border-2 
                  border-indigo-100 rounded-xl hover:border-indigo-300 transition-all
                  duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50"
         aria-expanded={isOpen}

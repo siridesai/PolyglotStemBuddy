@@ -45,13 +45,15 @@ return (
   <div>
     {segments.map((segment, index) => (
       <div key={index}>
-        {segment.type === 'text' ? (
+      {segment.type === 'text' ? (
+       <div className="message-text">
           <LatexRender content={segment.content} />
-        ) : (
-          <div className="my-4 p-4 bg-white rounded-lg">
-            <MermaidDiagram chart={segment.content} />
-          </div>
-        )}
+        </div>
+      ) : (
+        <div className="my-4 p-4 bg-white rounded-lg">
+          <MermaidDiagram chart={segment.content} />
+        </div>
+      )}
       </div>
     ))}
   </div>

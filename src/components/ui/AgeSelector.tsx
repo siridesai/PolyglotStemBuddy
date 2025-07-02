@@ -97,7 +97,7 @@ const AgeSelector: React.FC<AgeSelectorProps> = ({
               onKeyDown={(e) => handleKeyDown(e, group.minAge)}
               className={`
                 w-full text-left px-4 py-3 hover:bg-gray-50 text-base
-                transition-colors duration-150 outline-none
+                transition-colors duration-150 outline-none 
                 ${group.minAge === selectedAge ? 'bg-indigo-50 text-indigo-700' : ''}
               `}
               role="option"
