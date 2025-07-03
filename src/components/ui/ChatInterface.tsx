@@ -399,46 +399,43 @@ useEffect(() => {
 }, []);
 
 return (
-  <div className="flex flex-col h-screen bg-sketch-doodles"> {/* Custom background class */}
-    <div className="bg-white shadow-sm p-4 rounded-b-3xl">
-      <div className="max-w-12xl max-w-full mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-        {/* Header Left: Back + Title */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-2">
-          {/* Back Button */}
-          <button 
-            onClick={handleBack}
-            className="flex items-center text-indigo-600 hover:text-indigo-800 transition-colors"
-          >
-            <ArrowLeft className="w-25 h-5 mr-1 sm:mr-2" />
-          </button>
-          {/* Title */}
-          <h2 className="font-bold font-[Baloo_2,sans-serif] text-indigo-700 text-lg sm:text-xl whitespace-nowrap drop-shadow">
-            Polyglot STEM Buddy
-          </h2>
-        </div>
-        
-        {/* Header Right: Actions + Info */}
-        <div className="flex flex-wrap items-center gap-2">
-          {/* ...your Buttons unchanged... */}
-          <Button
-            onClick={() => { setShowFlashcards(true); }}
-            variant="secondary"
-            size="medium"
-            disabled={!buttonsEnabled}
-            className={`flex items-center gap-1 flex-shrink-0
-              ${buttonsEnabled
-                ? "bg-blue-50 hover:bg-blue-100 text-blue-700"
-                : "bg-gray-200 text-gray-400 cursor-not-allowed"}
-            `}
-          >
-            {/* Flashcards SVG */}
-            <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="7" width="13" height="10" rx="2" />
-              <rect x="8" y="3" width="13" height="10" rx="2" />
-            </svg>
-            <span className="hidden sm:inline">{getTranslation(settings.language, 'generateFlashcards')}</span>
+  <div className="flex flex-col h-screen bg-sketch-doodles">
+  <div className="bg-white shadow-sm w-full p-2 rounded-b-3xl">
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 w-full">
+    {/* Header Left: Back + Title */}
+    <div className="flex flex-row items-center gap-2">
+      <button 
+        onClick={handleBack}
+        className="flex items-center text-indigo-600 hover:text-indigo-800 transition-colors"
+      >
+        <ArrowLeft className="w-6 h-6 mr-1 sm:mr-2" />
+      </button>
+      <h2 className="font-bold font-[Baloo_2,sans-serif] text-indigo-700 text-[3vw] sm:text-[2.5vw] md:text-lg lg:text-xl xl:text-2xl whitespace-nowrap drop-shadow">
+        Polyglot STEM Buddy
+      </h2>
+    </div>
+
+    {/* Header Right: Actions + Info */}
+    <div className="flex flex-wrap items-center gap-2 justify-start sm:justify-end w-full sm:w-auto">
+        <Button
+          onClick={() => { setShowFlashcards(true); }}
+          variant="secondary"
+          size="medium"
+          disabled={!buttonsEnabled}
+          className={`flex items-center gap-1 flex-shrink-0
+            ${buttonsEnabled
+              ? "bg-blue-50 hover:bg-blue-100 text-blue-700"
+              : "bg-gray-200 text-gray-400 cursor-not-allowed"}
+          `}
+        >
+          {/* Flashcards SVG */}
+          <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"      stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="7" width="13" height="10" rx="2" />
+            <rect x="8" y="3" width="13" height="10" rx="2" />
+          </svg>
+          <span className="hidden sm:inline">{getTranslation(settings.language, 'generateFlashcards')}</span>
           </Button>
-          {/* ...other buttons unchanged... */}
+          
           <Button
             onClick={() => setShowSummary(true)}
             variant="secondary"
@@ -481,7 +478,7 @@ return (
             </svg>
             <span className="hidden sm:inline">{getTranslation(settings.language, 'exitLesson')}</span>
           </Button>
-          <div className="text-xs sm:text-sm text-gray-600 whitespace-nowrap">
+          <div className="ml-auto text-xs sm:text-sm text-gray-600 whitespace-nowrap">
             {getAgeGroupLabel(settings.age)} | {getCurrentLanguageName()}
           </div>
         </div>
@@ -574,7 +571,11 @@ return (
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSend()}
             placeholder={getTranslation(settings.language, 'typeMessage')}
-            className="flex-1 min-w-[150px] border-2 border-gray-200 rounded-xl px-4 py-2 text-lg focus:outline-none focus:border-indigo-500"
+            className="placeholder:text-sm
+                      sm:placeholder:text-base
+                      md:placeholder:text-lg
+                      lg:placeholder:text-xl
+                      flex-1 min-w-[150px] border-2 border-gray-200 rounded-xl px-4 py-2 text-lg focus:outline-none focus:border-indigo-500"
             disabled={isLoading}
           />
           <Button
