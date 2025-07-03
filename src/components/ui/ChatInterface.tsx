@@ -204,7 +204,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ settings, onBack }) => {
             >
               <ArrowLeft className="w-6 h-6 mr-1 sm:mr-2" />
             </button>
-            <h2 className="font-bold font-[Baloo_2,sans-serif] text-indigo-700 text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl whitespace-nowrap drop-shadow">
+            <h2 className="font-bold font-[Baloo_2,sans-serif] text-indigo-700 text-[3vw] sm:text-[2.5vw] md:text-lg lg:text-xl xl:text-2xl whitespace-nowrap drop-shadow">
               Polyglot STEM Buddy
             </h2>
           </div>
