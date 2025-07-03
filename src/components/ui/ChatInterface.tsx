@@ -23,8 +23,9 @@ import {
   createSSML,
   voiceMap,
   findRightLanguageForTTS,
-} from '../../utils/chatUtils.ts'
-
+} from '../../utils/chatUtils.ts';
+import robot from   '../../../public/images/robot.svg';
+import user from '../../../public/images/user.svg';
 
 const COOKIE_NAME = 'my_cookie';
 
@@ -435,15 +436,15 @@ return (
           key={message.id}
           className={`flex items-end ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
         >
-          {/* Cute avatar */}
-          {message.type === 'assistant' && (
-            <img
-              src='/images/robot.png'
-              alt="Robot"
-              className="w-12 h-12 mr-2 rounded-full bg-white border border-indigo-100 shadow"
-              style={{ boxShadow: '0 2px 8px #e0e7ff' }}
-            />
-          )}
+        {/* Cute avatar */}
+        {message.type === 'assistant' && (
+          <img
+          src={robot}
+          alt="Robot"
+          className="w-12 h-12 mr-2 rounded-full bg-white border border-indigo-100 shadow"
+          style={{ boxShadow: '0 2px 8px #e0e7ff' }}
+          />
+        )}
           {/* The message bubble */}
           <div
             className={`max-w-[80%] rounded-3xl px-5 py-4 shadow-lg border-2 ${
@@ -461,7 +462,7 @@ return (
           </div>
           {message.type === 'user' && (
             <img
-              src="/images/user.png"
+              src={user}
               alt="You"
               className="w-12 h-12 ml-2 rounded-full bg-white border border-indigo-100 shadow"
               style={{ boxShadow: '0 2px 8px #e0e7ff' }}
