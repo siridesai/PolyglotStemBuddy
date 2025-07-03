@@ -52,21 +52,22 @@ router.post('/generateSummary', async (req, res) => {
     - Message: ${message}
 
     **Response Rules**
-    1. Generate title strictly based on the topic in format: "[Topic] - ${formattedDate}" and return in JSON as title with first letter capitalized**
-    2. Display entire content strictly discussed ${message}; return in JSON as summaryExplanation including any markdown **
-    3. Use ${language} for age ${age}
-    5. Ensure the JSON is not nested inside another JSON object
-    6. Exclude the follow up questions asked at the end.
-    7. Use mermaid markdown code in ${message} to render the diagram. Do not include the mermaid markdown text in the summary explanation **
-    8. Remember to cover every key topic in the discussion. (For example, **do not** just talk about the first or last message - summarize the entire conversation.)
-    9. Return ONLY valid, minified JSON. DO NOT use json markdown
-      
+    1. Generate title strictly based on the main topics in format: "[ALL MAIN TOPICS DISCUSSED] - ${formattedDate}" and return in JSON as title with first letter capitalized**
+    2. Provide a comprehensive summary explanation of the entire conversation, covering all key points discussed in ${message}. Return this as the "summaryExplanation" property in the JSON. The summary should:
+      - Be written in ${language}, appropriate for a ${age}-year-old.
+      - Include any relevant markdown formatting.
+      - Use mermaid markdown code in ${message} to render the diagram. Do **NOT** include the mermaid markdown text in the summary explanation. Do not just describe the diagram in text or with emojis. ALWAYS INCLUDE THE DIAGRAM IN THE SUMMARY. **
+      - Separate multiple topics with bolded headers if more than one topic is discussed. For example, if 2+ topics are discussed, separate each with a clear header describing each topic.
+      - **Do not** include the mermaid markdown diagram text in the summary explanation.
+      - **Do not** include follow-up questions at the end.
+    3. Ensure the JSON is **flat** (not nested inside another object) and contains only the "title" and "summaryExplanation" properties.
+    4. Return **only** valid, minified JSON (no extra whitespace, no markdown code blocks, no additional commentary).
+    5. Cover every key topic discussed in the conversation; do not summarize only the first or last message.
+    6. The output format must be:
 
-{"title": "Topic - ${formattedDate}", "summaryExplanation": "..."}
+    {"title": "Topic - ${formattedDate}", "summaryExplanation": "..."}
 
-Conversation:
-${message.substring(0, 1500)}
-`;
+    **Strictly follow these rules. Any deviation will be considered an error.**`;
 
     // Create the run
     const run = await assistantClient.beta.threads.runs.create(threadId, {

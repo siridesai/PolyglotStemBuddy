@@ -204,7 +204,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ settings, onBack }) => {
             >
               <ArrowLeft className="w-6 h-6 mr-1 sm:mr-2" />
             </button>
-            <h2 className="font-bold font-[Baloo_2,sans-serif] text-indigo-700 text-[3vw] sm:text-[2.5vw] md:text-lg lg:text-xl xl:text-2xl whitespace-nowrap drop-shadow">
+            <h2 className="font-bold font-[Baloo_2,sans-serif] text-indigo-700 text-[4vw] sm:text-[4vw] md:text-lg lg:text-xl xl:text-2xl whitespace-nowrap drop-shadow">
               Polyglot STEM Buddy
             </h2>
           </div>
@@ -254,7 +254,23 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ settings, onBack }) => {
                   : "bg-gray-200 text-gray-400 cursor-not-allowed"}
               `}
             >
-              <Brain className="w-4 h-4" />
+            <svg
+              className="w-4 h-4"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"  // Keep the standard viewBox
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              {/* Clip */}
+              <rect x="8" y="3" width="8" height="3" rx="1" />
+              {/* Make the clipboard longer by extending the height and moving it up */}
+              <rect x="4" y="5" width="16" height="16" rx="2" />
+              {/* Checkmark (move it lower to fit the longer board) */}
+              <path d="M9.5 15.5l2 2 3-3" />
+            </svg>
               <span className="hidden sm:inline">{getTranslation(settings.language, 'readyForQuiz')}</span>
             </Button>
             <Button
