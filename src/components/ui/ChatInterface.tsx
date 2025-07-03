@@ -7,7 +7,6 @@ import QuizModal from './QuizModal.tsx';
 import { fetchThreadID } from '../../api/fetchThreadID.ts';
 import { runAssistant } from '../../api/runAssistant.ts';
 import { useCookies } from 'react-cookie';
-import { availableLanguages } from '../../data/languages.ts';
 import { deleteThread } from '../../api/deleteThread.ts';
 import { getTokenOrRefresh } from '../../utils/speechTokenUtils.js';
 import * as SpeechSDK from 'microsoft-cognitiveservices-speech-sdk';
@@ -17,6 +16,14 @@ import SummaryModal from './SummaryModal.tsx';
 import ExitLessonModal from './ExitLessonModal.tsx';
 import MessageContent from './MessageContent.tsx';
 import { extractMermaidCode, removeMermaidCode } from '../../utils/mermaidCodeUtils.ts';
+import {
+  cleanLaTeXForTTS,
+  getAgeGroupLabel,
+  getCurrentLanguageName,
+  createSSML,
+  voiceMap,
+  findRightLanguageForTTS,
+} from '../../utils/chatUtils.ts'
 
 
 const COOKIE_NAME = 'my_cookie';
@@ -76,17 +83,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
   }, [cookies, threadId]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  const getAgeGroupLabel = (age: number) => {
-    if (age >= 5 && age <= 8) return getTranslation(settings.language, 'earlyExplorer');
-    if (age >= 9 && age <= 12) return getTranslation(settings.language, 'juniorScientist');
-    return getTranslation(settings.language, 'teenResearcher');
-  };
-
-  const getCurrentLanguageName = () => {
-    const language = availableLanguages.find(lang => lang.code === settings.language);
-    return language ? language.nativeName : settings.language;
-  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -249,59 +245,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({settings, onBack}) => {
               console.log(`ERROR: ${result.reason}`);
           }
       });
-  }
-
-  // Utility to wrap text in SSML for the given language and voice
-  function createSSML(text: string, lang: string, voice: string) {
-    return `
-      <speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="${lang}">
-        <voice name="${voice}">${text}</voice>
-      </speak>
-    `;
-  }
-
-  // Map language to the recommended neural voice
-  const voiceMap: Record<string, string> = {
-    "hi-IN": "hi-IN-SwaraNeural",
-    "mr-IN": "mr-IN-AarohiNeural",
-    "kn-IN": "kn-IN-SapnaNeural",
-    "en-US": "en-US-JennyNeural",
-    "es-ES": "es-ES-ElviraNeural",
-  };
-
-  function findRightLanguageForTTS(langGiven: string) {
-    let language = 'en-US'; // Default to English
-    if (langGiven == 'es') {
-      language = 'es-ES'; // Set the language for TTS
-    }
-    else if (langGiven == 'hi') {
-      language = 'hi-IN'; // Set the language for TTS
-    }
-    else if (langGiven == 'kn') {
-      language = 'kn-IN'; // Set the language for TTS
-    }
-    else if (langGiven == 'mr') {
-      language = 'mr-IN'; 
-    }
-    return language;
-  }
-
-  function cleanLaTeXForTTS(text: string): string {
-  return text
-    // Remove LaTeX block markers ($$...$$)
-    .replace(/\$\$([\s\S]*?)\$\$/g, '$1')
-    // Remove inline LaTeX markers ($...$)
-    .replace(/\$([^\$]+)\$/g, '$1')
-    // Convert subscripts (_2 → 2)
-    .replace(/_({)?(\d+)(})?/g, '$2')
-    // Convert LaTeX arrows to words
-    .replace(/\\rightarrow|→/g, ' goes to ')
-    // Remove LaTeX spacing commands
-    .replace(/\\ /g, ' ')
-    // Remove 'text'
-    .replace(/\\text\s*{([^}]*)}/g, '$1')
-    // Remove curly braces
-    .replace(/[{}]/g, '')
   }
 
 async function textToSpeech(text: string, lang: string) {
@@ -479,7 +422,7 @@ return (
             <span className="hidden sm:inline">{getTranslation(settings.language, 'exitLesson')}</span>
           </Button>
           <div className="ml-auto text-xs sm:text-sm text-gray-600 whitespace-nowrap">
-            {getAgeGroupLabel(settings.age)} | {getCurrentLanguageName()}
+            {getAgeGroupLabel(settings.age)} | {getCurrentLanguageName(settings.language)}
           </div>
         </div>
       </div>
