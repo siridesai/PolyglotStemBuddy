@@ -394,7 +394,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ settings, onBack }) => {
         onChange={(e) => setInput(e.target.value)}
         onKeyPress={(e) => e.key === 'Enter' && handleSend()}
         placeholder={getTranslation(settings.language, 'typeMessage')}
-        className="min-w-0 flex-1 border-2 border-gray-200 rounded-xl px-3 py-2 text-base sm:text-lg placeholder:text-xs sm:placeholder:text-base focus:outline-none focus:border-indigo-500"
+        className="min-w-0 flex-1 border-2 border-gray-200 rounded-xl px-3 py-2 text-base sm:text-lg placeholder:text-sm sm:placeholder:text-base focus:outline-none focus:border-indigo-500"
         disabled={isLoading}
       />
       {/* Mic Button */}
