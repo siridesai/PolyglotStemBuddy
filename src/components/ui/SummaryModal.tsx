@@ -195,12 +195,17 @@ const SummaryModal: React.FC<SummaryModalProps> = ({
                   style={{
                     fontFamily: '"Segoe UI Emoji", "Noto Color Emoji", "Apple Color Emoji", Arial, Helvetica, sans-serif',
                     lineHeight: 1.6,
-                    whiteSpace: 'pre-wrap',
                     color: '#1e293b',
                   }}
                 >
-                  <LatexRender content={textWithoutMermaid} />
-                   {/* Mermaid diagram */}
+                {textWithoutMermaid
+                  .split(/\n{2,}/) // Split by double newlines or more
+                  .map((para, idx) => (
+                    <p key={idx} className="mb-3">
+                      <LatexRender content={para.trim()} />
+                    </p>
+                  ))}
+                {/* Mermaid diagram */}
                 {mermaidCode && (
                   <div className="mb-4 p-4 bg-gray-50 rounded-lg">
                     <MermaidDiagram chart={mermaidCode} />

@@ -33,6 +33,8 @@ jobs:
           VITE_FEEDBACK_FORM_BASE_URL: ${{ secrets.VITE_FEEDBACK_FORM_BASE_URL }} # Pull from GitHub Secrets
           VITE_FEEDBACK_FORM_FIELD_AGE_GROUP: ${{ secrets.VITE_FEEDBACK_FORM_FIELD_AGE_GROUP }} 
           VITE_FEEDBACK_FORM_FIELD_LANGUAGE: ${{ secrets.VITE_FEEDBACK_FORM_FIELD_LANGUAGE }} 
+          VITE_ENABLE_APPINSIGHTS: ${{ secrets.VITE_ENABLE_APPINSIGHTS }}
+          VITE_APPINSIGHTS_CONNECTION_STRING: ${{ secrets.VITE_APPINSIGHTS_CONNECTION_STRING }}
       
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4

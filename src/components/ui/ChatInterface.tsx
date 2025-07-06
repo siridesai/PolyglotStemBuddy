@@ -393,52 +393,53 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ settings, onBack }) => {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input bar */}
-      <div className="bg-white border-t p-4 rounded-t-3xl">
-        <div className="max-w-12xl max-w-full mx-auto">
-          <div className="flex flex-wrap gap-2">
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-              placeholder={getTranslation(settings.language, 'typeMessage')}
-              className="placeholder:text-sm sm:placeholder:text-base md:placeholder:text-lg lg:placeholder:text-xl flex-1 min-w-[150px] border-2 border-gray-200 rounded-xl px-4 py-2 text-lg focus:outline-none focus:border-indigo-500"
-              disabled={isLoading}
-            />
-            <Button
-              onClick={() => sttFromMic(setRecording, setInput, handleSend, settings)}
-              variant="secondary"
-              size="medium"
-              className={`flex items-center gap-1 flex-shrink-0 transition-all duration-200
-                ${recording ? "bg-red-100 hover:bg-red-200 text-red-700 scale-110" : "bg-blue-50 hover:bg-blue-100 text-blue-700"}
-              `}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill={recording ? "#dc2626" : "currentColor"}
-                stroke="none"
-                className="tabler-icon tabler-icon-microphone-filled"
-              >
-                <path d="M19 9a1 1 0 0 1 1 1a8 8 0 0 1 -6.999 7.938l-.001 2.062h3a1 1 0 0 1 0 2h-8a1 1 0 0 1 0 -2h3v-2.062a8 8 0 0 1 -7 -7.938a1 1 0 1 1 2 0a6 6 0 0 0 12 0a1 1 0 0 1 1 -1m-7 -8a4 4 0 0 1 4 4v5a4 4 0 1 1 -8 0v-5a4 4 0 0 1 4 -4"></path>
-              </svg>
-            </Button>
-            <Button
-              onClick={handleSend}
-              disabled={!input.trim() || isLoading}
-              variant="primary"
-              size="medium"
-              className="flex items-center gap-2 flex-shrink-0"
-            >
-              <Send className="w-4 h-4" />
-              {isLoading ? getTranslation(settings.language, 'sending') : getTranslation(settings.language, 'send')}
-            </Button>
-          </div>
-        </div>
-      </div>
+<div className="bg-white border-t p-4 rounded-t-3xl">
+  <div className="max-w-12xl max-w-full mx-auto">
+    <div className="flex flex-nowrap gap-2 items-center w-full">
+      <input
+        type="text"
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+        placeholder={getTranslation(settings.language, 'typeMessage')}
+        className="min-w-0 flex-1 border-2 border-gray-200 rounded-xl px-3 py-2 text-base sm:text-lg placeholder:text-sm sm:placeholder:text-base focus:outline-none focus:border-indigo-500"
+        disabled={isLoading}
+      />
+      {/* Mic Button */}
+      <button
+        type="button"
+        onClick={() => sttFromMic(setRecording, setInput, handleSend, settings)}
+        className={`
+          w-12 h-12 flex items-center justify-center rounded-full
+          transition-all duration-200
+          ${recording ? "bg-red-100 hover:bg-red-200 text-red-700 scale-110" : "bg-blue-50 hover:bg-blue-100 text-blue-700"}
+        `}
+        aria-label="Record"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="w-6 h-6"
+          viewBox="0 0 24 24"
+          fill={recording ? "#dc2626" : "currentColor"}
+          stroke="none"
+        >
+          <path d="M19 9a1 1 0 0 1 1 1a8 8 0 0 1 -6.999 7.938l-.001 2.062h3a1 1 0 0 1 0 2h-8a1 1 0 0 1 0 -2h3v-2.062a8 8 0 0 1 -7 -7.938a1 1 0 1 1 2 0a6 6 0 0 0 12 0a1 1 0 0 1 1 -1m-7 -8a4 4 0 0 1 4 4v5a4 4 0 1 1 -8 0v-5a4 4 0 0 1 4 -4"></path>
+        </svg>
+      </button>
+      {/* Send Button */}
+      <button
+        type="button"
+        onClick={handleSend}
+        disabled={!input.trim() || isLoading}
+        className="w-12 h-12 flex items-center justify-center rounded-full bg-indigo-500 hover:bg-indigo-600 text-white transition-all duration-200 disabled:opacity-50"
+        aria-label="Send"
+      >
+        <Send className="w-5 h-5" />
+      </button>
+    </div>
+  </div>
+</div>
+
 
       {/* Modals */}
       {showQuiz && (
