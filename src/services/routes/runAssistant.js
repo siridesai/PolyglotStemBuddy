@@ -5,7 +5,7 @@ import { getAssistantClient } from '../assistantClient.js';
 import { getAssistant } from '../assistant.js';
 import { getOrCreateThread } from '../threadManager.js';
 import { Mutex } from 'async-mutex';
-import { emitEvent } from '../../utils/appInsights.js'
+import { emitEvent } from '../appInsights.js'
 
 const router = express.Router();
 

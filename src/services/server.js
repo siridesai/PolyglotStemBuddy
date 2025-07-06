@@ -14,8 +14,8 @@ import { getAssistantClient, initializeAssistantClient } from '../services/assis
 import { getAssistant, initializeAssistant } from '../services/assistant.js';
 import { fileURLToPath } from 'url';
 import rateLimit from 'express-rate-limit';
-import { initializeAppInsights } from '../utils/appInsights.js'
-import { telemetryContextMiddleware } from '../utils/appInsights.js';
+import { initializeAppInsights } from './appInsights.js'
+import { telemetryContextMiddleware } from './appInsights.js';
 import cookieParser from 'cookie-parser';
 
 
