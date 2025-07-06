@@ -8,7 +8,7 @@ import Button from './Button';
 import MermaidDiagram from './MermaidDiagram';
 import LatexRender from './LatexCodeRender';
 import { generateSummary } from '../../api/generateSummary';
-import { extractMermaidCode, removeMermaidCode } from '../../utils/mermaidCodeUtils';
+import { splitTextAndMermaidBlocks } from '../../utils/mermaidCodeUtils';
 import { appInsights } from '../../utils/appInsightsForReact.ts';
 
 
@@ -161,8 +161,7 @@ const SummaryModal: React.FC<SummaryModalProps> = ({
     }
   };
 
-  const mermaidCode = summary ? extractMermaidCode(summary.summaryExplanation) : undefined;
-  const textWithoutMermaid = summary ? removeMermaidCode(summary.summaryExplanation) : '';
+
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
@@ -212,19 +211,27 @@ const SummaryModal: React.FC<SummaryModalProps> = ({
                     color: '#1e293b',
                   }}
                 >
-                {textWithoutMermaid
-                  .split(/\n{2,}/) // Split by double newlines or more
-                  .map((para, idx) => (
-                    <p key={idx} className="mb-3">
-                      <LatexRender content={para.trim()} />
-                    </p>
-                  ))}
-                {/* Mermaid diagram */}
-                {mermaidCode && (
-                  <div className="mb-4 p-4 bg-gray-50 rounded-lg">
-                    <MermaidDiagram chart={mermaidCode} />
-                  </div>
-                )}
+                {summary && splitTextAndMermaidBlocks(summary.summaryExplanation).map((block, idx) => {
+                    if (block.type === 'text') {
+                      // Split text block into paragraphs by double newlines
+                      return block.content
+                        .split(/\n{2,}/)
+                        .filter(para => para.trim().length > 0)
+                        .map((para, pidx) => (
+                          <p key={`${idx}-${pidx}`} className="mb-3">
+                            <LatexRender content={para.trim()} />
+                          </p>
+                        ));
+                    }
+                    if (block.type === 'mermaid') {
+                      return (
+                        <div key={idx} className="mb-4 p-4 bg-gray-50 rounded-lg">
+                          <MermaidDiagram chart={block.content} />
+                        </div>
+                      );
+                    }
+                    return null;
+                  })}
                 </div>
               </div>
               <div className="flex justify-end gap-2 mt-4">

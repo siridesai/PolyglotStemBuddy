@@ -198,9 +198,10 @@ export async function textToSpeech(
 export function stopCurrentPlayback(
   playerRef: React.MutableRefObject<SpeechSDK.SpeakerAudioDestination | null>,
   synthesizerRef: React.MutableRefObject<SpeechSDK.SpeechSynthesizer | null>,
-  setTtsStatus: (status: 'idle' | 'playing' | 'paused') => void
+  setTtsStatus: (status: 'idle' | 'playing' | 'paused') => void,
+  setCurrentTTS: (content: string | null) => void
 ) {
-  if (playerRef.current) {
+  if (playerRef.current && typeof playerRef.current.pause === 'function') {
     try { playerRef.current.pause(); } catch {}
     playerRef.current = null;
   }
@@ -209,8 +210,8 @@ export function stopCurrentPlayback(
     synthesizerRef.current = null;
   }
   setTtsStatus('idle');
+  setCurrentTTS(null);
 }
-
 export function handleSynthesisComplete(
   setTtsStatus: (status: 'idle' | 'playing' | 'paused') => void,
   setCurrentTTS: (content: string | null) => void
@@ -225,4 +226,23 @@ export function handleSynthesisError(
 ) {
   console.error('TTS Error:', error);
   setTtsStatus('idle');
+}
+
+
+export function cleanupTTS(
+  playerRef: React.MutableRefObject<any>,
+  synthesizerRef: React.MutableRefObject<any>,
+  setTtsStatus: (status: 'idle' | 'playing' | 'paused') => void,
+  setCurrentTTS: (content: string | null) => void
+) {
+  if (playerRef.current && typeof playerRef.current.pause === 'function') {
+    try { playerRef.current.pause(); } catch {}
+    playerRef.current = null;
+  }
+  if (synthesizerRef.current) {
+    try { synthesizerRef.current.close(); } catch {}
+    synthesizerRef.current = null;
+  }
+  setTtsStatus('idle');
+  setCurrentTTS(null);
 }
