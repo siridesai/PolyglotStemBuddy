@@ -23,18 +23,25 @@ import {
   stopCurrentPlayback,
   handleSynthesisComplete,
   handleSynthesisError,
+  cleanupTTS,
 } from '../../utils/chatUtils.ts';
 import robot from '../../../public/images/robot.svg';
 import user from '../../../public/images/user.svg';
 import { appInsights } from '../../utils/appInsightsForReact.ts';
 
-
 const COOKIE_NAME = 'my_cookie';
+
 
 interface ChatInterfaceProps {
   settings: ChildSettings;
   onBack: () => void;
 }
+
+
+
+
+
+
 
 const getWelcomeMessage = (lang: string) => {
   switch (lang) {
@@ -129,6 +136,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ settings, onBack }) => {
 
   // Handlers
   const handleBack = async () => {
+    cleanupTTS(playerRef, synthesizerRef, setTtsStatus, setCurrentTTS);
     const threadId = await fetchThreadID(cookies[COOKIE_NAME]);
     if (threadId) {
       try {
@@ -198,6 +206,33 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ settings, onBack }) => {
     }
   };
 
+  const handleTTSClick = (messageContent: string) => {
+    const cleanedText = removeMermaidCode(messageContent);
+    const isPlayingThis = currentTTS === cleanedText && ttsStatus === 'playing';
+
+    if (isPlayingThis) {
+      // Stop TTS if this message is playing
+      cleanupTTS(playerRef, synthesizerRef, setTtsStatus, setCurrentTTS);
+    } else {
+      // Start TTS
+      textToSpeech(
+        cleanedText,
+        findRightLanguageForTTS(settings.language),
+        playerRef,
+        synthesizerRef,
+        ttsStatus,
+        setTtsStatus,
+        currentTTS,
+        setCurrentTTS,
+        () => stopCurrentPlayback(playerRef, synthesizerRef, setTtsStatus, setCurrentTTS),
+        () => handleSynthesisComplete(setTtsStatus, setCurrentTTS),
+        (error) => handleSynthesisError(error, setTtsStatus)
+      );
+    }
+  };
+
+
+
   // --- Render ---
   return (
     <div className="flex flex-col h-screen bg-sketch-doodles">
@@ -220,7 +255,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ settings, onBack }) => {
           {/* Header Right */}
           <div className="flex flex-wrap items-center gap-2 justify-start sm:justify-end w-full sm:w-auto">
             <Button
-              onClick={() => setShowFlashcards(true)}
+              onClick={() => {
+                cleanupTTS(playerRef, synthesizerRef, setTtsStatus, setCurrentTTS);
+                setShowFlashcards(true)}}
               variant="secondary"
               size="medium"
               disabled={!buttonsEnabled}
@@ -238,7 +275,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ settings, onBack }) => {
               <span className="hidden sm:inline">{getTranslation(settings.language, 'generateFlashcards')}</span>
             </Button>
             <Button
-              onClick={() => setShowSummary(true)}
+              onClick={() => {
+                cleanupTTS(playerRef, synthesizerRef, setTtsStatus, setCurrentTTS);
+                setShowSummary(true)}}
               variant="secondary"
               size="medium"
               disabled={!buttonsEnabled}
@@ -252,7 +291,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ settings, onBack }) => {
               <span className="hidden sm:inline">{getTranslation(settings.language, 'summarize')}</span>
             </Button>
             <Button
-              onClick={() => setShowQuiz(true)}
+              onClick={() => {
+                 cleanupTTS(playerRef, synthesizerRef, setTtsStatus, setCurrentTTS);
+                 setShowQuiz(true)}}
               variant="secondary"
               size="medium"
               disabled={!buttonsEnabled}
@@ -282,7 +323,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ settings, onBack }) => {
               <span className="hidden sm:inline">{getTranslation(settings.language, 'readyForQuiz')}</span>
             </Button>
             <Button
-              onClick={() => setShowExitLessonFeedback(true)}
+              onClick={() => {
+                cleanupTTS(playerRef, synthesizerRef, setTtsStatus, setCurrentTTS);
+                setShowExitLessonFeedback(true)}}
               variant="secondary"
               size="medium"
               className="flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-700 flex-shrink-0"
@@ -344,49 +387,31 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ settings, onBack }) => {
             )}
             {/* TTS Button for Assistant */}
             {message.type === 'assistant' && (
-              <button
-                className="ml-2 p-1 rounded-full hover:bg-gray-100 transition flex-shrink-0"
-                title={
-                  currentTTS === removeMermaidCode(message.content)
-                    ? ttsStatus === 'playing'
-                      ? "Pause audio"
-                      : ttsStatus === 'paused'
-                      ? "Resume audio"
+                <button className="ml-2 p-1 rounded-full hover:bg-gray-100 transition flex-shrink-0"
+                  title={
+                    currentTTS === removeMermaidCode(message.content) && ttsStatus === 'playing'
+                      ? "Stop audio"
                       : "Read aloud"
-                    : "Read aloud"
-                }
-                onClick={() =>
-                  textToSpeech(
-                    removeMermaidCode(message.content),
-                    findRightLanguageForTTS(settings.language),
-                    playerRef,
-                    synthesizerRef,
-                    ttsStatus,
-                    setTtsStatus,
-                    currentTTS,
-                    setCurrentTTS,
-                    () => stopCurrentPlayback(playerRef, synthesizerRef, setTtsStatus),
-                    () => handleSynthesisComplete(setTtsStatus, setCurrentTTS),
-                    (error) => handleSynthesisError(error, setTtsStatus)
-                  )
-                }
-              >
-                {/* Speaker SVG */}
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={1.5}
-                  stroke="currentColor"
-                  className="w-8 h-8 text-indigo-600"
+                  }
+                  onClick={() => handleTTSClick(message.content)}
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M11 5.882V18.12a1 1 0 01-1.707.707L5.586 15H3a1 1 0 01-1-1V10a1 1 0 011-1h2.586l3.707-3.828A1 1 0 0111 5.882zm6.364 1.757a9 9 0 010 8.722M17.657 8.343a5 5 0 010 7.314"
-                  />
-                </svg>
-              </button>
+                  {/* Speaker Icon (always the same) */}
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="w-7 h-7 text-indigo-600"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={1.5}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M11 5.882V18.12a1 1 0 01-1.707.707L5.586 15H3a1 1 0 01-1-1V10a1 1 0 011-1h2.586l3.707-3.828A1 1 0 0111 5.882zm6.364 1.757a9 9 0 010 8.722M17.657 8.343a5 5 0 010 7.314"
+                    />
+                  </svg>
+                </button>
+
             )}
           </div>
         ))}
