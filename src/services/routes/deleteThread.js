@@ -17,7 +17,8 @@ router.delete('/deleteThread/:threadId', async (req, res) => {
       {
         p_threadId: threadId,
         p_status: "success",
-      }
+      },
+      req.telemetryContext
     )
     res.status(200).json({ success: true });
   } catch (error) {
@@ -26,7 +27,8 @@ router.delete('/deleteThread/:threadId', async (req, res) => {
       {
         p_threadId: threadId,
         p_status: "failure"
-      }
+      },      
+      req.telemetryContext
     )
     res.status(500).json({ error: error.message });
   }

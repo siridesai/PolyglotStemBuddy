@@ -1,10 +1,59 @@
+import express from 'express';
 import { AzureOpenAI } from 'openai';
 import dotenv from 'dotenv';
-import { getAssistantClient } from '../services/assistantClient.js';
-import { getAssistant } from '../services/assistant.js';
-import { getOrCreateThread } from '../services/threadManager.js';
+import { getAssistantClient } from '../assistantClient.js';
+import { getAssistant } from '../assistant.js';
+import { getOrCreateThread } from '../threadManager.js';
 import { Mutex } from 'async-mutex';
-import { emitEvent } from '../utils/appInsights.js'
+import { emitEvent } from '../../utils/appInsights.js'
+
+const router = express.Router();
+
+router.post('/runAssistant', async (req, res) => {
+    try {
+        const { message, threadId, age, language, sessionId } = req.body;
+        console.log("Session id:", sessionId);
+        const { result, runId } = await runAssistantBackend(
+            message,
+            threadId,
+            age,
+            language,
+            sessionId
+        );
+        sessionRunMap.set(sessionId, { threadId, runId });
+        emitEvent(
+        "ChatEvent",
+        {
+          p_question: message,
+          p_age: age,
+          p_language: language,
+          p_sessionId: sessionId, 
+          p_threadId: threadId,
+          p_status: "success"
+        },
+        req.telemetryContext 
+      )
+
+        res.json({ result, runId });
+
+    } catch (error) {
+        console.error("Backend API error:", error);
+        emitEvent(
+          "ChatEvent",
+          {
+            p_question: message,
+            p_age: age,
+            p_language: language,
+            p_sessionId: sessionId, 
+            p_threadId: threadId,
+            p_status: "failure"
+          },
+          req.telemetryContext
+        )
+        res.status(500).json({ error: error.message });
+    }
+});
+
 
 // Session-thread mapping with concurrency control
 const sessionThreadMap = new Map();
@@ -95,34 +144,12 @@ export const runAssistantBackend = async (
       const latestAssistantMsg = messages.data.find(m => m.role === 'assistant');
       const result = latestAssistantMsg?.content?.[0]?.text?.value ?? "(No response)";
       
-    emitEvent(
-      "ChatEvent",
-      {
-        p_question: message,
-        p_age: age,
-        p_language: language,
-        p_sessionId: sessionId, 
-        p_threadId: threadId,
-        p_status: "success"
-      }
-    )
       
       return { 
         result, 
         runId: run.id 
       };
     } else {
-      emitEvent(
-        "ChatEvent",
-        {
-          p_question: message,
-          p_age: age,
-          p_language: language,
-          p_sessionId: sessionId, 
-          p_threadId: threadId,
-          p_status: "failure"
-        }
-      )
       throw new Error(`Run failed with status: ${runStatus}`);
     }
   } catch (error) {
@@ -130,3 +157,5 @@ export const runAssistantBackend = async (
     throw error;
   }
 };
+
+export default router;

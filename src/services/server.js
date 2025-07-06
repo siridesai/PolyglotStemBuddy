@@ -1,5 +1,6 @@
 import express from 'express';
 import path from 'path';
+import runAssistantRouter from './routes/runAssistant.js'
 import generateQuestionsRouter from './routes/generateQuestions.js';
 import generateSummaryRouter from './routes/generateSummary.js';
 import cancelAssistantRunRouter from './routes/cancelAssistantRun.js';
@@ -8,13 +9,14 @@ import deleteThreadRouter from './routes/deleteThread.js';
 import threadIDRouter from './routes/threadID.js';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { runAssistantBackend } from '../services/runAssistant.js';
 import { getOrCreateThread } from '../services/threadManager.js';
 import { getAssistantClient, initializeAssistantClient } from '../services/assistantClient.js';
 import { getAssistant, initializeAssistant } from '../services/assistant.js';
 import { fileURLToPath } from 'url';
 import rateLimit from 'express-rate-limit';
 import { initializeAppInsights } from '../utils/appInsights.js'
+import { telemetryContextMiddleware } from '../utils/appInsights.js';
+import cookieParser from 'cookie-parser';
 
 
 dotenv.config();
@@ -65,12 +67,15 @@ function keyGenerator(req) {
   return ip.replace(/(:\d+)?$/, '').replace(/^\[|\]$/g, '');
 }
 
+
 // Initialize assistants first
 initializeAssistantClient();
 initializeAssistant();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+app.use(cookieParser());
 
 app.use(cors());
 app.use(express.json());
@@ -89,6 +94,7 @@ const limiter = rateLimit({
 
 // Apply to all requests
 app.use(limiter);
+app.use(telemetryContextMiddleware);
 
 app.get('/test-ip', (req, res) => {
   res.json({
@@ -99,26 +105,9 @@ app.get('/test-ip', (req, res) => {
 });
 
 // API Routes (MUST COME BEFORE STATIC FILES)
-app.post('/api/runAssistant', async (req, res) => {
-    try {
-        const { message, threadId, age, language, sessionId } = req.body;
-        console.log("Session id:", sessionId);
-        const { result, runId } = await runAssistantBackend(
-            message,
-            threadId,
-            age,
-            language,
-            sessionId
-        );
-        sessionRunMap.set(sessionId, { threadId, runId });
-        res.json({ result, runId });
-    } catch (error) {
-        console.error("Backend API error:", error);
-        res.status(500).json({ error: error.message });
-    }
-});
 
 // Mount all routers under /api
+app.use('/api', runAssistantRouter);
 app.use('/api', generateQuestionsRouter);
 app.use('/api', deleteThreadRouter);
 app.use('/api', threadIDRouter);

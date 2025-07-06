@@ -28,7 +28,7 @@ router.get('/getSpeechToken', async (req, res, next) => {
                 "GetSpeechTokenEvent",
                 {
                     p_status: "success"
-                }
+                }, req.telemetryContext
             )
             res.send({ token: tokenResponse.data, region: speechRegion });
         } catch (err) {
@@ -36,7 +36,7 @@ router.get('/getSpeechToken', async (req, res, next) => {
                 "GetSpeechTokenEvent",
                 {
                     p_status: "failure"
-                }
+                }, req.telemetryContext
             )
             res.status(401).send('There was an error authorizing your speech key.');
         }

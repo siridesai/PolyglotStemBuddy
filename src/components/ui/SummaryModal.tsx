@@ -139,6 +139,20 @@ const SummaryModal: React.FC<SummaryModalProps> = ({
       const formattedDate = `${yyyy}-${mm}-${dd}`;
 
       pdf.save(`${sanitizeFilename(summary.title)}-${formattedDate}-summary.pdf`);
+
+      // Track the event
+      if (appInsights) {
+        appInsights.trackEvent({
+          name: 'DownloadPDF',
+          properties: {
+            language: settings.language,
+            ageGroup: settings.age,
+            title: summary.title
+          }
+        });
+      }
+
+
     } catch (err) {
       console.error('PDF generation failed:', err);
       alert('Failed to generate PDF. Please try again.');

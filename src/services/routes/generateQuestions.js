@@ -16,7 +16,7 @@ router.post('/generateQuestions', async (req, res) => {
         p_threadId: threadId,
         p_status: "failure",
         p_errcode: 'MissingParams'
-      });
+      },req.telemetryContext);
 
       return res.status(400).json({ error: 'Missing required parameters.' });
     }
@@ -76,7 +76,7 @@ router.post('/generateQuestions', async (req, res) => {
           p_threadId: threadId,
           p_status: "failure",
           p_errcode: 'QuizGenFailed'
-        }
+        }, req.telemetryContext
       )
       return res.status(500).json({ error: 'Quiz generation failed.' });
     }
@@ -104,8 +104,7 @@ router.post('/generateQuestions', async (req, res) => {
             p_threadId: threadId,
             p_status: "failure",
             p_errcode: 'JSONParseError'
-
-          }
+          }, req.telemetryContext
         )
         return res.status(500).json({ error: 'Failed to parse quiz JSON.' });
       }
@@ -117,7 +116,7 @@ router.post('/generateQuestions', async (req, res) => {
         p_language: language,
         p_threadId: threadId,
         p_status: "success"
-      }
+      }, req.telemetryContext
     )
     return res.json({ result: quizQuestions });
   } catch (error) {
@@ -130,7 +129,7 @@ router.post('/generateQuestions', async (req, res) => {
         p_threadId: threadId,
         p_status: "failure",
         p_errcode: "InternalServerError"
-      }
+      }, req.telemetryContext
     )
     return res.status(500).json({ error: 'Internal server error.' });
   }

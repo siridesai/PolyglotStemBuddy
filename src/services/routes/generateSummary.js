@@ -31,7 +31,7 @@ router.post('/generateSummary', async (req, res) => {
           p_threadId: threadId,
           p_status: "failure",
           p_errcode: "ThreadNotFound"
-        }
+        }, req.telemetryContext
       )
       return res.status(404).json({ error: `Thread ${threadId} not found` });
     }
@@ -91,7 +91,7 @@ router.post('/generateSummary', async (req, res) => {
           p_threadId: threadId,
           p_status: "failure",
           p_errcode: "SummaryGenFailed"
-        }
+        }, req.telemetryContext
       )
       return res.status(500).json({ error: 'Summary generation failed.' });
     }
@@ -112,7 +112,7 @@ router.post('/generateSummary', async (req, res) => {
           p_threadId: threadId,
           p_status: "failure",
           p_errcode: "NoSummaryGenerated"
-        }
+        }, req.telemetryContext
       )
       return res.status(500).json({ error: 'No summary generated.' });
     }
@@ -143,7 +143,7 @@ router.post('/generateSummary', async (req, res) => {
     }
 
     // Log and return
-    console.log('SUMMARY TO RETURN:', summary);
+    //console.log('SUMMARY TO RETURN:', summary);
       emitEvent(
         "SummaryEvent",
          {
@@ -152,7 +152,7 @@ router.post('/generateSummary', async (req, res) => {
           p_sessionId: sessionId, 
           p_threadId: threadId,
           p_status: "success"
-        }
+        }, req.telemetryContext
       )
     return res.json(summary);
 
@@ -166,7 +166,7 @@ router.post('/generateSummary', async (req, res) => {
         p_threadId: req.body.threadId,
         p_status: "failure",
         p_errcode: "UnknownError"
-      }
+      }, req.telemetryContext
     )
     return res.json({
       title: "Summary Error",
