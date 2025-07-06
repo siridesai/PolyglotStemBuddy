@@ -4,7 +4,7 @@ import { getAssistantClient } from '../services/assistantClient.js';
 import { getAssistant } from '../services/assistant.js';
 import { getOrCreateThread } from '../services/threadManager.js';
 import { Mutex } from 'async-mutex';
-import appInsights from 'applicationinsights';
+import { emitEvent } from '../utils/appInsights.js'
 
 // Session-thread mapping with concurrency control
 const sessionThreadMap = new Map();
@@ -18,7 +18,6 @@ export const runAssistantBackend = async (
   language = 'en',
   sessionId
 ) => {
-  const appInsightsClient = appInsights.defaultClient;
   try {
     console.log("Received message: " + message);
     console.log("Received age: " + age);
@@ -96,9 +95,9 @@ export const runAssistantBackend = async (
       const latestAssistantMsg = messages.data.find(m => m.role === 'assistant');
       const result = latestAssistantMsg?.content?.[0]?.text?.value ?? "(No response)";
       
-    appInsightsClient.trackEvent({
-      name: "ChatEvent",
-      properties: {
+    emitEvent(
+      "ChatEvent",
+      {
         p_question: message,
         p_age: age,
         p_language: language,
@@ -106,16 +105,16 @@ export const runAssistantBackend = async (
         p_threadId: threadId,
         p_status: "success"
       }
-    })
+    )
       
       return { 
         result, 
         runId: run.id 
       };
     } else {
-      appInsightsClient.trackEvent({
-        name: "ChatEvent",
-        properties: {
+      emitEvent(
+        "ChatEvent",
+        {
           p_question: message,
           p_age: age,
           p_language: language,
@@ -123,7 +122,7 @@ export const runAssistantBackend = async (
           p_threadId: threadId,
           p_status: "failure"
         }
-      })
+      )
       throw new Error(`Run failed with status: ${runStatus}`);
     }
   } catch (error) {

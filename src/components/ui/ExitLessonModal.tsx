@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { getTranslation } from '../../data/translations';
+import { appInsights } from '../../utils/appInsightsForReact.ts';
 
 interface ExitLessonProps {
   onClose: () => void;
@@ -37,6 +38,15 @@ const ExitLessonModal: React.FC<ExitLessonProps> = ({  onBack, settings }) => {
   const exitLesson = getTranslation(settings.language, 'exitLesson');
   console.log(settings.language);
   console.log(exitLesson);
+
+  // Log App Insights page usage
+  useEffect(() => {
+    if (appInsights) {
+      appInsights.trackPageView({ name: 'ExitModal' });
+    }
+  }, []);
+
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md sm:max-w-lg md:max-w-xl p-6 sm:p-8 relative flex flex-col items-center">

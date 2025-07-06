@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { ChildSettings, Message } from '../../utils/assistantMessageType.ts';
 import { generateQuestions } from '../../api/generateQuestions';
 import { getTranslation } from '../../data/translations';
+import { appInsights } from '../../utils/appInsightsForReact.ts';
 
 
 interface FlashcardModalProps {
@@ -91,6 +92,13 @@ const FlashcardModal: React.FC<FlashcardModalProps> = ({
     hasFetched.current = true;
     fetchQuestions();
   }, [fetchQuestions]);
+
+  // Log App Insights page usage
+  useEffect(() => {
+    if (appInsights) {
+      appInsights.trackPageView({ name: 'FlashCardModal' });
+    }
+  }, );
 
   // Navigation handlers
   const handlePrev = () => {

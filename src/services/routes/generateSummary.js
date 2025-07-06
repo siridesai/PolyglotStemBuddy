@@ -1,13 +1,12 @@
 import express from 'express';
 import { getAssistantClient, initializeAssistantClient } from '../assistantClient.js';
 import { getAssistant, initializeAssistant } from '../assistant.js';
-import appInsights from 'applicationinsights';
+import { emitEvent } from '../../utils/appInsights.js'
 
 const router = express.Router();
 const sessionRunMap = new Map();
 
 router.post('/generateSummary', async (req, res) => {
-  const appInsightsClient = appInsights.defaultClient;
   try {
     const { message, threadId, age, language, sessionId } = req.body;
 
@@ -25,9 +24,9 @@ router.post('/generateSummary', async (req, res) => {
     try {
       await assistantClient.beta.threads.retrieve(threadId);
     } catch (err) {
-      appInsightsClient.trackEvent({
-        name: "SummaryEvent",
-        properties: {
+      emitEvent(
+        "SummaryEvent",
+         {
           p_age: age,
           p_language: language,
           p_sessionId: sessionId, 
@@ -35,7 +34,7 @@ router.post('/generateSummary', async (req, res) => {
           p_status: "failure",
           p_errcode: "ThreadNotFound"
         }
-      })
+      )
       return res.status(404).json({ error: `Thread ${threadId} not found` });
     }
 
@@ -92,9 +91,9 @@ router.post('/generateSummary', async (req, res) => {
     } while (runStatus.status === 'queued' || runStatus.status === 'in_progress');
 
     if (runStatus.status === 'failed') {
-      appInsightsClient.trackEvent({
-        name: "SummaryEvent",
-        properties: {
+      emitEvent(
+        "SummaryEvent",
+         {
           p_age: age,
           p_language: language,
           p_sessionId: sessionId, 
@@ -102,7 +101,7 @@ router.post('/generateSummary', async (req, res) => {
           p_status: "failure",
           p_errcode: "SummaryGenFailed"
         }
-      })
+      )
       return res.status(500).json({ error: 'Summary generation failed.' });
     }
 
@@ -112,9 +111,9 @@ router.post('/generateSummary', async (req, res) => {
       .find(m => m.run_id === run.id && m.role === 'assistant');
 
     if (!lastMessage?.content?.[0]?.text?.value) {
-      appInsightsClient.trackEvent({
-        name: "SummaryEvent",
-        properties: {
+      emitEvent(
+        "SummaryEvent",
+         {
           p_age: age,
           p_language: language,
           p_sessionId: sessionId, 
@@ -122,30 +121,30 @@ router.post('/generateSummary', async (req, res) => {
           p_status: "failure",
           p_errcode: "NoSummaryGenerated"
         }
-      })
+      )
       return res.status(500).json({ error: 'No summary generated.' });
     }
 
     try {
       // Parse JSON response
       const summary = JSON.parse(lastMessage.content[0].text.value);
-      appInsightsClient.trackEvent({
-        name: "SummaryEvent",
-        properties: {
+      emitEvent(
+        "SummaryEvent",
+         {
           p_age: age,
           p_language: language,
           p_sessionId: sessionId, 
           p_threadId: threadId,
           p_status: "success"
         }
-      })
+      )
       return res.json(summary);
     } catch (error) {
       // Fallback for text-based response
       const [title, ...summaryParts] = lastMessage.content[0].text.value.split('\n\n');
-      appInsightsClient.trackEvent({
-        name: "SummaryEvent",
-        properties: {
+      emitEvent(
+        "SummaryEvent",
+         {
           p_age: age,
           p_language: language,
           p_sessionId: sessionId, 
@@ -153,7 +152,7 @@ router.post('/generateSummary', async (req, res) => {
           p_status: "failure",
           p_errcode: "JSONParseError"
         }
-      })
+      )
       return res.json({
         title: title.replace('Title: ', '').trim(),
         summaryExplanation: summaryParts.join('\n\n').trim()
@@ -161,9 +160,9 @@ router.post('/generateSummary', async (req, res) => {
     }
 
   } catch (error) {
-    appInsightsClient.trackEvent({
-      name: "SummaryEvent",
-      properties: {
+    emitEvent(
+      "SummaryEvent",
+       {
         p_age: age,
         p_language: language,
         p_sessionId: sessionId, 
@@ -171,7 +170,7 @@ router.post('/generateSummary', async (req, res) => {
         p_status: "failure",
         p_errcode: "UnknownError"
       }
-    })
+    )
     return res.json({
     title: "Summary Error",
     summaryExplanation: "Could not generate summary. Please try again."

@@ -9,6 +9,8 @@ import MermaidDiagram from './MermaidDiagram';
 import LatexRender from './LatexCodeRender';
 import { generateSummary } from '../../api/generateSummary';
 import { extractMermaidCode, removeMermaidCode } from '../../utils/mermaidCodeUtils';
+import { appInsights } from '../../utils/appInsightsForReact.ts';
+
 
 interface Summary {
   title: string;
@@ -40,6 +42,12 @@ const SummaryModal: React.FC<SummaryModalProps> = ({
   const summaryRef = useRef<HTMLDivElement>(null);
   const hasFetched = useRef(false);
   
+  // Log App Insights page usage
+  useEffect(() => {
+    if (appInsights) {
+      appInsights.trackPageView({ name: 'SummaryModal' });
+    }
+  }, );
 
   useEffect(() => {
     if (hasFetched.current) return;

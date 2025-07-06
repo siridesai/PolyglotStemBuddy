@@ -14,7 +14,8 @@ import { getAssistantClient, initializeAssistantClient } from '../services/assis
 import { getAssistant, initializeAssistant } from '../services/assistant.js';
 import { fileURLToPath } from 'url';
 import rateLimit from 'express-rate-limit';
-import appInsights from 'applicationinsights';
+import { initializeAppInsights } from '../utils/appInsights.js'
+
 
 dotenv.config();
 const app = express();
@@ -30,13 +31,9 @@ app.use((req, res, next) => {
 
 const port = process.env.PORT || 3000;  // Use environment variable for port
 
+const appInsightsConnectionString = process.env.APPLICATIONINSIGHTS_CONNECTION_STRING; 
+initializeAppInsights(appInsightsConnectionString);
 
-appInsights.setup(process.env.APPLICATIONINSIGHTS_CONNECTION_STRING)
-  .setAutoCollectRequests(true)
-  .setAutoCollectPerformance(true)
-  .setAutoCollectExceptions(true)
-  .enableWebInstrumentation(true)
-  .start();
 
 function keyGenerator(req) {
   let ip;
