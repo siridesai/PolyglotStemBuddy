@@ -4,6 +4,7 @@ import Button from './Button';
 import { getTranslation } from '../../data/translations';
 import { ChildSettings, Message } from '../../utils/assistantMessageType.ts';
 import { generateQuestions } from '../../api/generateQuestions';
+import { appInsights } from '../../utils/appInsightsForReact.ts';
 
 interface QuizQuestion {
   question: string;
@@ -65,6 +66,14 @@ const QuizModal: React.FC<QuizModalProps> = ({
         setLoading(false);
       });
   }, [messages, threadId, settings.age, settings.language, cookie]);
+
+  // Log App Insights page usage
+  useEffect(() => {
+    if (appInsights) {
+      appInsights.trackPageView({ name: 'QuizModal' });
+    }
+  }, );
+
 
   // Reset quiz state when new questions are loaded
   useEffect(() => {

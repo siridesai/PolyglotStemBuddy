@@ -1,26 +1,23 @@
 import express from 'express';
 import { getAssistantClient, initializeAssistantClient } from '../assistantClient.js';
 import { getAssistant, initializeAssistant } from '../assistant.js';
-import appInsights from 'applicationinsights';
+import { emitEvent } from '../../utils/appInsights.js'
 
 const router = express.Router();
 
 router.post('/generateQuestions', async (req, res) => {
-  const appInsightsClient = appInsights.defaultClient;
   try {
     const { message, threadId, age, language } = req.body;
 
     if (!threadId || !language) {
-      appInsightsClient.trackEvent({
-        name: "QuestionEvent",
-        properties: {
-          p_age: age,
-          p_language: language,
-          p_threadId: threadId,
-          p_status: "failure",
-          p_errcode: 'MissingParams'
-        }
-      })
+      emitEvent("QuestionEvent", {
+        p_age: age,
+        p_language: language,
+        p_threadId: threadId,
+        p_status: "failure",
+        p_errcode: 'MissingParams'
+      },req.telemetryContext);
+
       return res.status(400).json({ error: 'Missing required parameters.' });
     }
 
@@ -72,16 +69,15 @@ router.post('/generateQuestions', async (req, res) => {
     } while (runStatus.status !== 'completed' && runStatus.status !== 'failed');
 
     if (runStatus.status === 'failed') {
-      appInsightsClient.trackEvent({
-        name: "QuestionEvent",
-        properties: {
+      emitEvent("QuestionEvent",
+        {
           p_age: age,
           p_language: language,
           p_threadId: threadId,
           p_status: "failure",
           p_errcode: 'QuizGenFailed'
-        }
-      })
+        }, req.telemetryContext
+      )
       return res.status(500).json({ error: 'Quiz generation failed.' });
     }
 
@@ -100,42 +96,41 @@ router.post('/generateQuestions', async (req, res) => {
         quizQuestions = JSON.parse(content);
       } catch (err) {
         console.error('JSON parse error:', err, 'Content:', content);
-        appInsightsClient.trackEvent({
-          name: "QuestionEvent",
-          properties: {
+        emitEvent(
+          "QuestionEvent",
+          {
             p_age: age,
             p_language: language,
             p_threadId: threadId,
             p_status: "failure",
             p_errcode: 'JSONParseError'
-
-          }
-        })
+          }, req.telemetryContext
+        )
         return res.status(500).json({ error: 'Failed to parse quiz JSON.' });
       }
     }
-    appInsightsClient.trackEvent({
-      name: "QuestionEvent",
-      properties: {
+    emitEvent(
+      "QuestionEvent",
+      {
         p_age: age,
         p_language: language,
         p_threadId: threadId,
         p_status: "success"
-      }
-    })
+      }, req.telemetryContext
+    )
     return res.json({ result: quizQuestions });
   } catch (error) {
     console.error('Error in /generateQuestions:', error);
-    appInsightsClient.trackEvent({
-      name: "QuestionEvent",
-      properties: {
+    emitEvent(
+      "QuestionEvent",
+      {
         p_age: age,
         p_language: language,
         p_threadId: threadId,
         p_status: "failure",
         p_errcode: "InternalServerError"
-      }
-    })
+      }, req.telemetryContext
+    )
     return res.status(500).json({ error: 'Internal server error.' });
   }
 });

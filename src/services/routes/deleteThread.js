@@ -1,34 +1,35 @@
 import express from 'express';
 import { getAssistantClient, initializeAssistantClient } from '../assistantClient.js';
 import { getAssistant, initializeAssistant } from '../assistant.js';
-import appInsights from 'applicationinsights';
+import { emitEvent } from '../../utils/appInsights.js'
 
 const router = express.Router();
 
 router.delete('/deleteThread/:threadId', async (req, res) => {
-  const appInsightsClient = appInsights.defaultClient;
   const { threadId } = req.params;
   try {
     const assistantClient = getAssistantClient();
     console.log('Deleting thread for Thread ID:', threadId);
     await assistantClient.beta.threads.del(threadId);
     console.log('Thread deleted successfully');
-    appInsightsClient.trackEvent({
-      name: "ThreadDeleteEvent",
-      properties: {
+    emitEvent(
+      "ThreadDeleteEvent",
+      {
         p_threadId: threadId,
         p_status: "success",
-      }
-    })
+      },
+      req.telemetryContext
+    )
     res.status(200).json({ success: true });
   } catch (error) {
-    appInsightsClient.trackEvent({
-      name: "ThreadDeleteEvent",
-      properties: {
+    emitEvent(
+      "ThreadDeleteEvent",
+      {
         p_threadId: threadId,
         p_status: "failure"
-      }
-    })
+      },      
+      req.telemetryContext
+    )
     res.status(500).json({ error: error.message });
   }
 });

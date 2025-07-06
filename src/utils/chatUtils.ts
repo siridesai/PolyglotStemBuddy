@@ -6,6 +6,7 @@ import { ResultReason } from 'microsoft-cognitiveservices-speech-sdk';
 import { Message, ChildSettings } from './assistantMessageType';
 import { getTokenOrRefresh } from './speechTokenUtils';
 import { removeMermaidCode } from './mermaidCodeUtils.ts';
+import { appInsights } from './appInsightsForReact.ts'; // Adjust the path as needed
 
 // Utility: Clean LaTeX for TTS (removes math delimiters, subscripts, arrows, etc.)
 export function cleanLaTeXForTTS(text: string): string {
@@ -109,6 +110,18 @@ export async function sttFromMic(
     } else {
       console.log(`ERROR: ${result.reason}`);
     }
+ 
+  // Track the event
+  if (appInsights) {
+    appInsights.trackEvent({
+      name: 'SpeechToTextUsed',
+      properties: {
+        language: settings.language,
+        ageGroup: settings.age
+      }
+    });
+  }
+    
   });
 }
 
@@ -146,6 +159,16 @@ export async function textToSpeech(
   stopCurrentPlayback();
   setCurrentTTS(cleanedText);
   setTtsStatus('playing');
+
+  // Track the event
+  if (appInsights) {
+    appInsights.trackEvent({
+      name: 'TextToSpeechUsed',
+      properties: {
+        language: lang
+      }
+    });
+  }  
 
   try {
     const tokenObj = await getTokenOrRefresh();

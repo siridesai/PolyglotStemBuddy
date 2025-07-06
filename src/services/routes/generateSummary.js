@@ -1,13 +1,12 @@
 import express from 'express';
 import { getAssistantClient } from '../assistantClient.js';
 import { getAssistant } from '../assistant.js';
-import appInsights from 'applicationinsights';
+import { emitEvent } from '../../utils/appInsights.js'
 
 const router = express.Router();
 const sessionRunMap = new Map();
 
 router.post('/generateSummary', async (req, res) => {
-  const appInsightsClient = appInsights.defaultClient;
   try {
     const { message, threadId, age, language, sessionId } = req.body;
 
@@ -23,17 +22,17 @@ router.post('/generateSummary', async (req, res) => {
     try {
       await assistantClient.beta.threads.retrieve(threadId);
     } catch (err) {
-      appInsightsClient.trackEvent({
-        name: "SummaryEvent",
-        properties: {
+      emitEvent(
+        "SummaryEvent",
+         {
           p_age: age,
           p_language: language,
           p_sessionId: sessionId, 
           p_threadId: threadId,
           p_status: "failure",
           p_errcode: "ThreadNotFound"
-        }
-      });
+        }, req.telemetryContext
+      )
       return res.status(404).json({ error: `Thread ${threadId} not found` });
     }
 
@@ -83,17 +82,17 @@ router.post('/generateSummary', async (req, res) => {
     } while (runStatus.status === 'queued' || runStatus.status === 'in_progress');
 
     if (runStatus.status === 'failed') {
-      appInsightsClient.trackEvent({
-        name: "SummaryEvent",
-        properties: {
+      emitEvent(
+        "SummaryEvent",
+         {
           p_age: age,
           p_language: language,
           p_sessionId: sessionId, 
           p_threadId: threadId,
           p_status: "failure",
           p_errcode: "SummaryGenFailed"
-        }
-      });
+        }, req.telemetryContext
+      )
       return res.status(500).json({ error: 'Summary generation failed.' });
     }
 
@@ -104,17 +103,17 @@ router.post('/generateSummary', async (req, res) => {
     );
 
     if (!lastMessage?.content?.[0]?.text?.value) {
-      appInsightsClient.trackEvent({
-        name: "SummaryEvent",
-        properties: {
+      emitEvent(
+        "SummaryEvent",
+         {
           p_age: age,
           p_language: language,
           p_sessionId: sessionId, 
           p_threadId: threadId,
           p_status: "failure",
           p_errcode: "NoSummaryGenerated"
-        }
-      });
+        }, req.telemetryContext
+      )
       return res.status(500).json({ error: 'No summary generated.' });
     }
 
@@ -144,31 +143,31 @@ router.post('/generateSummary', async (req, res) => {
     }
 
     // Log and return
-    console.log('SUMMARY TO RETURN:', summary);
-    appInsightsClient.trackEvent({
-      name: "SummaryEvent",
-      properties: {
-        p_age: age,
-        p_language: language,
-        p_sessionId: sessionId, 
-        p_threadId: threadId,
-        p_status: "success"
-      }
-    });
+    //console.log('SUMMARY TO RETURN:', summary);
+      emitEvent(
+        "SummaryEvent",
+         {
+          p_age: age,
+          p_language: language,
+          p_sessionId: sessionId, 
+          p_threadId: threadId,
+          p_status: "success"
+        }, req.telemetryContext
+      )
     return res.json(summary);
 
   } catch (error) {
-    appInsightsClient.trackEvent({
-      name: "SummaryEvent",
-      properties: {
+    emitEvent(
+      "SummaryEvent",
+      {
         p_age: req.body.age,
         p_language: req.body.language,
         p_sessionId: req.body.sessionId, 
         p_threadId: req.body.threadId,
         p_status: "failure",
         p_errcode: "UnknownError"
-      }
-    });
+      }, req.telemetryContext
+    )
     return res.json({
       title: "Summary Error",
       summaryExplanation: "Could not generate summary. Please try again."

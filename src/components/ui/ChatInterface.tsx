@@ -26,6 +26,8 @@ import {
 } from '../../utils/chatUtils.ts';
 import robot from '../../../public/images/robot.svg';
 import user from '../../../public/images/user.svg';
+import { appInsights } from '../../utils/appInsightsForReact.ts';
+
 
 const COOKIE_NAME = 'my_cookie';
 
@@ -67,6 +69,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ settings, onBack }) => {
   // Scroll to bottom helper
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+
+  useEffect(() => {
+    if (appInsights) {
+      appInsights.trackPageView({ name: 'ChatInterface' });
+    }
+  }, []);
 
   // Set cookie if missing
   useEffect(() => {
