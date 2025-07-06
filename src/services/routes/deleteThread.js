@@ -1,7 +1,7 @@
 import express from 'express';
 import { getAssistantClient, initializeAssistantClient } from '../assistantClient.js';
 import { getAssistant, initializeAssistant } from '../assistant.js';
-import { emitEvent } from '../../utils/appInsights.js'
+import { emitEvent } from '../appInsights.js'
 
 const router = express.Router();
 
