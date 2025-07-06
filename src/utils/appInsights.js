@@ -65,9 +65,8 @@ function extractOperationId(requestId) {
 
 export function telemetryContextMiddleware(req, res, next) {
   if (!enabled || !isInitialized) {
-    console.warn('AppInsights not initialized. Emit telemetry context capture.');
+    console.warn('AppInsights not initialized. Telemetry capture will be skipped.');
     // if app insights is not enabled, do nothing
-    return;
   }
   const client = appInsights.defaultClient ;
   if (client) {
