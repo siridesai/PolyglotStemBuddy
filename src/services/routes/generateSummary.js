@@ -1,7 +1,7 @@
 import express from 'express';
 import { getAssistantClient } from '../assistantClient.js';
 import { getAssistant } from '../assistant.js';
-import { emitEvent } from '../appInsights.js'
+import { emitEvent } from '../appInsights.js';
 
 const router = express.Router();
 const sessionRunMap = new Map();
@@ -24,15 +24,15 @@ router.post('/generateSummary', async (req, res) => {
     } catch (err) {
       emitEvent(
         "SummaryEvent",
-         {
+        {
           p_age: age,
           p_language: language,
-          p_sessionId: sessionId, 
+          p_sessionId: sessionId,
           p_threadId: threadId,
           p_status: "failure",
           p_errcode: "ThreadNotFound"
         }, req.telemetryContext
-      )
+      );
       return res.status(404).json({ error: `Thread ${threadId} not found` });
     }
 
@@ -53,7 +53,7 @@ router.post('/generateSummary', async (req, res) => {
       - **Do not** include follow-up questions at the end.
     3. Ensure the JSON is **flat** (not nested inside another object) and contains only the "title" and "summaryExplanation" properties. **Do not** return JSON as a string. Return a flat JSON object only.
     4. Return **only** valid, minified JSON (no extra whitespace, no markdown code blocks, no additional commentary).
-    5. Cover every key topic discussed in the conversation; do not summarize only the first or last message.
+    5. Cover **every key topic** discussed in the conversation; do not summarize only the first or last message.
     6. The output format must be:
 
     {"title": "Topic - ${formattedDate}", "summaryExplanation": "..."}
@@ -84,15 +84,15 @@ router.post('/generateSummary', async (req, res) => {
     if (runStatus.status === 'failed') {
       emitEvent(
         "SummaryEvent",
-         {
+        {
           p_age: age,
           p_language: language,
-          p_sessionId: sessionId, 
+          p_sessionId: sessionId,
           p_threadId: threadId,
           p_status: "failure",
           p_errcode: "SummaryGenFailed"
         }, req.telemetryContext
-      )
+      );
       return res.status(500).json({ error: 'Summary generation failed.' });
     }
 
@@ -105,27 +105,40 @@ router.post('/generateSummary', async (req, res) => {
     if (!lastMessage?.content?.[0]?.text?.value) {
       emitEvent(
         "SummaryEvent",
-         {
+        {
           p_age: age,
           p_language: language,
-          p_sessionId: sessionId, 
+          p_sessionId: sessionId,
           p_threadId: threadId,
           p_status: "failure",
           p_errcode: "NoSummaryGenerated"
         }, req.telemetryContext
-      )
+      );
       return res.status(500).json({ error: 'No summary generated.' });
     }
 
-    // Parse the assistant's output robustly
+    // Robustly parse the assistant's output with safe unescaping of backslashes
     let summary;
+    let textValue = lastMessage.content[0].text.value;
+
     try {
-      summary = JSON.parse(lastMessage.content[0].text.value);
-      // Handle double-stringified JSON
+      // Double any backslash not followed by a valid JSON escape character
+      textValue = textValue.replace(/\\(?![\\\/bfnrtu"])/g, '\\\\');
+
+      // Attempt to parse JSON
+      summary = JSON.parse(textValue);
+
+      // Handle stringified JSON inside the title property
       while (typeof summary === 'string') {
         summary = JSON.parse(summary);
       }
-      // Validate structure
+      if (
+        typeof summary.title === 'string' &&
+        summary.title.includes('"summaryExplanation"')
+      ) {
+        summary = JSON.parse(summary.title);
+      }
+
       if (
         typeof summary !== 'object' ||
         !summary.title ||
@@ -134,26 +147,44 @@ router.post('/generateSummary', async (req, res) => {
         throw new Error('Invalid summary structure');
       }
     } catch (error) {
-      // Fallback: try to extract from text
-      const [title, ...summaryParts] = lastMessage.content[0].text.value.split('\n\n');
-      summary = {
-        title: title.replace('Title: ', '').trim(),
-        summaryExplanation: summaryParts.join('\n\n').trim()
-      };
+      console.error("Summary parse error:", error, "textValue:", textValue);
+
+      // Try to extract JSON substring from text (handles JSON embedded in markdown/text)
+      const match = typeof textValue === 'string' && textValue.match(/{[\s\S]*?"title"\s*:\s*".+?[\s\S]*?"summaryExplanation"\s*:\s*".+?"[\s\S]*?}/);
+      if (match) {
+        try {
+          let safeMatch = match[0].replace(/\\(?![\\\/bfnrtu"])/g, '\\\\');
+          summary = JSON.parse(safeMatch);
+          if (
+            typeof summary.title === 'string' &&
+            summary.title.includes('"summaryExplanation"')
+          ) {
+            summary = JSON.parse(summary.title);
+          }
+        } catch (e) {
+          summary = null;
+        }
+      }
+
+      // Final fallback: return error message
+      if (!summary || !summary.title || !summary.summaryExplanation) {
+        summary = {
+          title: "Summary Error",
+          summaryExplanation: "Could not parse summary. Please try again."
+        };
+      }
     }
 
-    // Log and return
-    //console.log('SUMMARY TO RETURN:', summary);
-      emitEvent(
-        "SummaryEvent",
-         {
-          p_age: age,
-          p_language: language,
-          p_sessionId: sessionId, 
-          p_threadId: threadId,
-          p_status: "success"
-        }, req.telemetryContext
-      )
+    emitEvent(
+      "SummaryEvent",
+      {
+        p_age: age,
+        p_language: language,
+        p_sessionId: sessionId,
+        p_threadId: threadId,
+        p_status: "success"
+      }, req.telemetryContext
+    );
     return res.json(summary);
 
   } catch (error) {
@@ -162,12 +193,12 @@ router.post('/generateSummary', async (req, res) => {
       {
         p_age: req.body.age,
         p_language: req.body.language,
-        p_sessionId: req.body.sessionId, 
+        p_sessionId: req.body.sessionId,
         p_threadId: req.body.threadId,
         p_status: "failure",
         p_errcode: "UnknownError"
       }, req.telemetryContext
-    )
+    );
     return res.json({
       title: "Summary Error",
       summaryExplanation: "Could not generate summary. Please try again."

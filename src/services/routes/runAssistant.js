@@ -120,6 +120,9 @@ export const runAssistantBackend = async (
 
       Additionally, do not specify that the diagram is a Mermaid diagram; just call it a diagram.
 
+      When including LaTeX or Markdown in the JSON, always double-escape each backslash (e.g., use \\\\rightarrow in JSON for \\rightarrow in LaTeX). Do NOT use a single backslash unless it is part of a valid JSON escape.
+      All LaTeX and Markdown in the JSON must be valid JSON strings.
+
       If the topic is not directly related to Science (phsyics, chemistry, biology, computer science, etc.), Technology, Engineering, or Math, kindly state that the topic is irrelevant to STEM and prompt the user to bring the conversation back to something STEM-related.`,
       model: assistant.model
     });

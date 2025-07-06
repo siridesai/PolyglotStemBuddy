@@ -1,18 +1,18 @@
-// MermaidDiagram.tsx
 import React, { useEffect, useRef, useState } from 'react';
 import mermaid from 'mermaid';
 
 interface MermaidDiagramProps {
   chart: string;
 }
- const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ chart }) => {
+
+const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ chart }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [svg, setSvg] = useState<string>('');
   const [error, setError] = useState<string>('');
 
   useEffect(() => {
     let isMounted = true;
-    
+
     const initializeAndRender = async () => {
       try {
         mermaid.initialize({
@@ -22,10 +22,15 @@ interface MermaidDiagramProps {
           fontFamily: 'inherit'
         });
 
+        // Sanitize chart for Mermaid syntax
+        let cleanChart = chart
+          .replace(/\\"/g, '"')
+          .replace(/""(.*?)""/g, '"$1"');
+
         if (containerRef.current) {
           const { svg } = await mermaid.render(
-            `mermaid-${Math.random().toString(36).substr(2, 9)}`, 
-            chart
+            `mermaid-${Math.random().toString(36).substr(2, 9)}`,
+            cleanChart
           );
           if (isMounted) setSvg(svg);
         }
@@ -36,14 +41,14 @@ interface MermaidDiagramProps {
     };
 
     initializeAndRender();
-    
+
     return () => {
       isMounted = false;
     };
   }, [chart]);
 
   if (error) return <div className="text-red-500 p-2">{error}</div>;
-
   return <div ref={containerRef} dangerouslySetInnerHTML={{ __html: svg }} />;
 };
+
 export default MermaidDiagram;
