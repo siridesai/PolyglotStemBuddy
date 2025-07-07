@@ -5,8 +5,8 @@
 ## Polyglot STEM Buddy
 AI-powered chat-based application for teaching STEM concepts to kids—across ages and languages!
 Let kids select their age and language, chat with the bot, and generate flashcards, quizzes, or a PDF summary.
-Great tool for students, parents, and educators!
-Try it live: [https://www.polyglotstembuddy.org](https://www.polyglotstembuddy.org).
+Great tool for students, parents, and educators! Watch a [video overview](https://youtu.be/lGsGlxR8EWI), or try it live: [https://www.polyglotstembuddy.org](https://www.polyglotstembuddy.org).
+
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
