@@ -1,11 +1,12 @@
 <p align="center">
-  <img src="https://i.ibb.co/Y7vbr0v7/Polyglot-STEMBuddy-picture.jpg">
+  <img src="https://github.com/siridesai/PolyglotStemBuddy/blob/main/public/images/banner.jpg">
 </p>
 
 ## Polyglot STEM Buddy
-AI-powered chatbot for teaching STEM concepts to kids—across ages and languages!
+AI-powered chat-based application for teaching STEM concepts to kids—across ages and languages!
 Let kids select their age and language, chat with the bot, and generate flashcards, quizzes, or a PDF summary.
-Try it live: [www.polyglotstem.ai](url)
+Great tool for students, parents, and educators!
+Try it live: [https://www.polyglotstembuddy.org](https://www.polyglotstembuddy.org).
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
@@ -24,11 +25,14 @@ Try it live: [www.polyglotstem.ai](url)
 
 ### 🛠️ Tech Stack
 
-- Frontend: React.js
+- Frontend: React.js, TypeScript
+- UX Design: Bolt.new
 - Backend: Node.js/Express
-- AI: Azure OpenAI API, Azure Speech SDK
+- Hosted On: Azure App Service
+- AI: Azure OpenAI (GPT-4o-mini LLM)
+- Speech and Transcription: Azure Cognitive Services (Speech SDK)
 - PDF: jsPDF, html2canvas
-- Monitoring: Azure Application Insights (optional)
+- Monitoring: Azure Application Insights
 
 ---
 
@@ -38,27 +42,34 @@ Try it live: [www.polyglotstem.ai](url)
 - cd polyglot-stem-buddy
 - npm install
 - cp .env.example .env
-# Edit .env with your Azure/OpenAI/Speech keys and settings
+  
+### Edit .env for your configuration
 
-Example .env keys:
+Example `.env` keys:
 - OPENAI_API_KEY=your_azure_openai_key
 - AZURE_OPENAI_ENDPOINT=your_azure_openai_endpoint
 - SPEECH_KEY=your_azure_speech_key
 - SPEECH_REGION=your_azure_region
-- APPLICATIONINSIGHTS_CONNECTION_STRING=your_connection_string
 - TIME_WINDOW_MS=900000
 - MAX_REQ=100
+- ENABLE_APPINSIGHTS=true
+- APPLICATIONINSIGHTS_CONNECTION_STRING=your_connection_string
+- VITE_FEEDBACK_FORM_BASE_URL=your_feedback_form_link
+- VITE_FEEDBACK_FORM_FIELD_LANGUAGE=form_field_GUID_for_language
+- VITE_FEEDBACK_FORM_FIELD_AGE_GROUP=form_field_GUID_for_age_group
 
 ---
 
 ### ▶️ Usage
 
-- Start locally:
-  npm run local-server
-- Build for production:
-  npm run build
-- Visit:
-  http://localhost:3000 (or [www.polyglotstem.ai](url))
+- **Build for production:**  
+  `npm run build`
+- **To test locally:**  
+  `npm run local-server`
+- **Visit:**  
+  `http://localhost:3000`
+- For reference, see [https://www.polyglotstembuddy.org](https://www.polyglotstembuddy.org).
+- If you plan to deploy this as an Azure App Service, refer to the [GitHub action workflow](https://github.com/siridesai/PolyglotStemBuddy/blob/main/.github/workflows/main_polyglot-stem-buddy.yml).
 
 ---
 
@@ -70,23 +81,31 @@ Example .env keys:
    - Flashcards
    - Quiz
    - PDF summary
-4. Exit lesson:
-   - Feedback form appears (customize your own Microsoft Form in ExitLessonModal)
+4. Exit lesson & provide feedback
 
 ---
 
 ### 🔧 Configuration
 
-Variable                               | Purpose
---------------------------------------- | ----------------------------------------
-OPENAI_API_KEY                         | Azure OpenAI API key
-AZURE_OPENAI_ENDPOINT                  | Azure OpenAI endpoint
-SPEECH_KEY                             | Azure Speech Service key
-SPEECH_REGION                          | Azure region (e.g., eastus)
-APPLICATIONINSIGHTS_CONNECTION_STRING  | Azure Application Insights (optional)
-TIME_WINDOW_MS                         | Rate limiter window (ms)
-MAX_REQ                                | Max requests per window
+| Variable                               | Purpose                                               |
+|-----------------------------------------|-------------------------------------------------------|
+| `OPENAI_API_KEY`                        | Azure OpenAI API key                                  |
+| `AZURE_OPENAI_ENDPOINT`                 | Azure OpenAI endpoint                                 |
+| `SPEECH_KEY`                            | Azure Speech Service key                              |
+| `SPEECH_REGION`                         | Azure region (e.g., `eastus`)                         |
+| `TIME_WINDOW_MS`                        | Rate limiter window (milliseconds)                    |
+| `MAX_REQ`                               | Max requests per window                               |
+| `APPLICATIONINSIGHTS_CONNECTION_STRING` | Azure Application Insights connection string (optional)|
+| `ENABLE_APPINSIGHTS`                    | Enable Application Insights (optional)                |
+| `VITE_ENABLE_APPINSIGHTS`               | Enable App Insights in Vite frontend (optional)       |
+| `VITE_APPINSIGHTS_CONNECTION_STRING`    | Vite Application Insights connection string (optional) |
+| `VITE_FEEDBACK_FORM_FIELD_LANGUAGE`     | Feedback form field: language                         |
+| `VITE_FEEDBACK_FORM_FIELD_AGE_GROUP`    | Feedback form field: age group                        |
 
+**Notes:**
+- Variables starting with `VITE_` are for the frontend (Vite).
+- Optional variables can be omitted if not needed.
+  
 ---
 
 ### 🤝 Contributing
@@ -95,7 +114,6 @@ MAX_REQ                                | Max requests per window
 2. Create a branch (git checkout -b feature/your-feature)
 3. Commit your changes
 4. Push and open a pull request
-5. Add a fun comment if you like—robots love encouragement!
 
 ---
 
@@ -105,13 +123,8 @@ MIT License. See LICENSE.
 
 ---
 
-### 🙏 Acknowledgments
+### 💬 Feedback
 
-- Azure Cognitive Services (Speech, OpenAI)
-- Mermaid.js
-- jsPDF & html2canvas
-- Microsoft Forms
+We value your input! Your feedback helps us improve Polyglot STEM Buddy and make it more effective for learners of all ages and backgrounds. If you have comments, ideas, or feature requests, please feel free to open an issue on our [GitHub Issues](https://github.com/siridesai/PolyglotStemBuddy/issues) page.
 
----
-
-_Sparking curiosity, one conversation at a time! ✨_
+_STEM learning made simple✨_
