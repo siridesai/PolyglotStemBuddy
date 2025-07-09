@@ -13,6 +13,8 @@ import SummaryModal from './SummaryModal.tsx';
 import ExitLessonModal from './ExitLessonModal.tsx';
 import MessageContent from './MessageContent.tsx';
 import { extractMermaidCode, removeMermaidCode } from '../../utils/mermaidCodeUtils.ts';
+import { extractMainAndQuestions } from '../../utils/chatUtils.ts';
+
 import {
   getAgeGroupLabel,
   getCurrentLanguageName,
@@ -69,6 +71,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ settings, onBack }) => {
   const [recording, setRecording] = useState(false);
   const [exitLessonFeedback, setShowExitLessonFeedback] = useState(false);
   const [currentRunId, setCurrentRunId] = useState<string | null>(null);
+  const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>([]);
 
   const welcomeMessage = getWelcomeMessage(settings.language);
   const buttonsEnabled = hasUserStartedConversation(messages, welcomeMessage) && !isLoading;
@@ -149,9 +152,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ settings, onBack }) => {
     onBack();
   };
 
-  const handleSend = async () => {
-    if (!input.trim() || isLoading) return;
-    const messageToSend = input;
+  const handleSend = async (q?: any) => {
+    const messageToSend = q ?? input.trim();
+    if (!messageToSend || isLoading) return;
+    
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -160,6 +164,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ settings, onBack }) => {
       timestamp: new Date(),
     };
 
+    console.log(`Sending message: ${messageToSend}`);
     setMessages((prev) => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
@@ -173,6 +178,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ settings, onBack }) => {
         settings.language,
         cookies[COOKIE_NAME]
       );
+      
 
       if (response.error) {
         setMessages((prev) => [
@@ -188,17 +194,23 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ settings, onBack }) => {
       }
 
       const { result, runId } = response;
+      
       setCurrentRunId(runId);
-
+      const { main, questions } = extractMainAndQuestions(result);
+      setSuggestedQuestions(
+        questions.filter(
+          (q) => q && !messages.some(m => m.content === q)
+      )
+);
       setMessages((prev) => [
         ...prev,
         {
           id: (Date.now() + 1).toString(),
-          type: 'assistant',
-          content: result,
+          type: "assistant" as const,
+          content: main,
           timestamp: new Date(),
-          mermaidCode: extractMermaidCode(result),
-        },
+          mermaidCode: extractMermaidCode(main),
+        }
       ]);
     } finally {
       setIsLoading(false);
@@ -345,11 +357,18 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ settings, onBack }) => {
         </div>
       </div>
 
-      {/* Chat messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-6">
-        {messages.map((message) => (
+    <div className="flex-1 overflow-y-auto p-4 space-y-6">
+  {messages.map((message, idx) => {
+    // Check if this is the first question bubble
+    const isFirstQuestion =
+      message.type === 'question' &&
+      (idx === 0 || messages[idx - 1].type !== 'question');
+
+    return (
+      <React.Fragment key={message.id}>
+        {/* Assistant/User Message Bubbles */}
+        {(message.type === 'assistant' || message.type === 'user') && (
           <div
-            key={message.id}
             className={`flex items-end ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             {/* Assistant Avatar */}
@@ -387,36 +406,77 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ settings, onBack }) => {
             )}
             {/* TTS Button for Assistant */}
             {message.type === 'assistant' && (
-                <button className="ml-2 p-1 rounded-full hover:bg-gray-100 transition flex-shrink-0"
-                  title={
-                    currentTTS === removeMermaidCode(message.content) && ttsStatus === 'playing'
-                      ? "Stop audio"
-                      : "Read aloud"
-                  }
-                  onClick={() => handleTTSClick(message.content)}
+              <button className="ml-2 p-1 rounded-full hover:bg-gray-100 transition flex-shrink-0"
+                title={
+                  currentTTS === removeMermaidCode(message.content) && ttsStatus === 'playing'
+                    ? "Stop audio"
+                    : "Read aloud"
+                }
+                onClick={() => handleTTSClick(message.content)}
+              >
+                {/* Speaker Icon */}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-7 h-7 text-indigo-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={1.5}
                 >
-                  {/* Speaker Icon (always the same) */}
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="w-7 h-7 text-indigo-600"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={1.5}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M11 5.882V18.12a1 1 0 01-1.707.707L5.586 15H3a1 1 0 01-1-1V10a1 1 0 011-1h2.586l3.707-3.828A1 1 0 0111 5.882zm6.364 1.757a9 9 0 010 8.722M17.657 8.343a5 5 0 010 7.314"
-                    />
-                  </svg>
-                </button>
-
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M11 5.882V18.12a1 1 0 01-1.707.707L5.586 15H3a1 1 0 01-1-1V10a1 1 0 011-1h2.586l3.707-3.828A1 1 0 0111 5.882zm6.364 1.757a9 9 0 010 8.722M17.657 8.343a5 5 0 010 7.314"
+                  />
+                </svg>
+              </button>
             )}
           </div>
-        ))}
-        <div ref={messagesEndRef} />
-      </div>
+        )}
+
+        {/* Suggested Follow-Up Questions Label */}
+  {isFirstQuestion && (
+    <div className="text-sm font-semibold text-gray-600 mb-2 ml-14">
+      Suggested Follow-Up Questions
+    </div>
+  )}
+ <div>
+ {message.type === 'assistant' &&
+      idx === messages.length - 1 &&
+      suggestedQuestions.length > 0 && (
+        <>
+          <div className="bg-gray-100 flex flex-wrap ml-14 mt-2 mb-1 text-gray-900 font-semibold text-lg justify-start">
+            <span role="img" aria-label="Question" className="text-2xl mr-2 drop-shadow-glow">💡</span>
+            Suggested follow-up questions
+          </div>
+          <div className="flex flex-wrap gap-3 ml-14 mt-2 mb-1">
+          {suggestedQuestions.map((question, idx) => (
+            <div
+              key={idx}
+              className="bg-indigo-100 border border-indigo-200 text-gray-900 rounded-full px-6 py-2 text-base cursor-pointer shadow hover:bg-indigo-100 transition w-auto max-w-xs inline-flex items-center justify-start"
+              onClick={() => {
+                cleanupTTS(playerRef, synthesizerRef, setTtsStatus, setCurrentTTS);
+                setSuggestedQuestions([]);
+                handleSend(question);
+              }}
+              tabIndex={0}
+              role="button"
+              aria-label={`Ask: ${question}`}
+            >
+      
+              {question}
+              
+            </div>
+          ))}
+          </div>
+        </>
+      )}
+</div>
+      </React.Fragment>
+    );
+  })}
+  <div ref={messagesEndRef} />
+</div>
 
 <div className="bg-white border-t p-4 rounded-t-3xl">
   <div className="max-w-12xl max-w-full mx-auto">

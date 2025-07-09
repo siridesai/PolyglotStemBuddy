@@ -96,6 +96,7 @@ export const runAssistantBackend = async (
 
       Include a Mermaid diagram that illustrates the concept only if it is relevant for ${age} age and the first response only**
       All explanantion should be in ${language} ONLY. Use scientific vocabulary**.
+      
 
       If mermaid code is present, it must be inside a markdown code block, labeled with "mermaid".
 
@@ -112,17 +113,21 @@ export const runAssistantBackend = async (
       In every Mermaid diagram, always use classDef and class to add pastel background colors and style nodes. 
       Assign a unique class to each node or group of nodes and define its style using pastel colors. One class assignment per line**
 
-      Use emojis to make the diagram fun and visually engaging.
+      Use emojis to make the diagram fun and visually engaging. DO not add question marks.
 
       Keep the diagram as simple as possible for younger ages, and allow more complexity for older ages.
 
       Do not include any ASCII art.
 
       After the diagram, briefly explain the concept in one or two sentences, using age-appropriate and fun language for the specified age group ${age} in ${language}.
+      Do not include question mark in the middle of the explanations.
+
 
       For ages 13 through 16, include mathematical equations in LaTeX (inside $$ ... $$) when relevant.
 
-      In the end, offer age-appropriate follow-up questions related to the concept for ${age}, with questions becoming more challenging and open-ended for older students**
+      In the end, offer atleast 3 age-appropriate follow-up questions related to the concept for ${age}, which you can answer as a tutor to further their understanding of the topic.Do not ask anything outside of the topic.Each question must be inside a markdown code block, labeled with "followUpQuestions".
+      DO not use phrases like this - Here are some fun questions to think about:. Simply provide the questions in the code block.
+      Always ask follow up questions that you can answer. Do not reply with 'This topic is not directly related to STEM. Please bring the conversation back to something STEM-related.'
 
       Additionally, do not specify that the diagram is a Mermaid diagram; just call it a diagram.
 

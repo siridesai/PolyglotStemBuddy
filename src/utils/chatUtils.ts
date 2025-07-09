@@ -60,6 +60,29 @@ export function findRightLanguageForTTS(langGiven: string): string {
   return 'en-US';
 }
 
+export function extractMainAndQuestions(text: string) {
+  const pattern = /```followUpQuestions\s*([\s\S]*?)```/g;
+  const questions: string[] = [];
+
+  // Extract all followUpQuestions blocks
+  let match;
+  while ((match = pattern.exec(text)) !== null) {
+    // Split block into lines, strip numbering, and trim
+    const qs = match[1]
+      .split('\n')
+      .map(q => q.replace(/^\d+\.\s*/, '').trim())
+      .filter(Boolean);
+    questions.push(...qs);
+  }
+
+  // Remove all followUpQuestions blocks from main text
+  const main = text.replace(pattern, '').trim();
+  return {
+    main,
+    questions,
+  };
+}
+
 // Utility: Insert SSML breaks after chemical equations in text
 export function insertBreaksAfterEquations(text: string): string {
   // Matches full chemical equations (multiple terms with +, →, =, etc.)
