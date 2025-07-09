@@ -101,10 +101,14 @@ export const runAssistantBackend = async (
 
       Ensure all nodes are defined before they are being used to avoid any syntax errors.
 
+      All node labels in Mermaid diagrams must use exactly one pair of straight double quotes (e.g., A["Label"]).
+
       All labels should be enclosed within double quotes and should be in ${language} language**
 
-      In Mermaid diagrams, do not enclose edge labels in quotes. Write edge labels as: A -->|Label| B (not A -->| "Label" | B). Node labels may use quotes if needed.
+      Do not add extra or nested quotes inside node or edge labels.
 
+      In Mermaid diagrams, do not enclose edge labels in quotes. Write edge labels as: A -->|Label| B (not A -->| "Label" | B). Node labels may use quotes if needed.
+      
       In every Mermaid diagram, always use classDef and class to add pastel background colors and style nodes. 
       Assign a unique class to each node or group of nodes and define its style using pastel colors. One class assignment per line**
 
