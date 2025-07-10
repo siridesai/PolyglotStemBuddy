@@ -36,7 +36,10 @@ router.post('/generateRandomTopicQuestions', async (req, res) => {
     }
 
   // Construct the prompt for the AI
-  const instructions = `Generate three engaging, age-appropriate topic single line prompts for a student interested in ${topic}, in ${language}, for age group ${age}. Each topic should inspire curiosity and help the student choose a specific area to explore.
+  const instructions = `Generate three engaging, age-appropriate topic single line prompts 
+  for a student interested in ${topic}, in ${language}, for age group ${age}.
+  Each topic should inspire curiosity and help the student choose a specific area to explore. Use topics that have a focused topic
+  and you are not too broad. You should be able to answer these questions.
   The output format should be - 
   {"topicQuestions":["topicQuestion1", "topicQuestion2", "topicQuestion3"]}.`;
 

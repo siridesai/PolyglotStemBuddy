@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Message, ChildSettings } from '../../utils/assistantMessageType.ts';
 import { getTranslation } from '../../data/translations.ts';
 import type { TranslationKey } from '../../data/translations.ts';
-import { ArrowLeft, Send, BookOpen, Brain } from 'lucide-react';
+import { ArrowLeft, Send, BookOpen, Brain, Sparkles } from 'lucide-react';
 import Button from './Button.tsx';
 import QuizModal from './QuizModal.tsx';
 import { fetchThreadID } from '../../api/fetchThreadID.ts';
@@ -272,8 +272,7 @@ useEffect(() => {
   setTopicQuestions(randomTopicQuestions);
   setShowTopicPills(false);
   setIsLoading(false);
-  console.log(`Selected topic: ${chosenTopic}`);
-  console.log(`Generated questions for topic ${chosenTopic}:`, randomTopicQuestions);
+
 };
 
 
@@ -492,8 +491,11 @@ useEffect(() => {
   {/* --- Question Pills: After topic is picked and questions loaded --- */}
   {isFirstAssistant && !showTopicPills && topicQuestions.length > 0 && (
     <>
-    <div className="ml-14 mb-1 font-semibold text-gray-700 text-base">
+    
+    <div className="bg-gray-100 flex flex-wrap ml-14 mt-2 mb-1 text-gray-900 font-semibold text-lg justify-start">
+      <Sparkles className="w-8 h-8 text-yellow-500 mr-3 font-bold" />
       {getTranslation(settings.language, 'searchPrompts')}
+      <span className="text-yellow-500 ml-3 text-2xl font-bold">✧</span>
     </div>
     <div className="flex flex-wrap gap-2 mt-3 mb-2 ml-14">
       {topicQuestions.map((question, idx) => (
@@ -529,8 +531,10 @@ useEffect(() => {
     suggestedQuestions.length > 0 && (
       <>
         <div className="bg-gray-100 flex flex-wrap ml-14 mt-2 mb-1 text-gray-900 font-semibold text-lg justify-start">
-          <span role="img" aria-label="Question" className="text-2xl mr-2 drop-shadow-glow">💡</span>
+          {/*<span role="img" aria-label="Question" className="text-2xl mr-2 drop-shadow-glow">💡</span> */}
+          <Sparkles className="w-8 h-8 text-yellow-500 mr-3 font-bold" />
           {getTranslation(settings.language, 'followUpQuestions')}
+          <span className="text-yellow-500 ml-3 text-2xl font-bold">✧</span>
         </div>
         <div className="flex flex-wrap gap-3 ml-14 mt-2 mb-1">
           {suggestedQuestions.map((question, idx) => (
