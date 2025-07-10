@@ -7,6 +7,7 @@ import cancelAssistantRunRouter from './routes/cancelAssistantRun.js';
 import getSpeechTokenRouter from './routes/getSpeechToken.js';
 import deleteThreadRouter from './routes/deleteThread.js';
 import threadIDRouter from './routes/threadID.js';
+import generateRandomTopicQuestionsRouter from './routes/generateRandomTopicQuestions.js';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { getOrCreateThread } from '../services/threadManager.js';
@@ -114,6 +115,7 @@ app.use('/api', threadIDRouter);
 app.use('/api', getSpeechTokenRouter);
 app.use('/api', generateSummaryRouter);
 app.use('/api', cancelAssistantRunRouter);
+app.use('/api', generateRandomTopicQuestionsRouter);
 
 // Static files (MUST COME AFTER API ROUTES)
 app.use(express.static(path.join(__dirname, '../../dist')));

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Message, ChildSettings } from '../../utils/assistantMessageType.ts';
 import { getTranslation } from '../../data/translations.ts';
+import type { TranslationKey } from '../../data/translations.ts';
 import { ArrowLeft, Send, BookOpen, Brain } from 'lucide-react';
 import Button from './Button.tsx';
 import QuizModal from './QuizModal.tsx';
@@ -30,6 +31,7 @@ import {
 import robot from '../../../public/images/robot.svg';
 import user from '../../../public/images/user.svg';
 import { appInsights } from '../../utils/appInsightsForReact.ts';
+import { generateRandomTopicQuestions } from '../../api/generateRandomTopicQuestions.ts';
 
 const COOKIE_NAME = 'my_cookie';
 
@@ -38,10 +40,6 @@ interface ChatInterfaceProps {
   settings: ChildSettings;
   onBack: () => void;
 }
-
-
-
-
 
 
 
@@ -79,6 +77,23 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ settings, onBack }) => {
   // Scroll to bottom helper
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+
+  const [showTopicPills, setShowTopicPills] = useState(true);
+  const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
+  const [topicQuestions, setTopicQuestions] = useState<string[]>([]);
+
+  const BROAD_TOPICS = [
+  { key: 'science', translationKey: 'science' },
+  { key: 'math', translationKey: 'math' },
+  { key: 'engineering', translationKey: 'engineering' },
+  { key: 'technology', translationKey: 'technology' },
+  { key: 'surprise', translationKey: 'surprise' }
+];
+
+const [randomizedTopics, setRandomizedTopics] = useState<{ key: string; translationKey: string }[]>([]);
+useEffect(() => {
+  setRandomizedTopics(BROAD_TOPICS);
+}, []);
 
   useEffect(() => {
     if (appInsights) {
@@ -242,6 +257,25 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ settings, onBack }) => {
     }
   };
 
+  async function handleTopicPillClick(topicKey: string) {
+  setIsLoading(true);
+  let chosenTopic = topicKey;
+  if (topicKey === 'surprise') {
+    // Randomly select a topic except 'surprise'
+    const otherTopics = BROAD_TOPICS.filter(t => t.key !== 'surprise');
+    chosenTopic = otherTopics[Math.floor(Math.random() * otherTopics.length)].key;
+  }
+  setSelectedTopic(chosenTopic);
+
+  // Call backend to get AI-generated questions
+  const randomTopicQuestions = await generateRandomTopicQuestions(chosenTopic, threadId, settings.age, settings.language, cookies[COOKIE_NAME]);
+  setTopicQuestions(randomTopicQuestions);
+  setShowTopicPills(false);
+  setIsLoading(false);
+  console.log(`Selected topic: ${chosenTopic}`);
+  console.log(`Generated questions for topic ${chosenTopic}:`, randomTopicQuestions);
+};
+
 
 
   // --- Render ---
@@ -356,6 +390,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ settings, onBack }) => {
         </div>
       </div>
 
+
     <div className="flex-1 overflow-y-auto p-4 space-y-6">
   {messages.map((message, idx) => {
     // Check if this is the first question bubble
@@ -363,92 +398,141 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ settings, onBack }) => {
       message.type === 'question' &&
       (idx === 0 || messages[idx - 1].type !== 'question');
 
-    return (
-      <React.Fragment key={message.id}>
-        {/* Assistant/User Message Bubbles */}
-        {(message.type === 'assistant' || message.type === 'user') && (
-          <div
-            className={`flex items-end ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
-          >
-            {/* Assistant Avatar */}
-            {message.type === 'assistant' && (
-              <img
-                src={robot}
-                alt="Robot"
-                className="w-12 h-12 mr-2 rounded-full bg-white border border-indigo-100 shadow"
-                style={{ boxShadow: '0 2px 8px #e0e7ff' }}
-              />
-            )}
-            {/* Message Bubble */}
-            <div
-              className={`max-w-[80%] rounded-3xl px-5 py-4 shadow-lg border-2 ${
-                message.type === 'user'
-                  ? 'bg-indigo-100 border-indigo-200 text-indigo-900'
-                  : 'bg-white border-indigo-100 text-gray-800'
-              }`}
-              style={{
-                borderStyle: 'dashed',
-                boxShadow: '0 4px 16px 0 rgba(60, 72, 100, 0.14), 0 2px 8px 0 #a5b4fc',
-                transform: 'translateY(-2px) scale(1.01)',
-              }}
-            >
-              <MessageContent content={message.content} />
-            </div>
-            {/* User Avatar */}
-            {message.type === 'user' && (
-              <img
-                src={user}
-                alt="You"
-                className="w-12 h-12 ml-2 rounded-full bg-white border border-indigo-100 shadow"
-                style={{ boxShadow: '0 2px 8px #e0e7ff' }}
-              />
-            )}
-            {/* TTS Button for Assistant */}
-            {message.type === 'assistant' && (
-              <button className="ml-2 p-1 rounded-full hover:bg-gray-100 transition flex-shrink-0"
-                title={
-                  currentTTS === removeMermaidCode(message.content) && ttsStatus === 'playing'
-                    ? "Stop audio"
-                    : "Read aloud"
-                }
-                onClick={() => handleTTSClick(message.content)}
-              >
-                {/* Speaker Icon */}
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="w-7 h-7 text-indigo-600"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={1.5}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M11 5.882V18.12a1 1 0 01-1.707.707L5.586 15H3a1 1 0 01-1-1V10a1 1 0 011-1h2.586l3.707-3.828A1 1 0 0111 5.882zm6.364 1.757a9 9 0 010 8.722M17.657 8.343a5 5 0 010 7.314"
-                  />
-                </svg>
-              </button>
-            )}
-          </div>
-        )}
+    const isFirstAssistant =
+    message.type === 'assistant' &&
+    messages.findIndex(m => m.type === 'assistant') === idx;  
 
-        {/* Suggested Follow-Up Questions Label */}
+    return (
+     <React.Fragment key={message.id}>
+  {/* Assistant/User Message Bubbles */}
+  {(message.type === 'assistant' || message.type === 'user') && (
+    <div
+      className={`flex items-end ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+    >
+      {/* Assistant Avatar */}
+      {message.type === 'assistant' && (
+        <img
+          src={robot}
+          alt="Robot"
+          className="w-12 h-12 mr-2 rounded-full bg-white border border-indigo-100 shadow"
+          style={{ boxShadow: '0 2px 8px #e0e7ff' }}
+        />
+      )}
+      {/* Message Bubble */}
+      <div
+        className={`max-w-[80%] rounded-3xl px-5 py-4 shadow-lg border-2 ${
+          message.type === 'user'
+            ? 'bg-indigo-100 border-indigo-200 text-indigo-900'
+            : 'bg-white border-indigo-100 text-gray-800'
+        }`}
+        style={{
+          borderStyle: 'dashed',
+          boxShadow: '0 4px 16px 0 rgba(60, 72, 100, 0.14), 0 2px 8px 0 #a5b4fc',
+          transform: 'translateY(-2px) scale(1.01)',
+        }}
+      >
+        <MessageContent content={message.content} />
+      </div>
+      {/* User Avatar */}
+      {message.type === 'user' && (
+        <img
+          src={user}
+          alt="You"
+          className="w-12 h-12 ml-2 rounded-full bg-white border border-indigo-100 shadow"
+          style={{ boxShadow: '0 2px 8px #e0e7ff' }}
+        />
+      )}
+      {/* TTS Button for Assistant */}
+      {message.type === 'assistant' && (
+        <button className="ml-2 p-1 rounded-full hover:bg-gray-100 transition flex-shrink-0"
+          title={
+            currentTTS === removeMermaidCode(message.content) && ttsStatus === 'playing'
+              ? "Stop audio"
+              : "Read aloud"
+          }
+          onClick={() => handleTTSClick(message.content)}
+        >
+          {/* Speaker Icon */}
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="w-7 h-7 text-indigo-600"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={1.5}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M11 5.882V18.12a1 1 0 01-1.707.707L5.586 15H3a1 1 0 01-1-1V10a1 1 0 011-1h2.586l3.707-3.828A1 1 0 0111 5.882zm6.364 1.757a9 9 0 010 8.722M17.657 8.343a5 5 0 010 7.314"
+            />
+          </svg>
+        </button>
+      )}
+    </div>
+  )}
+
+  {/* --- Topic Pills: Only after first assistant message and at the start --- */}
+  {isFirstAssistant && showTopicPills && (
+    <div className="flex flex-wrap gap-2 mt-3 mb-2 ml-14">
+      {randomizedTopics.map(topic => (
+        <button
+          key={topic.key}
+          className="rounded-full bg-indigo-100 border border-indigo-200 text-indigo-900 px-5 py-2 text-base font-medium shadow hover:bg-indigo-200 transition"
+          onClick={() => handleTopicPillClick(topic.key)}
+          tabIndex={0}
+          aria-label={`Choose ${getTranslation(settings.language, topic.translationKey as TranslationKey)}`}
+        >
+          {getTranslation(settings.language, topic.translationKey as TranslationKey)}
+        </button>
+      ))}
+    </div>
+  )}
+
+  {/* --- Question Pills: After topic is picked and questions loaded --- */}
+  {isFirstAssistant && !showTopicPills && topicQuestions.length > 0 && (
+    <>
+    <div className="ml-14 mb-1 font-semibold text-gray-700 text-base">
+      {getTranslation(settings.language, 'searchPrompts')}
+    </div>
+    <div className="flex flex-wrap gap-2 mt-3 mb-2 ml-14">
+      {topicQuestions.map((question, idx) => (
+        <button
+          key={idx}
+          className="rounded-full bg-indigo-100 border border-indigo-200 text-indigo-900 px-5 py-2 text-base font-medium shadow hover:bg-indigo-200 transition"
+          onClick={() => {
+            setInput(question);
+            setTopicQuestions([]);
+            setSelectedTopic(null);
+            handleSend(question);
+          }}
+          tabIndex={0}
+          aria-label={`Ask: ${question}`}
+        >
+          {question}
+        </button>
+      ))}
+    </div>
+     </>
+  )}
+
+  {/* Suggested Follow-Up Questions Label */}
   {isFirstQuestion && (
     <div className="text-sm font-semibold text-gray-600 mb-2 ml-14">
       {getTranslation(settings.language, 'followUpQuestions')}
     </div>
   )}
- <div>
- {message.type === 'assistant' &&
-      idx === messages.length - 1 &&
-      suggestedQuestions.length > 0 && (
-        <>
-          <div className="bg-gray-100 flex flex-wrap ml-14 mt-2 mb-1 text-gray-900 font-semibold text-lg justify-start">
-            <span role="img" aria-label="Question" className="text-2xl mr-2 drop-shadow-glow">💡</span>
-            {getTranslation(settings.language, 'followUpQuestions')}
-          </div>
-          <div className="flex flex-wrap gap-3 ml-14 mt-2 mb-1">
+
+  {/* Follow-up Questions (if any) */}
+  {message.type === 'assistant' &&
+    idx === messages.length - 1 &&
+    suggestedQuestions.length > 0 && (
+      <>
+        <div className="bg-gray-100 flex flex-wrap ml-14 mt-2 mb-1 text-gray-900 font-semibold text-lg justify-start">
+          <span role="img" aria-label="Question" className="text-2xl mr-2 drop-shadow-glow">💡</span>
+          {getTranslation(settings.language, 'followUpQuestions')}
+        </div>
+        <div className="flex flex-wrap gap-3 ml-14 mt-2 mb-1">
           {suggestedQuestions.map((question, idx) => (
             <div
               key={idx}
@@ -463,16 +547,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ settings, onBack }) => {
               role="button"
               aria-label={`Ask: ${question}`}
             >
-      
               {question}
-              
             </div>
           ))}
-          </div>
-        </>
-      )}
-</div>
-      </React.Fragment>
+        </div>
+      </>
+    )}
+</React.Fragment>
     );
   })}
   <div ref={messagesEndRef} />

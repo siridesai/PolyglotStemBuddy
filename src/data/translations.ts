@@ -1,4 +1,4 @@
-type TranslationKey = 
+export type TranslationKey = 
   | 'selectAgeGroup'
   | 'chooseLanguage'
   | 'startLearning'
@@ -17,6 +17,7 @@ type TranslationKey =
   | 'science'
   | 'technology'
   | 'engineering'
+  | 'surprise'
   | 'math'
   | 'searchPlaceholder'
   | 'wantToLearnAbout'
@@ -92,11 +93,12 @@ export const translations: TranslationSet = {
     juniorScientistRange: 'Ages 9-12',
     teenResearcherRange: 'Ages 13-15',
     language: 'Language',
-    searchPrompts: 'Search topics...',
+    searchPrompts: 'Pick a topic to explore, or type your own question!',
     science: 'Science',
     technology: 'Technology',
     engineering: 'Engineering',
     math: 'Mathematics',
+    surprise: 'Surprise Me',
     searchPlaceholder: 'What do you want to learn about today?',
     wantToLearnAbout: 'Want to learn about...',
     typeMessage: 'Type your message...',
@@ -161,11 +163,12 @@ export const translations: TranslationSet = {
     juniorScientistRange: 'Edad: 9-12',
     teenResearcherRange: 'Edad: 13-15',
     language: 'Idioma',
-    searchPrompts: 'Buscar temas...',
+    searchPrompts: 'Elige un tema para explorar, o escribe tu propia pregunta.',
     science: 'Ciencia',
     technology: 'Tecnología',
     engineering: 'Ingeniería',
     math: 'Matemáticas',
+    surprise: 'Sorpréndeme',
     searchPlaceholder: '¿Qué quieres aprender hoy?',
     wantToLearnAbout: 'Quiero aprender sobre...',
     typeMessage: 'Escribe tu mensaje...',
@@ -230,11 +233,12 @@ export const translations: TranslationSet = {
     juniorScientistRange: 'आयु: 9-12',
     teenResearcherRange: 'आयु: 13-15',
     language: 'भाषा',
-    searchPrompts: 'विषय खोजें...',
+    searchPrompts: 'एक विषय चुनें, या अपना प्रश्न टाइप करें!',
     science: 'विज्ञान',
     technology: 'प्रौद्योगिकी',
     engineering: 'अभियांत्रिकी',
     math: 'गणित',
+    surprise: 'कुछ नया दिखाओ',
     searchPlaceholder: 'आज आप क्या सीखना चाहते हैं?',
     wantToLearnAbout: 'इसके बारे में जानना चाहते हैं...',
     typeMessage: 'अपना संदेश लिखें...',
@@ -299,11 +303,12 @@ export const translations: TranslationSet = {
     juniorScientistRange: 'वय: ९-१२',
     teenResearcherRange: 'वय: १३-१५',
     language: 'भाषा',
-    searchPrompts: 'विषय शोधा...',
+    searchPrompts: 'एक विषय निवडा, किंवा तुमचा स्वतःचा प्रश्न टाइप करा!',
     science: 'विज्ञान',
     technology: 'तंत्रज्ञान',
     engineering: 'अभियांत्रिकी',
     math: 'गणित',
+    surprise: 'काहीतरी नवीन दाखव',
     searchPlaceholder: 'आज तुम्हाला काय शिकायचं आहे?',
     wantToLearnAbout: 'याबद्दल शिकायचं आहे...',
     typeMessage: 'तुमचा संदेश टाइप करा...',
@@ -368,11 +373,12 @@ export const translations: TranslationSet = {
     juniorScientistRange: 'ವಯಸ್ಸು: ೯-೧೨',
     teenResearcherRange: 'ವಯಸ್ಸು: ೧೩-೧೫',
     language: 'ಭಾಷೆ',
-    searchPrompts: 'ವಿಷಯ ಹುಡುಕಿ...',
+    searchPrompts: 'ಒಂದು ವಿಷಯ ಆಯ್ಕೆಮಾಡಿ, ಅಥವಾ ನಿಮ್ಮದೇ ಪ್ರಶ್ನೆಯನ್ನು ಟೈಪ್ ಮಾಡಿ!',
     science: 'ವಿಜ್ಞಾನ',
     technology: 'ತಂತ್ರಜ್ಞಾನ',
     engineering: 'ಅಭಿಯಾಂತ್ರಿಕೆ',
     math: 'ಗಣಿತ',
+    surprise: 'ಹೊಸದು ತೋರಿಸು',
     searchPlaceholder: 'ಇಂದು ನೀವು ಏನು ಕಲಿಯಲು ಇಚ್ಛಿಸುತ್ತೀರಿ?',
     wantToLearnAbout: 'ಇದಿನ ಬಗ್ಗೆ ಕಲಿಯಲು ಇಚ್ಛೆ...',
     typeMessage: 'ನಿಮ್ಮ ಸಂದೇಶವನ್ನು ಬರೆಯಿರಿ...',
