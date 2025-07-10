@@ -153,7 +153,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ settings, onBack }) => {
   };
 
   const handleSend = async (q?: any) => {
-    const messageToSend = q ?? input.trim();
+    const messageToSend = typeof q === 'string' ? q : input.trim();
     if (!messageToSend || isLoading) return;
     
 
@@ -164,7 +164,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ settings, onBack }) => {
       timestamp: new Date(),
     };
 
-    console.log(`Sending message: ${messageToSend}`);
     setMessages((prev) => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
@@ -437,7 +436,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ settings, onBack }) => {
         {/* Suggested Follow-Up Questions Label */}
   {isFirstQuestion && (
     <div className="text-sm font-semibold text-gray-600 mb-2 ml-14">
-      Suggested Follow-Up Questions
+      {getTranslation(settings.language, 'followUpQuestions')}
     </div>
   )}
  <div>
@@ -447,7 +446,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ settings, onBack }) => {
         <>
           <div className="bg-gray-100 flex flex-wrap ml-14 mt-2 mb-1 text-gray-900 font-semibold text-lg justify-start">
             <span role="img" aria-label="Question" className="text-2xl mr-2 drop-shadow-glow">💡</span>
-            Suggested follow-up questions
+            {getTranslation(settings.language, 'followUpQuestions')}
           </div>
           <div className="flex flex-wrap gap-3 ml-14 mt-2 mb-1">
           {suggestedQuestions.map((question, idx) => (
@@ -456,6 +455,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ settings, onBack }) => {
               className="bg-indigo-100 border border-indigo-200 text-gray-900 rounded-full px-6 py-2 text-base cursor-pointer shadow hover:bg-indigo-100 transition w-auto max-w-xs inline-flex items-center justify-start"
               onClick={() => {
                 cleanupTTS(playerRef, synthesizerRef, setTtsStatus, setCurrentTTS);
+                setInput(question);
                 setSuggestedQuestions([]);
                 handleSend(question);
               }}

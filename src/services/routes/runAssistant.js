@@ -104,7 +104,7 @@ export const runAssistantBackend = async (
 
       All node labels in Mermaid diagrams must use exactly one pair of straight double quotes (e.g., A["Label"]).
 
-      All labels should be enclosed within double quotes and should be in ${language} language**
+      All labels should be enclosed within double quotes and should be in ${language} language except inside the | ... | label syntax
 
       Do not add extra or nested quotes inside node or edge labels.
 

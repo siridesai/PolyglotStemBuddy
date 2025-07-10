@@ -65,6 +65,7 @@ type TranslationKey =
   | 'of'
   | 'tooManyRequests'
   | 'errorMessage'
+  | 'followUpQuestions'
   ;
 
 type Translations = {
@@ -142,7 +143,8 @@ export const translations: TranslationSet = {
     question: 'Question',
     of: 'of',
     tooManyRequests: 'Too many requests. Please try again in a couple of minutes.',
-    errorMessage: 'Something went wrong. Please try again.'
+    errorMessage: 'Something went wrong. Please try again.',
+    followUpQuestions: 'Learn more'
   },
   es: {
     selectAgeGroup: 'Selecciona grupo de edad',
@@ -210,7 +212,8 @@ export const translations: TranslationSet = {
     question: 'Pregunta',
     of: 'de',
     tooManyRequests: 'Demasiadas solicitudes. Por favor, inténtalo de nuevo en unos minutos.',
-    errorMessage: 'Algo salió mal. Por favor, inténtalo de nuevo.'
+    errorMessage: 'Algo salió mal. Por favor, inténtalo de nuevo.',
+    followUpQuestions: 'Aprende más'
   },
   hi: {
     selectAgeGroup: 'आयु वर्ग चुनें',
@@ -278,7 +281,8 @@ export const translations: TranslationSet = {
     question: 'प्रश्न',
     of: 'में से',
     tooManyRequests: 'बहुत ज़्यादा अनुरोध किए गए हैं। कृपया कुछ मिनटों बाद पुनः प्रयास करें।',
-    errorMessage: 'कुछ गलत हो गया। कृपया पुनः प्रयास करें।'
+    errorMessage: 'कुछ गलत हो गया। कृपया पुनः प्रयास करें।',
+    followUpQuestions: 'और सीखें'
   },
   mr: {
     selectAgeGroup: 'वय गट निवडा',
@@ -346,7 +350,8 @@ export const translations: TranslationSet = {
     question: 'प्रश्न',
     of: 'पैकी',
     tooManyRequests: 'खूप विनंत्या झाल्या आहेत. कृपया काही मिनिटांनी पुन्हा प्रयत्न करा.',
-    errorMessage: 'काहीतरी चुकले. कृपया पुन्हा प्रयत्न करा.'
+    errorMessage: 'काहीतरी चुकले. कृपया पुन्हा प्रयत्न करा.',
+    followUpQuestions: 'आणखी शिका'
   },
   kn: {
     selectAgeGroup: 'ವಯೋಮಿತಿ ಆಯ್ಕೆಮಾಡಿ',
@@ -414,7 +419,9 @@ export const translations: TranslationSet = {
     question: 'ಪ್ರಶ್ನೆ',
     of: 'ಇಂದ',
     tooManyRequests: 'ಅತಿಯಾದ ವಿನಂತಿಗಳು ಮಾಡಲಾಗಿದೆ. ದಯವಿಟ್ಟು ಕೆಲ ನಿಮಿಷಗಳಲ್ಲಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.',
-    errorMessage: 'ಏನೋ ತಪ್ಪಾಗಿದೆ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.'
+    errorMessage: 'ಏನೋ ತಪ್ಪಾಗಿದೆ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.',
+    followUpQuestions: 'ಹೆಚ್ಚು ತಿಳಿಯಿರಿ'
+
   }
 };
 
