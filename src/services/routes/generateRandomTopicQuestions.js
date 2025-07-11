@@ -36,12 +36,17 @@ router.post('/generateRandomTopicQuestions', async (req, res) => {
     }
 
   // Construct the prompt for the AI
-  const instructions = `Generate three engaging, age-appropriate topic single line prompts 
-  for a student interested in ${topic}, in ${language}, for age group ${age}.
-  Each topic should inspire curiosity and help the student choose a specific area to explore. Use topics that have a focused topic
-  and you are not too broad. You should be able to answer these questions.
-  The output format should be - 
-  {"topicQuestions":["topicQuestion1", "topicQuestion2", "topicQuestion3"]}.`;
+  const instructions = `Generate three engaging, age-appropriate topic single line STEM prompts for a student interested in ${topic}, in ${language}, for age group ${age}.
+                        Only use factual, STEM-related topics that deepen understanding of the current topic. 
+                        Do not add topics about feelings, preferences, favorites,colors, or any personal matters.
+                        Do not use imagination or hypothetical scenarios.
+                        Each topic must be strictly related to the STEM concept above and answerable by a tutor.
+                        Each time you receive this prompt, you must generate a new, unique set of questions—do not repeat questions from previous responses
+                        You must answer only in ${language}. Do not use English or any other language.
+                        Respond only in the following JSON format using native script for the language 
+                        Example: For language 'kn': {"topicQuestions":["ಪ್ರಶ್ನೆ 1", "ಪ್ರಶ್ನೆ 2", "ಪ್ರಶ್ನೆ 3"]}
+                        Replace the example questions above with your actual questions in ${language}.
+                        Questions should be concise, engaging, and suitable STEM related only for a student interested in ${topic}.`;
 
   const run = await assistantClient.beta.threads.runs.create(threadId, {
       assistant_id: assistant.id,
@@ -103,7 +108,7 @@ router.post('/generateRandomTopicQuestions', async (req, res) => {
     let topics;
     let textValue = lastMessage.content[0].text.value;
 
-    console.log(`Received topics: ${textValue}`);
+    
 
     try {
       // Double any backslash not followed by a valid JSON escape character
@@ -144,6 +149,6 @@ router.post('/generateRandomTopicQuestions', async (req, res) => {
       }, req.telemetryContext
     );
 
-    return res.status(200).json({ topics });
+    return res.status(200).json(topics);
   });
   export default router;

@@ -25,7 +25,7 @@ const MessageContent: React.FC<MessageContentProps> = ({ content }) => {
                 </div>
               ))
           : (
-            <div className="my-4 p-4 bg-white rounded-lg" key={index}>
+            <div className="my-4 p-4 bg-gray-100 rounded-lg" key={index}>
               <MermaidDiagram chart={segment.content} />
             </div>
           )

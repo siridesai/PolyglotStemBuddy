@@ -70,6 +70,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ settings, onBack }) => {
   const [exitLessonFeedback, setShowExitLessonFeedback] = useState(false);
   const [currentRunId, setCurrentRunId] = useState<string | null>(null);
   const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>([]);
+  const [isSending, setIsSending] = useState(false);
+  const [isLoadingTopics, setIsLoadingTopics] = useState(false);
 
   const welcomeMessage = getWelcomeMessage(settings.language);
   const buttonsEnabled = hasUserStartedConversation(messages, welcomeMessage) && !isLoading;
@@ -84,13 +86,22 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ settings, onBack }) => {
 
   const BROAD_TOPICS = [
   { key: 'science', translationKey: 'science' },
-  { key: 'math', translationKey: 'math' },
-  { key: 'engineering', translationKey: 'engineering' },
   { key: 'technology', translationKey: 'technology' },
+  { key: 'engineering', translationKey: 'engineering' },
+  { key: 'math', translationKey: 'math' },
   { key: 'surprise', translationKey: 'surprise' }
 ];
 
+function shuffle(array: any[]) {
+  return array
+    .map(value => ({ value, sort: Math.random() }))
+    .sort((a, b) => a.sort - b.sort)
+    .map(({ value }) => value);
+}
+
 const [randomizedTopics, setRandomizedTopics] = useState<{ key: string; translationKey: string }[]>([]);
+
+
 useEffect(() => {
   setRandomizedTopics(BROAD_TOPICS);
 }, []);
@@ -168,6 +179,11 @@ useEffect(() => {
   };
 
   const handleSend = async (q?: any) => {
+    setIsSending(true);
+    setTopicQuestions([]);
+    setSelectedTopic(null);
+    //Hide the topic pills
+    setShowTopicPills(false);
     const messageToSend = typeof q === 'string' ? q : input.trim();
     if (!messageToSend || isLoading) return;
     
@@ -181,7 +197,7 @@ useEffect(() => {
 
     setMessages((prev) => [...prev, userMessage]);
     setInput('');
-    setIsLoading(true);
+    
 
     try {
       const threadId = await fetchThreadID(cookies[COOKIE_NAME]);
@@ -227,7 +243,7 @@ useEffect(() => {
         }
       ]);
     } finally {
-      setIsLoading(false);
+      setIsSending(false);
       setCurrentRunId(null);
     }
   };
@@ -257,17 +273,26 @@ useEffect(() => {
     }
   };
 
+  const lastUserMessageIdx = [...messages].reverse().findIndex(m => m.type === 'user');
+  const lastUserMessageIndex = lastUserMessageIdx === -1 ? -1 : messages.length - 1 - lastUserMessageIdx;
+
   async function handleTopicPillClick(topicKey: string) {
   setIsLoading(true);
   let chosenTopic = topicKey;
+  
+  const STEM_TOPICS = BROAD_TOPICS.filter(t => t.key !== 'surprise');
+  
+  // If 'surprise' is selected, pick a random STEM topic
   if (topicKey === 'surprise') {
-    // Randomly select a topic except 'surprise'
-    const otherTopics = BROAD_TOPICS.filter(t => t.key !== 'surprise');
-    chosenTopic = otherTopics[Math.floor(Math.random() * otherTopics.length)].key;
+    const shuffled = shuffle([...STEM_TOPICS]);
+    const randomIndex = Math.floor(Math.random() * shuffled.length);
+    chosenTopic = shuffled[randomIndex].key;
+    
   }
   setSelectedTopic(chosenTopic);
 
   // Call backend to get AI-generated questions
+  console.log(`Topic chosen: ${chosenTopic}`);
   const randomTopicQuestions = await generateRandomTopicQuestions(chosenTopic, threadId, settings.age, settings.language, cookies[COOKIE_NAME]);
   setTopicQuestions(randomTopicQuestions);
   setShowTopicPills(false);
@@ -413,7 +438,7 @@ useEffect(() => {
         <img
           src={robot}
           alt="Robot"
-          className="w-12 h-12 mr-2 rounded-full bg-white border border-indigo-100 shadow"
+          className="w-12 h-12 mr-2 rounded-full bg-gray-100 border border-indigo-100 shadow"
           style={{ boxShadow: '0 2px 8px #e0e7ff' }}
         />
       )}
@@ -422,7 +447,7 @@ useEffect(() => {
         className={`max-w-[80%] rounded-3xl px-5 py-4 shadow-lg border-2 ${
           message.type === 'user'
             ? 'bg-indigo-100 border-indigo-200 text-indigo-900'
-            : 'bg-white border-indigo-100 text-gray-800'
+            : 'bg-gray-100 border-indigo-100 text-gray-800'
         }`}
         style={{
           borderStyle: 'dashed',
@@ -441,6 +466,7 @@ useEffect(() => {
           style={{ boxShadow: '0 2px 8px #e0e7ff' }}
         />
       )}
+      
       {/* TTS Button for Assistant */}
       {message.type === 'assistant' && (
         <button className="ml-2 p-1 rounded-full hover:bg-gray-100 transition flex-shrink-0"
@@ -471,14 +497,20 @@ useEffect(() => {
     </div>
   )}
 
+
+
   {/* --- Topic Pills: Only after first assistant message and at the start --- */}
   {isFirstAssistant && showTopicPills && (
-    <div className="flex flex-wrap gap-2 mt-3 mb-2 ml-14">
+    <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-3">
       {randomizedTopics.map(topic => (
         <button
           key={topic.key}
-          className="rounded-full bg-indigo-100 border border-indigo-200 text-indigo-900 px-5 py-2 text-base font-medium shadow hover:bg-indigo-200 transition"
-          onClick={() => handleTopicPillClick(topic.key)}
+          className="w-full sm:w-40 flex-shrink-0 rounded-full bg-indigo-100 border border-indigo-200 text-indigo-900 px-5 py-2 text-base font-medium shadow hover:bg-indigo-200 transition text-center "
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsLoading(true);
+            handleTopicPillClick(topic.key);
+          }}
           tabIndex={0}
           aria-label={`Choose ${getTranslation(settings.language, topic.translationKey as TranslationKey)}`}
         >
@@ -487,23 +519,28 @@ useEffect(() => {
       ))}
     </div>
   )}
+  {isLoading && showTopicPills && (
+    <div style={{ marginLeft: '25%' }} className="flex justify-start items-center mt-4 mb-4 ">
+      <div className="loader border-4 border-indigo-500 border-t-transparent rounded-full w-8 h-8 animate-spin sm:text-base md:text-lg lg:text-xl xl:text-2xl"></div>
+    </div>
+  )}
 
   {/* --- Question Pills: After topic is picked and questions loaded --- */}
   {isFirstAssistant && !showTopicPills && topicQuestions.length > 0 && (
     <>
     
-    <div className="bg-gray-100 flex flex-wrap ml-14 mt-2 mb-1 text-gray-900 font-semibold text-lg justify-start">
-      <Sparkles className="w-8 h-8 text-yellow-500 mr-3 font-bold" />
-      {getTranslation(settings.language, 'searchPrompts')}
-      <span className="text-yellow-500 ml-3 text-2xl font-bold">✧</span>
+    <div className="w-auto bg-gray-100 flex flex-wrap ml-14 mt-2 mb-1 text-black-900 font-semibold text-lg justify-start sm:text-base md:text-lg lg:text-xl xl:text-2xl">
+      <Sparkles className="w-8 h-8 text-yellow-500 mr-3 font-bold sm:text-sm md:text-base lg:text-lg xl:text-xl justify-start" />
+      <span className="sm:text-sm md:text-base lg:text-lg xl:text-xl">{getTranslation(settings.language, 'searchPrompts')}  </span>
+      <span className="text-yellow-500 ml-3 text-2xl font-bold sm:text-sm md:text-base lg:text-lg xl:text-xl">✧</span>
     </div>
-    <div className="flex flex-wrap gap-2 mt-3 mb-2 ml-14">
+    <div className="flex flex-wrap gap-2 mt-3 mb-2 ml-14 sm:text-base md:text-lg lg:text-xl xl:text-2xl">
       {topicQuestions.map((question, idx) => (
         <button
           key={idx}
-          className="rounded-full bg-indigo-100 border border-indigo-200 text-indigo-900 px-5 py-2 text-base font-medium shadow hover:bg-indigo-200 transition"
-          onClick={() => {
-            setInput(question);
+          className="rounded-full bg-indigo-100 border border-indigo-200 text-indigo-900 px-5 py-2 text-lg text-black-900 font-medium shadow hover:bg-indigo-200 transition"
+          onClick={(e) => {
+            e.stopPropagation();
             setTopicQuestions([]);
             setSelectedTopic(null);
             handleSend(question);
@@ -520,8 +557,9 @@ useEffect(() => {
 
   {/* Suggested Follow-Up Questions Label */}
   {isFirstQuestion && (
-    <div className="text-sm font-semibold text-gray-600 mb-2 ml-14">
-      {getTranslation(settings.language, 'followUpQuestions')}
+    <div className="w-auto text-sm font-semibold text-black-600 mb-2 ml-14 justify-start sm:text-base md:text-lg lg:text-xl xl:text-2xl">
+      <span className="sm:text-sm md:text-base lg:text-lg xl:text-xl">{getTranslation(settings.language, 'followUpQuestions')}
+      </span>
     </div>
   )}
 
@@ -530,20 +568,19 @@ useEffect(() => {
     idx === messages.length - 1 &&
     suggestedQuestions.length > 0 && (
       <>
-        <div className="bg-gray-100 flex flex-wrap ml-14 mt-2 mb-1 text-gray-900 font-semibold text-lg justify-start">
-          {/*<span role="img" aria-label="Question" className="text-2xl mr-2 drop-shadow-glow">💡</span> */}
-          <Sparkles className="w-8 h-8 text-yellow-500 mr-3 font-bold" />
-          {getTranslation(settings.language, 'followUpQuestions')}
-          <span className="text-yellow-500 ml-3 text-2xl font-bold">✧</span>
+        <div className="w-auto bg-gray-100 flex flex-wrap ml-14 mt-2 mb-1 text-black-900 font-semibold text-lg justify-start sm:text-base md:text-lg lg:text-xl xl:text-2xl">
+          {/*<span role="img" aria-label="Question" className="text-2xl mr-2 drop-shadow-glow">💡</span> */} 
+          <Sparkles className="justify-start w-8 h-8 text-yellow-500 mr-3 font-bold sm:text-sm md:text-base lg:text-lg xl:text-xl" />
+          <span className="sm:text-sm md:text-base lg:text-lg xl:text-xl">{getTranslation(settings.language, 'followUpQuestions')} </span>
+          <span className="text-yellow-500 ml-3 text-2xl font-bold sm:text-sm md:text-base lg:text-lg xl:text-xl">✧</span>
         </div>
-        <div className="flex flex-wrap gap-3 ml-14 mt-2 mb-1">
+        <div className="flex flex-wrap gap-2 mt-3 mb-2 ml-14 sm:text-base text-black-900 md:text-lg lg:text-xl xl:text-2xl">
           {suggestedQuestions.map((question, idx) => (
-            <div
+            <button
               key={idx}
-              className="bg-indigo-100 border border-indigo-200 text-gray-900 rounded-full px-6 py-2 text-base cursor-pointer shadow hover:bg-indigo-100 transition w-auto max-w-xs inline-flex items-center justify-start"
+              className="rounded-full bg-indigo-100 border border-indigo-200 text-indigo-900 px-5 py-2 text-lg font-medium shadow hover:bg-indigo-200 transition"
               onClick={() => {
                 cleanupTTS(playerRef, synthesizerRef, setTtsStatus, setCurrentTTS);
-                setInput(question);
                 setSuggestedQuestions([]);
                 handleSend(question);
               }}
@@ -552,16 +589,27 @@ useEffect(() => {
               aria-label={`Ask: ${question}`}
             >
               {question}
-            </div>
+            </button>
           ))}
         </div>
       </>
     )}
+    {isSending && 
+      idx === lastUserMessageIndex &&
+      // Only show if the last message is from the user and no assistant message has been rendered after
+      (idx === messages.length - 1 || messages.slice(idx + 1).every(m => m.type !== 'assistant')) && (
+        <div style={{ marginRight: '25%' }} className="flex justify-end items-center mt-2 mb-2 ml-14">
+          <div className="loader border-4 border-indigo-500 border-t-transparent rounded-full w-8 h-8 animate-spin sm:text-base md:text-lg lg:text-xl xl:text-2xl"></div>
+        </div>
+      )
+    }
+    
 </React.Fragment>
     );
   })}
   <div ref={messagesEndRef} />
 </div>
+
 
 <div className="bg-white border-t p-4 rounded-t-3xl">
   <div className="max-w-12xl max-w-full mx-auto">

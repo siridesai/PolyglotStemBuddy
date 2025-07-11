@@ -146,7 +146,7 @@ export const translations: TranslationSet = {
     of: 'of',
     tooManyRequests: 'Too many requests. Please try again in a couple of minutes.',
     errorMessage: 'Something went wrong. Please try again.',
-    followUpQuestions: 'Learn more'
+    followUpQuestions: 'Explore related topics'
   },
   es: {
     selectAgeGroup: 'Selecciona grupo de edad',
@@ -216,7 +216,7 @@ export const translations: TranslationSet = {
     of: 'de',
     tooManyRequests: 'Demasiadas solicitudes. Por favor, inténtalo de nuevo en unos minutos.',
     errorMessage: 'Algo salió mal. Por favor, inténtalo de nuevo.',
-    followUpQuestions: 'Aprende más'
+    followUpQuestions: 'explorar temas relacionados'
   },
   hi: {
     selectAgeGroup: 'आयु वर्ग चुनें',
@@ -378,7 +378,7 @@ export const translations: TranslationSet = {
     technology: 'ತಂತ್ರಜ್ಞಾನ',
     engineering: 'ಅಭಿಯಾಂತ್ರಿಕೆ',
     math: 'ಗಣಿತ',
-    surprise: 'ಹೊಸದು ತೋರಿಸು',
+    surprise: 'ಹೊಸದೇನೋ ತೋರಿಸು',
     searchPlaceholder: 'ಇಂದು ನೀವು ಏನು ಕಲಿಯಲು ಇಚ್ಛಿಸುತ್ತೀರಿ?',
     wantToLearnAbout: 'ಇದಿನ ಬಗ್ಗೆ ಕಲಿಯಲು ಇಚ್ಛೆ...',
     typeMessage: 'ನಿಮ್ಮ ಸಂದೇಶವನ್ನು ಬರೆಯಿರಿ...',

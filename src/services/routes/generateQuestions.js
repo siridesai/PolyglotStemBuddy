@@ -37,7 +37,9 @@ router.post('/generateQuestions', async (req, res) => {
         - Context: ${contextString}
         
         **Response Rules**
-        1. Create 3 multiple-choice questions that directly relate to and are EXCLUSIVELY ABOUT ALL OF: "${contextString}". The questions **cannot** be subjective; for example, do not ask any questions like, "What's your favorite color?". Ensure that the questions generated are not the same as the ones that are asked by the chatbot in ${contextString}. **
+        1. Create between 3 and 5 multiple-choice questions that directly relate to and are EXCLUSIVELY ABOUT ALL OF: "${contextString}". 
+          The questions **cannot** be subjective; for example, do not ask any questions like, "What's your favorite color?". 
+          Ensure that the questions generated are not the same as the ones that are asked by the chatbot in ${contextString}. **
         2. Use ${language} suitable for age ${age}.
         3. Questions should be strictly age appropriate only relevant to ${age}.
         4. Include fun facts or interesting information related to the questions.
