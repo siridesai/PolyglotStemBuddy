@@ -4,17 +4,16 @@ import MermaidDiagram from './MermaidDiagram';
 import LatexRender from './LatexCodeRender';
 import {splitTextAndMermaidBlocks } from '../../utils/mermaidCodeUtils';
 
+
 interface MessageContentProps {
   content: string;
   }
 
 const MessageContent: React.FC<MessageContentProps> = ({ content }) => {
-  // Split content by Mermaid code blocks
   const segments = splitTextAndMermaidBlocks(content);
 
-
-return (
-  <div>
+  return (
+    <div>
       {segments.map((segment, index) =>
         segment.type === 'text'
           ? segment.content
@@ -26,7 +25,7 @@ return (
                 </div>
               ))
           : (
-            <div className="my-4 p-4 bg-white rounded-lg" key={index}>
+            <div className="my-4 p-4 bg-gray-100 rounded-lg" key={index}>
               <MermaidDiagram chart={segment.content} />
             </div>
           )
@@ -34,5 +33,7 @@ return (
     </div>
   );
 };
+
+
 
 export default MessageContent;

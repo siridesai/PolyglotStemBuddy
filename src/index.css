@@ -97,6 +97,7 @@ html {
 .message-text {
   font-size: clamp(0.95rem, 2vw, 1.2rem);
   line-height: 1.6;
+  color: black
 }
 
 ::-webkit-scrollbar {

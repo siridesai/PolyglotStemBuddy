@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Message, ChildSettings } from '../../utils/assistantMessageType.ts';
 import { getTranslation } from '../../data/translations.ts';
-import { ArrowLeft, Send, BookOpen, Brain } from 'lucide-react';
+import type { TranslationKey } from '../../data/translations.ts';
+import { ArrowLeft, Send, BookOpen, Brain, Sparkles } from 'lucide-react';
 import Button from './Button.tsx';
 import QuizModal from './QuizModal.tsx';
 import { fetchThreadID } from '../../api/fetchThreadID.ts';
@@ -13,6 +14,8 @@ import SummaryModal from './SummaryModal.tsx';
 import ExitLessonModal from './ExitLessonModal.tsx';
 import MessageContent from './MessageContent.tsx';
 import { extractMermaidCode, removeMermaidCode } from '../../utils/mermaidCodeUtils.ts';
+import { extractMainAndQuestions } from '../../utils/chatUtils.ts';
+
 import {
   getAgeGroupLabel,
   getCurrentLanguageName,
@@ -28,6 +31,7 @@ import {
 import robot from '../../../public/images/robot.svg';
 import user from '../../../public/images/user.svg';
 import { appInsights } from '../../utils/appInsightsForReact.ts';
+import { generateRandomTopicQuestions } from '../../api/generateRandomTopicQuestions.ts';
 
 const COOKIE_NAME = 'my_cookie';
 
@@ -36,10 +40,6 @@ interface ChatInterfaceProps {
   settings: ChildSettings;
   onBack: () => void;
 }
-
-
-
-
 
 
 
@@ -69,6 +69,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ settings, onBack }) => {
   const [recording, setRecording] = useState(false);
   const [exitLessonFeedback, setShowExitLessonFeedback] = useState(false);
   const [currentRunId, setCurrentRunId] = useState<string | null>(null);
+  const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>([]);
+  const [isSending, setIsSending] = useState(false);
+  const [isLoadingTopics, setIsLoadingTopics] = useState(false);
 
   const welcomeMessage = getWelcomeMessage(settings.language);
   const buttonsEnabled = hasUserStartedConversation(messages, welcomeMessage) && !isLoading;
@@ -76,6 +79,32 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ settings, onBack }) => {
   // Scroll to bottom helper
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+
+  const [showTopicPills, setShowTopicPills] = useState(true);
+  const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
+  const [topicQuestions, setTopicQuestions] = useState<string[]>([]);
+
+  const BROAD_TOPICS = [
+  { key: 'science', translationKey: 'science' },
+  { key: 'technology', translationKey: 'technology' },
+  { key: 'engineering', translationKey: 'engineering' },
+  { key: 'math', translationKey: 'math' },
+  { key: 'surprise', translationKey: 'surprise' }
+];
+
+function shuffle(array: any[]) {
+  return array
+    .map(value => ({ value, sort: Math.random() }))
+    .sort((a, b) => a.sort - b.sort)
+    .map(({ value }) => value);
+}
+
+const [randomizedTopics, setRandomizedTopics] = useState<{ key: string; translationKey: string }[]>([]);
+
+
+useEffect(() => {
+  setRandomizedTopics(BROAD_TOPICS);
+}, []);
 
   useEffect(() => {
     if (appInsights) {
@@ -149,9 +178,15 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ settings, onBack }) => {
     onBack();
   };
 
-  const handleSend = async () => {
-    if (!input.trim() || isLoading) return;
-    const messageToSend = input;
+  const handleSend = async (q?: any) => {
+    setIsSending(true);
+    setTopicQuestions([]);
+    setSelectedTopic(null);
+    //Hide the topic pills
+    setShowTopicPills(false);
+    const messageToSend = typeof q === 'string' ? q : input.trim();
+    if (!messageToSend || isLoading) return;
+    
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -162,7 +197,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ settings, onBack }) => {
 
     setMessages((prev) => [...prev, userMessage]);
     setInput('');
-    setIsLoading(true);
+    
 
     try {
       const threadId = await fetchThreadID(cookies[COOKIE_NAME]);
@@ -173,6 +208,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ settings, onBack }) => {
         settings.language,
         cookies[COOKIE_NAME]
       );
+      
 
       if (response.error) {
         setMessages((prev) => [
@@ -188,20 +224,26 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ settings, onBack }) => {
       }
 
       const { result, runId } = response;
+      
       setCurrentRunId(runId);
-
+      const { main, questions } = extractMainAndQuestions(result);
+      setSuggestedQuestions(
+        questions.filter(
+          (q) => q && ![...messages, userMessage].some(m => m.content === q)
+      )
+);
       setMessages((prev) => [
         ...prev,
         {
           id: (Date.now() + 1).toString(),
-          type: 'assistant',
-          content: result,
+          type: "assistant" as const,
+          content: main,
           timestamp: new Date(),
-          mermaidCode: extractMermaidCode(result),
-        },
+          mermaidCode: extractMermaidCode(main),
+        }
       ]);
     } finally {
-      setIsLoading(false);
+      setIsSending(false);
       setCurrentRunId(null);
     }
   };
@@ -230,6 +272,33 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ settings, onBack }) => {
       );
     }
   };
+
+  const lastUserMessageIdx = [...messages].reverse().findIndex(m => m.type === 'user');
+  const lastUserMessageIndex = lastUserMessageIdx === -1 ? -1 : messages.length - 1 - lastUserMessageIdx;
+
+  async function handleTopicPillClick(topicKey: string) {
+  setIsLoading(true);
+  let chosenTopic = topicKey;
+  
+  const STEM_TOPICS = BROAD_TOPICS.filter(t => t.key !== 'surprise');
+  
+  // If 'surprise' is selected, pick a random STEM topic
+  if (topicKey === 'surprise') {
+    const shuffled = shuffle([...STEM_TOPICS]);
+    const randomIndex = Math.floor(Math.random() * shuffled.length);
+    chosenTopic = shuffled[randomIndex].key;
+    
+  }
+  setSelectedTopic(chosenTopic);
+
+  // Call backend to get AI-generated questions
+  console.log(`Topic chosen: ${chosenTopic}`);
+  const randomTopicQuestions = await generateRandomTopicQuestions(chosenTopic, threadId, settings.age, settings.language, cookies[COOKIE_NAME]);
+  setTopicQuestions(randomTopicQuestions);
+  setShowTopicPills(false);
+  setIsLoading(false);
+
+};
 
 
 
@@ -339,84 +408,216 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ settings, onBack }) => {
               <span className="hidden sm:inline">{getTranslation(settings.language, 'exitLesson')}</span>
             </Button>
             <div className="ml-auto text-xs sm:text-sm text-gray-600 whitespace-nowrap">
-              {getAgeGroupLabel(settings.age)} | {getCurrentLanguageName(settings.language)}
+              {getAgeGroupLabel(settings.age, settings.language)} | {getCurrentLanguageName(settings.language)}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Chat messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-6">
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`flex items-end ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
-          >
-            {/* Assistant Avatar */}
-            {message.type === 'assistant' && (
-              <img
-                src={robot}
-                alt="Robot"
-                className="w-12 h-12 mr-2 rounded-full bg-white border border-indigo-100 shadow"
-                style={{ boxShadow: '0 2px 8px #e0e7ff' }}
-              />
-            )}
-            {/* Message Bubble */}
-            <div
-              className={`max-w-[80%] rounded-3xl px-5 py-4 shadow-lg border-2 ${
-                message.type === 'user'
-                  ? 'bg-indigo-100 border-indigo-200 text-indigo-900'
-                  : 'bg-white border-indigo-100 text-gray-800'
-              }`}
-              style={{
-                borderStyle: 'dashed',
-                boxShadow: '0 4px 16px 0 rgba(60, 72, 100, 0.14), 0 2px 8px 0 #a5b4fc',
-                transform: 'translateY(-2px) scale(1.01)',
-              }}
-            >
-              <MessageContent content={message.content} />
-            </div>
-            {/* User Avatar */}
-            {message.type === 'user' && (
-              <img
-                src={user}
-                alt="You"
-                className="w-12 h-12 ml-2 rounded-full bg-white border border-indigo-100 shadow"
-                style={{ boxShadow: '0 2px 8px #e0e7ff' }}
-              />
-            )}
-            {/* TTS Button for Assistant */}
-            {message.type === 'assistant' && (
-                <button className="ml-2 p-1 rounded-full hover:bg-gray-100 transition flex-shrink-0"
-                  title={
-                    currentTTS === removeMermaidCode(message.content) && ttsStatus === 'playing'
-                      ? "Stop audio"
-                      : "Read aloud"
-                  }
-                  onClick={() => handleTTSClick(message.content)}
-                >
-                  {/* Speaker Icon (always the same) */}
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="w-7 h-7 text-indigo-600"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={1.5}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M11 5.882V18.12a1 1 0 01-1.707.707L5.586 15H3a1 1 0 01-1-1V10a1 1 0 011-1h2.586l3.707-3.828A1 1 0 0111 5.882zm6.364 1.757a9 9 0 010 8.722M17.657 8.343a5 5 0 010 7.314"
-                    />
-                  </svg>
-                </button>
 
-            )}
-          </div>
-        ))}
-        <div ref={messagesEndRef} />
+    <div className="flex-1 overflow-y-auto p-4 space-y-6">
+  {messages.map((message, idx) => {
+    // Check if this is the first question bubble
+    const isFirstQuestion =
+      message.type === 'question' &&
+      (idx === 0 || messages[idx - 1].type !== 'question');
+
+    const isFirstAssistant =
+    message.type === 'assistant' &&
+    messages.findIndex(m => m.type === 'assistant') === idx;  
+
+    return (
+     <React.Fragment key={message.id}>
+  {/* Assistant/User Message Bubbles */}
+  {(message.type === 'assistant' || message.type === 'user') && (
+    <div
+      className={`flex items-end ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+    >
+      {/* Assistant Avatar */}
+      {message.type === 'assistant' && (
+        <img
+          src={robot}
+          alt="Robot"
+          className="w-12 h-12 mr-2 rounded-full bg-gray-100 border border-indigo-100 shadow"
+          style={{ boxShadow: '0 2px 8px #e0e7ff' }}
+        />
+      )}
+      {/* Message Bubble */}
+      <div
+        className={`max-w-[80%] rounded-3xl px-5 py-4 shadow-lg border-2 ${
+          message.type === 'user'
+            ? 'bg-indigo-100 border-indigo-200 text-indigo-900'
+            : 'bg-gray-100 border-indigo-100 text-gray-800'
+        }`}
+        style={{
+          borderStyle: 'dashed',
+          boxShadow: '0 4px 16px 0 rgba(60, 72, 100, 0.14), 0 2px 8px 0 #a5b4fc',
+          transform: 'translateY(-2px) scale(1.01)',
+        }}
+      >
+        <MessageContent content={message.content} />
       </div>
+      {/* User Avatar */}
+      {message.type === 'user' && (
+        <img
+          src={user}
+          alt="You"
+          className="w-12 h-12 ml-2 rounded-full bg-white border border-indigo-100 shadow"
+          style={{ boxShadow: '0 2px 8px #e0e7ff' }}
+        />
+      )}
+      
+      {/* TTS Button for Assistant */}
+      {message.type === 'assistant' && (
+        <button className="ml-2 p-1 rounded-full hover:bg-gray-100 transition flex-shrink-0"
+          title={
+            currentTTS === removeMermaidCode(message.content) && ttsStatus === 'playing'
+              ? "Stop audio"
+              : "Read aloud"
+          }
+          onClick={() => handleTTSClick(message.content)}
+        >
+          {/* Speaker Icon */}
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="w-7 h-7 text-indigo-600"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={1.5}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M11 5.882V18.12a1 1 0 01-1.707.707L5.586 15H3a1 1 0 01-1-1V10a1 1 0 011-1h2.586l3.707-3.828A1 1 0 0111 5.882zm6.364 1.757a9 9 0 010 8.722M17.657 8.343a5 5 0 010 7.314"
+            />
+          </svg>
+        </button>
+      )}
+    </div>
+  )}
+
+
+
+  {/* --- Topic Pills: Only after first assistant message and at the start --- */}
+  {isFirstAssistant && showTopicPills && (
+    <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-3">
+      {randomizedTopics.map(topic => (
+        <button
+          key={topic.key}
+          className="w-full sm:w-40 flex-shrink-0 rounded-full bg-indigo-100 border border-indigo-200 text-black-500 px-5 py-2 text-base font-semibold shadow hover:bg-indigo-200 transition text-center "
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsLoading(true);
+            handleTopicPillClick(topic.key);
+          }}
+          tabIndex={0}
+          aria-label={`Choose ${getTranslation(settings.language, topic.translationKey as TranslationKey)}`}
+        >
+          {getTranslation(settings.language, topic.translationKey as TranslationKey)}
+        </button>
+      ))}
+    </div>
+  )}
+  {isLoading && showTopicPills && (
+     <div className="flex justify-center items-center mt-6 mb-6">
+    <div className="flex flex-col items-center bg-indigo-50 rounded-xl px-6 py-4 shadow-md">
+      <div
+        className="loader border-4 border-indigo-500 border-t-transparent rounded-full w-10 h-10 animate-spin shadow"
+        role="status"
+        aria-label="Loading topics"
+      ></div>
+      <span className="mt-3 text-indigo-700 font-medium text-base animate-pulse">
+        {getTranslation(settings.language, "loadingTopics")}
+      </span>
+    </div>
+  </div>
+  )}
+
+  {/* --- Question Pills: After topic is picked and questions loaded --- */}
+  {isFirstAssistant && !showTopicPills && topicQuestions.length > 0 && (
+    <>
+    
+    <div className="w-auto bg-gray-100 flex flex-wrap ml-7 mt-2 mb-1 text-black-900 font-semibold text-lg justify-start sm:text-base md:text-lg lg:text-xl xl:text-2xl">
+      <Sparkles className="w-8 h-8 text-yellow-500 mr-3 font-bold sm:text-sm md:text-base lg:text-lg xl:text-xl justify-start" />
+      <span className="sm:text-sm md:text-base lg:text-lg xl:text-xl">{getTranslation(settings.language, 'searchPrompts')}  </span>
+      <span className="text-yellow-500 ml-3 text-2xl font-bold sm:text-sm md:text-base lg:text-lg xl:text-xl">✧</span>
+    </div>
+    <div className="flex flex-wrap gap-2 mt-3 mb-2 ml-14 sm:text-base md:text-lg lg:text-xl xl:text-2xl">
+      {topicQuestions.map((question, idx) => (
+        <button
+          key={idx}
+          className="rounded-full bg-indigo-100 border border-indigo-200 text-indigo-900 px-5 py-2 text-lg text-black-900 font-medium shadow hover:bg-indigo-200 transition"
+          onClick={(e) => {
+            e.stopPropagation();
+            setTopicQuestions([]);
+            setSelectedTopic(null);
+            handleSend(question);
+          }}
+          tabIndex={0}
+          aria-label={`Ask: ${question}`}
+        >
+          {question}
+        </button>
+      ))}
+    </div>
+     </>
+  )}
+
+  {/* Suggested Follow-Up Questions Label */}
+  {isFirstQuestion && (
+    <div className="w-auto text-sm font-semibold text-black-600 mb-2 ml-7 justify-start sm:text-base md:text-lg lg:text-xl xl:text-2xl">
+      <span className="sm:text-sm md:text-base lg:text-lg xl:text-xl">{getTranslation(settings.language, 'followUpQuestions')}
+      </span>
+    </div>
+  )}
+
+  {/* Follow-up Questions (if any) */}
+  {message.type === 'assistant' &&
+    idx === messages.length - 1 &&
+    suggestedQuestions.length > 0 && (
+      <>
+        <div className="w-auto bg-gray-100 flex flex-wrap ml-7 mt-2 mb-1 text-black-900 font-semibold text-lg justify-start sm:text-base md:text-lg lg:text-xl xl:text-2xl">
+          <Sparkles className="justify-start w-8 h-8 text-yellow-500 mr-3 font-bold sm:text-sm md:text-base lg:text-lg xl:text-xl" />
+          <span className="sm:text-sm md:text-base lg:text-lg xl:text-xl">{getTranslation(settings.language, 'followUpQuestions')} </span>
+          <span className="text-yellow-500 ml-3 text-2xl font-bold sm:text-sm md:text-base lg:text-lg xl:text-xl">✧</span>
+        </div>
+        <div className="flex flex-wrap gap-2 mt-3 mb-2 ml-14 sm:text-base text-black-900 md:text-lg lg:text-xl xl:text-2xl">
+          {suggestedQuestions.map((question, idx) => (
+            <button
+              key={idx}
+              className="rounded-full bg-indigo-100 border border-indigo-200 text-indigo-900 px-5 py-2 text-lg font-medium shadow hover:bg-indigo-200 transition"
+              onClick={() => {
+                cleanupTTS(playerRef, synthesizerRef, setTtsStatus, setCurrentTTS);
+                setSuggestedQuestions([]);
+                handleSend(question);
+              }}
+              tabIndex={0}
+              role="button"
+              aria-label={`Ask: ${question}`}
+            >
+              {question}
+            </button>
+          ))}
+        </div>
+      </>
+    )}
+    {isSending && 
+      idx === lastUserMessageIndex &&
+      // Only show if the last message is from the user and no assistant message has been rendered after
+      (idx === messages.length - 1 || messages.slice(idx + 1).every(m => m.type !== 'assistant')) && (
+        <div style={{ marginRight: '25%' }} className="flex justify-end items-center mt-2 mb-2 ml-14">
+          <div className="loader border-4 border-indigo-500 border-t-transparent rounded-full w-8 h-8 animate-spin sm:text-base md:text-lg lg:text-xl xl:text-2xl"></div>
+        </div>
+      )
+    }
+    
+</React.Fragment>
+    );
+  })}
+  <div ref={messagesEndRef} />
+</div>
+
 
 <div className="bg-white border-t p-4 rounded-t-3xl">
   <div className="max-w-12xl max-w-full mx-auto">

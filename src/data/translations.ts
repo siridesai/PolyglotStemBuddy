@@ -1,4 +1,4 @@
-type TranslationKey = 
+export type TranslationKey = 
   | 'selectAgeGroup'
   | 'chooseLanguage'
   | 'startLearning'
@@ -17,6 +17,7 @@ type TranslationKey =
   | 'science'
   | 'technology'
   | 'engineering'
+  | 'surprise'
   | 'math'
   | 'searchPlaceholder'
   | 'wantToLearnAbout'
@@ -65,6 +66,9 @@ type TranslationKey =
   | 'of'
   | 'tooManyRequests'
   | 'errorMessage'
+  | 'followUpQuestions'
+  | 'loadingTopics'
+  | 'loadingResponse'
   ;
 
 type Translations = {
@@ -91,11 +95,12 @@ export const translations: TranslationSet = {
     juniorScientistRange: 'Ages 9-12',
     teenResearcherRange: 'Ages 13-15',
     language: 'Language',
-    searchPrompts: 'Search topics...',
+    searchPrompts: 'Great choice! Now pick a topic to explore, or type your own question!',
     science: 'Science',
     technology: 'Technology',
     engineering: 'Engineering',
     math: 'Mathematics',
+    surprise: 'Surprise Me',
     searchPlaceholder: 'What do you want to learn about today?',
     wantToLearnAbout: 'Want to learn about...',
     typeMessage: 'Type your message...',
@@ -142,7 +147,10 @@ export const translations: TranslationSet = {
     question: 'Question',
     of: 'of',
     tooManyRequests: 'Too many requests. Please try again in a couple of minutes.',
-    errorMessage: 'Something went wrong. Please try again.'
+    errorMessage: 'Something went wrong. Please try again.',
+    followUpQuestions: 'Explore related topics',
+    loadingTopics: 'Loading topics...',
+    loadingResponse: 'Analyzing your question...',
   },
   es: {
     selectAgeGroup: 'Selecciona grupo de edad',
@@ -159,11 +167,12 @@ export const translations: TranslationSet = {
     juniorScientistRange: 'Edad: 9-12',
     teenResearcherRange: 'Edad: 13-15',
     language: 'Idioma',
-    searchPrompts: 'Buscar temas...',
+    searchPrompts: '¡Gran elección! Ahora elige un tema para explorar, o escribe tu propia pregunta.',
     science: 'Ciencia',
     technology: 'Tecnología',
     engineering: 'Ingeniería',
     math: 'Matemáticas',
+    surprise: 'Sorpréndeme',
     searchPlaceholder: '¿Qué quieres aprender hoy?',
     wantToLearnAbout: 'Quiero aprender sobre...',
     typeMessage: 'Escribe tu mensaje...',
@@ -210,7 +219,10 @@ export const translations: TranslationSet = {
     question: 'Pregunta',
     of: 'de',
     tooManyRequests: 'Demasiadas solicitudes. Por favor, inténtalo de nuevo en unos minutos.',
-    errorMessage: 'Algo salió mal. Por favor, inténtalo de nuevo.'
+    errorMessage: 'Algo salió mal. Por favor, inténtalo de nuevo.',
+    followUpQuestions: 'Explorar temas relacionados',
+    loadingTopics: 'Cargando temas...',
+    loadingResponse: 'Analizando su pregunta...'
   },
   hi: {
     selectAgeGroup: 'आयु वर्ग चुनें',
@@ -227,11 +239,12 @@ export const translations: TranslationSet = {
     juniorScientistRange: 'आयु: 9-12',
     teenResearcherRange: 'आयु: 13-15',
     language: 'भाषा',
-    searchPrompts: 'विषय खोजें...',
+    searchPrompts: 'अब एक विषय चुनें, या अपना प्रश्न टाइप करें!',
     science: 'विज्ञान',
     technology: 'प्रौद्योगिकी',
     engineering: 'अभियांत्रिकी',
     math: 'गणित',
+    surprise: 'कुछ नया दिखाओ',
     searchPlaceholder: 'आज आप क्या सीखना चाहते हैं?',
     wantToLearnAbout: 'इसके बारे में जानना चाहते हैं...',
     typeMessage: 'अपना संदेश लिखें...',
@@ -278,7 +291,10 @@ export const translations: TranslationSet = {
     question: 'प्रश्न',
     of: 'में से',
     tooManyRequests: 'बहुत ज़्यादा अनुरोध किए गए हैं। कृपया कुछ मिनटों बाद पुनः प्रयास करें।',
-    errorMessage: 'कुछ गलत हो गया। कृपया पुनः प्रयास करें।'
+    errorMessage: 'कुछ गलत हो गया। कृपया पुनः प्रयास करें।',
+    followUpQuestions: 'और सीखें',
+    loadingTopics: 'विषय लोड हो रहे हैं...',
+    loadingResponse: 'आपके प्रश्न का विश्लेषण किया जा रहा है...'
   },
   mr: {
     selectAgeGroup: 'वय गट निवडा',
@@ -295,11 +311,12 @@ export const translations: TranslationSet = {
     juniorScientistRange: 'वय: ९-१२',
     teenResearcherRange: 'वय: १३-१५',
     language: 'भाषा',
-    searchPrompts: 'विषय शोधा...',
+    searchPrompts: 'आता एक विषय निवडा, किंवा तुमचा स्वतःचा प्रश्न टाइप करा!',
     science: 'विज्ञान',
     technology: 'तंत्रज्ञान',
     engineering: 'अभियांत्रिकी',
     math: 'गणित',
+    surprise: 'काहीतरी नवीन दाखव',
     searchPlaceholder: 'आज तुम्हाला काय शिकायचं आहे?',
     wantToLearnAbout: 'याबद्दल शिकायचं आहे...',
     typeMessage: 'तुमचा संदेश टाइप करा...',
@@ -346,7 +363,10 @@ export const translations: TranslationSet = {
     question: 'प्रश्न',
     of: 'पैकी',
     tooManyRequests: 'खूप विनंत्या झाल्या आहेत. कृपया काही मिनिटांनी पुन्हा प्रयत्न करा.',
-    errorMessage: 'काहीतरी चुकले. कृपया पुन्हा प्रयत्न करा.'
+    errorMessage: 'काहीतरी चुकले. कृपया पुन्हा प्रयत्न करा.',
+    followUpQuestions: 'आणखी शिका',
+    loadingTopics: 'विषय लोड करत आहे...',
+    loadingResponse: 'तुमच्या प्रश्नाचे विश्लेषण केले जात आहे...'
   },
   kn: {
     selectAgeGroup: 'ವಯೋಮಿತಿ ಆಯ್ಕೆಮಾಡಿ',
@@ -363,11 +383,12 @@ export const translations: TranslationSet = {
     juniorScientistRange: 'ವಯಸ್ಸು: ೯-೧೨',
     teenResearcherRange: 'ವಯಸ್ಸು: ೧೩-೧೫',
     language: 'ಭಾಷೆ',
-    searchPrompts: 'ವಿಷಯ ಹುಡುಕಿ...',
+    searchPrompts: 'ಈಗ ಒಂದು ವಿಷಯ ಆಯ್ಕೆಮಾಡಿ, ಅಥವಾ ನಿಮ್ಮದೇ ಪ್ರಶ್ನೆಯನ್ನು ಟೈಪ್ ಮಾಡಿ!',
     science: 'ವಿಜ್ಞಾನ',
     technology: 'ತಂತ್ರಜ್ಞಾನ',
     engineering: 'ಅಭಿಯಾಂತ್ರಿಕೆ',
     math: 'ಗಣಿತ',
+    surprise: 'ಹೊಸದೇನೋ ತೋರಿಸು',
     searchPlaceholder: 'ಇಂದು ನೀವು ಏನು ಕಲಿಯಲು ಇಚ್ಛಿಸುತ್ತೀರಿ?',
     wantToLearnAbout: 'ಇದಿನ ಬಗ್ಗೆ ಕಲಿಯಲು ಇಚ್ಛೆ...',
     typeMessage: 'ನಿಮ್ಮ ಸಂದೇಶವನ್ನು ಬರೆಯಿರಿ...',
@@ -414,7 +435,11 @@ export const translations: TranslationSet = {
     question: 'ಪ್ರಶ್ನೆ',
     of: 'ಇಂದ',
     tooManyRequests: 'ಅತಿಯಾದ ವಿನಂತಿಗಳು ಮಾಡಲಾಗಿದೆ. ದಯವಿಟ್ಟು ಕೆಲ ನಿಮಿಷಗಳಲ್ಲಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.',
-    errorMessage: 'ಏನೋ ತಪ್ಪಾಗಿದೆ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.'
+    errorMessage: 'ಏನೋ ತಪ್ಪಾಗಿದೆ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.',
+    followUpQuestions: 'ಹೆಚ್ಚು ತಿಳಿಯಿರಿ',
+    loadingTopics: 'ವಿಷಯ ಲೋಡ್ ಮಾಡಲಾಗುತ್ತಿದೆ...',
+    loadingResponse: 'ನಿಮ್ಮ ಪ್ರಶ್ನೆಯನ್ನು ವಿಶ್ಲೇಷಿಸಲಾಗುತ್ತಿದೆ...'
+
   }
 };
 

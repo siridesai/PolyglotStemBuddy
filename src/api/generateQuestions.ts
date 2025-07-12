@@ -1,6 +1,6 @@
 export interface Message {
   id: string;
-  type: 'user' | 'assistant';
+  type: 'user' | 'assistant' | 'question';
   content: string;
   timestamp: Date;
   mermaidCode?: string; 
