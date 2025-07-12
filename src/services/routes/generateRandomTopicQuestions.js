@@ -36,17 +36,16 @@ router.post('/generateRandomTopicQuestions', async (req, res) => {
     }
 
   // Construct the prompt for the AI
-  const instructions = `Generate three engaging, age-appropriate topic single line STEM prompts for a student interested in ${topic}, in ${language}, for age group ${age}.
-                        Only use factual, STEM-related topics that deepen understanding of the current topic. 
-                        Do not add topics about feelings, preferences, favorites,colors, or any personal matters.
-                        Do not use imagination or hypothetical scenarios.
-                        Each topic must be strictly related to the STEM concept above and answerable by a tutor.
-                        Each time you receive this prompt, you must generate a new, unique set of questions—do not repeat questions from previous responses
-                        You must answer only in ${language}. Do not use English or any other language.
-                        Respond only in the following JSON format using native script for the language 
-                        Example: For language 'kn': {"topicQuestions":["ಪ್ರಶ್ನೆ 1", "ಪ್ರಶ್ನೆ 2", "ಪ್ರಶ್ನೆ 3"]}
-                        Replace the example questions above with your actual questions in ${language}.
-                        Questions should be concise, engaging, and suitable STEM related only for a student interested in ${topic}.`;
+  const instructions = `Generate three unique, age-appropriate, single-line STEM questions strictly related to ${topic} for a student in age group ${age} plus 3 years. 
+                        Example: if ${age} is 5, then the age group is 5 to 8. 
+                        Ensure the questions are engaging, educational, and suitable for the specified age range and in ${language} only.
+                        Use native script JSON format for the response.
+                        Each time you receive this prompt, generate a new set of questions, varying the subtopics and wording, even if the input is the same.
+                        Do not repeat questions from previous sessions, and rotate through different STEM subtopics suitable for the age group.
+                        Respond only in this JSON format using respective native script of ${language}.
+                        Respond ONLY in ${language} and in the native script of ${language}. Do NOT use English or any other language under any circumstances.
+                        Example: For 'kn' language, response should be in the following format - 
+                        {"topicQuestions":["ವಿದ್ಯುತ್ ಸರಣಿಯಲ್ಲಿ ಪ್ರತಿರೋಧಕದ ಪಾತ್ರವೇನು?", "ಯಂತ್ರವಿಜ್ಞಾನದಲ್ಲಿ ಸರಳ ಯಂತ್ರಗಳ ಉದಾಹರಣೆಗಳನ್ನು ಹೇಳಿ.", "ಭೌತಶಾಸ್ತ್ರದಲ್ಲಿ ಗುರ್ತಿಸುವ ನಿಯಮ ಯಾವುದು?"]}`;
 
   const run = await assistantClient.beta.threads.runs.create(threadId, {
       assistant_id: assistant.id,

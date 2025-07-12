@@ -67,6 +67,8 @@ export type TranslationKey =
   | 'tooManyRequests'
   | 'errorMessage'
   | 'followUpQuestions'
+  | 'loadingTopics'
+  | 'loadingResponse'
   ;
 
 type Translations = {
@@ -146,7 +148,9 @@ export const translations: TranslationSet = {
     of: 'of',
     tooManyRequests: 'Too many requests. Please try again in a couple of minutes.',
     errorMessage: 'Something went wrong. Please try again.',
-    followUpQuestions: 'Explore related topics'
+    followUpQuestions: 'Explore related topics',
+    loadingTopics: 'Loading topics...',
+    loadingResponse: 'Analyzing your question...',
   },
   es: {
     selectAgeGroup: 'Selecciona grupo de edad',
@@ -216,7 +220,9 @@ export const translations: TranslationSet = {
     of: 'de',
     tooManyRequests: 'Demasiadas solicitudes. Por favor, inténtalo de nuevo en unos minutos.',
     errorMessage: 'Algo salió mal. Por favor, inténtalo de nuevo.',
-    followUpQuestions: 'explorar temas relacionados'
+    followUpQuestions: 'Explorar temas relacionados',
+    loadingTopics: 'Cargando temas...',
+    loadingResponse: 'Analizando su pregunta...'
   },
   hi: {
     selectAgeGroup: 'आयु वर्ग चुनें',
@@ -286,7 +292,9 @@ export const translations: TranslationSet = {
     of: 'में से',
     tooManyRequests: 'बहुत ज़्यादा अनुरोध किए गए हैं। कृपया कुछ मिनटों बाद पुनः प्रयास करें।',
     errorMessage: 'कुछ गलत हो गया। कृपया पुनः प्रयास करें।',
-    followUpQuestions: 'और सीखें'
+    followUpQuestions: 'और सीखें',
+    loadingTopics: 'विषय लोड हो रहे हैं...',
+    loadingResponse: 'आपके प्रश्न का विश्लेषण किया जा रहा है...'
   },
   mr: {
     selectAgeGroup: 'वय गट निवडा',
@@ -356,7 +364,9 @@ export const translations: TranslationSet = {
     of: 'पैकी',
     tooManyRequests: 'खूप विनंत्या झाल्या आहेत. कृपया काही मिनिटांनी पुन्हा प्रयत्न करा.',
     errorMessage: 'काहीतरी चुकले. कृपया पुन्हा प्रयत्न करा.',
-    followUpQuestions: 'आणखी शिका'
+    followUpQuestions: 'आणखी शिका',
+    loadingTopics: 'विषय लोड करत आहे...',
+    loadingResponse: 'तुमच्या प्रश्नाचे विश्लेषण केले जात आहे...'
   },
   kn: {
     selectAgeGroup: 'ವಯೋಮಿತಿ ಆಯ್ಕೆಮಾಡಿ',
@@ -426,7 +436,9 @@ export const translations: TranslationSet = {
     of: 'ಇಂದ',
     tooManyRequests: 'ಅತಿಯಾದ ವಿನಂತಿಗಳು ಮಾಡಲಾಗಿದೆ. ದಯವಿಟ್ಟು ಕೆಲ ನಿಮಿಷಗಳಲ್ಲಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.',
     errorMessage: 'ಏನೋ ತಪ್ಪಾಗಿದೆ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.',
-    followUpQuestions: 'ಹೆಚ್ಚು ತಿಳಿಯಿರಿ'
+    followUpQuestions: 'ಹೆಚ್ಚು ತಿಳಿಯಿರಿ',
+    loadingTopics: 'ವಿಷಯ ಲೋಡ್ ಮಾಡಲಾಗುತ್ತಿದೆ...',
+    loadingResponse: 'ನಿಮ್ಮ ಪ್ರಶ್ನೆಯನ್ನು ವಿಶ್ಲೇಷಿಸಲಾಗುತ್ತಿದೆ...'
 
   }
 };

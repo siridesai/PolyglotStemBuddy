@@ -229,7 +229,7 @@ useEffect(() => {
       const { main, questions } = extractMainAndQuestions(result);
       setSuggestedQuestions(
         questions.filter(
-          (q) => q && !messages.some(m => m.content === q)
+          (q) => q && ![...messages, userMessage].some(m => m.content === q)
       )
 );
       setMessages((prev) => [
@@ -408,7 +408,7 @@ useEffect(() => {
               <span className="hidden sm:inline">{getTranslation(settings.language, 'exitLesson')}</span>
             </Button>
             <div className="ml-auto text-xs sm:text-sm text-gray-600 whitespace-nowrap">
-              {getAgeGroupLabel(settings.age)} | {getCurrentLanguageName(settings.language)}
+              {getAgeGroupLabel(settings.age, settings.language)} | {getCurrentLanguageName(settings.language)}
             </div>
           </div>
         </div>
@@ -505,7 +505,7 @@ useEffect(() => {
       {randomizedTopics.map(topic => (
         <button
           key={topic.key}
-          className="w-full sm:w-40 flex-shrink-0 rounded-full bg-indigo-100 border border-indigo-200 text-indigo-900 px-5 py-2 text-base font-medium shadow hover:bg-indigo-200 transition text-center "
+          className="w-full sm:w-40 flex-shrink-0 rounded-full bg-indigo-100 border border-indigo-200 text-black-500 px-5 py-2 text-base font-semibold shadow hover:bg-indigo-200 transition text-center "
           onClick={(e) => {
             e.stopPropagation();
             setIsLoading(true);
@@ -520,16 +520,25 @@ useEffect(() => {
     </div>
   )}
   {isLoading && showTopicPills && (
-    <div style={{ marginLeft: '25%' }} className="flex justify-start items-center mt-4 mb-4 ">
-      <div className="loader border-4 border-indigo-500 border-t-transparent rounded-full w-8 h-8 animate-spin sm:text-base md:text-lg lg:text-xl xl:text-2xl"></div>
+     <div className="flex justify-center items-center mt-6 mb-6">
+    <div className="flex flex-col items-center bg-indigo-50 rounded-xl px-6 py-4 shadow-md">
+      <div
+        className="loader border-4 border-indigo-500 border-t-transparent rounded-full w-10 h-10 animate-spin shadow"
+        role="status"
+        aria-label="Loading topics"
+      ></div>
+      <span className="mt-3 text-indigo-700 font-medium text-base animate-pulse">
+        {getTranslation(settings.language, "loadingTopics")}
+      </span>
     </div>
+  </div>
   )}
 
   {/* --- Question Pills: After topic is picked and questions loaded --- */}
   {isFirstAssistant && !showTopicPills && topicQuestions.length > 0 && (
     <>
     
-    <div className="w-auto bg-gray-100 flex flex-wrap ml-14 mt-2 mb-1 text-black-900 font-semibold text-lg justify-start sm:text-base md:text-lg lg:text-xl xl:text-2xl">
+    <div className="w-auto bg-gray-100 flex flex-wrap ml-7 mt-2 mb-1 text-black-900 font-semibold text-lg justify-start sm:text-base md:text-lg lg:text-xl xl:text-2xl">
       <Sparkles className="w-8 h-8 text-yellow-500 mr-3 font-bold sm:text-sm md:text-base lg:text-lg xl:text-xl justify-start" />
       <span className="sm:text-sm md:text-base lg:text-lg xl:text-xl">{getTranslation(settings.language, 'searchPrompts')}  </span>
       <span className="text-yellow-500 ml-3 text-2xl font-bold sm:text-sm md:text-base lg:text-lg xl:text-xl">✧</span>
@@ -557,7 +566,7 @@ useEffect(() => {
 
   {/* Suggested Follow-Up Questions Label */}
   {isFirstQuestion && (
-    <div className="w-auto text-sm font-semibold text-black-600 mb-2 ml-14 justify-start sm:text-base md:text-lg lg:text-xl xl:text-2xl">
+    <div className="w-auto text-sm font-semibold text-black-600 mb-2 ml-7 justify-start sm:text-base md:text-lg lg:text-xl xl:text-2xl">
       <span className="sm:text-sm md:text-base lg:text-lg xl:text-xl">{getTranslation(settings.language, 'followUpQuestions')}
       </span>
     </div>
@@ -568,8 +577,7 @@ useEffect(() => {
     idx === messages.length - 1 &&
     suggestedQuestions.length > 0 && (
       <>
-        <div className="w-auto bg-gray-100 flex flex-wrap ml-14 mt-2 mb-1 text-black-900 font-semibold text-lg justify-start sm:text-base md:text-lg lg:text-xl xl:text-2xl">
-          {/*<span role="img" aria-label="Question" className="text-2xl mr-2 drop-shadow-glow">💡</span> */} 
+        <div className="w-auto bg-gray-100 flex flex-wrap ml-7 mt-2 mb-1 text-black-900 font-semibold text-lg justify-start sm:text-base md:text-lg lg:text-xl xl:text-2xl">
           <Sparkles className="justify-start w-8 h-8 text-yellow-500 mr-3 font-bold sm:text-sm md:text-base lg:text-lg xl:text-xl" />
           <span className="sm:text-sm md:text-base lg:text-lg xl:text-xl">{getTranslation(settings.language, 'followUpQuestions')} </span>
           <span className="text-yellow-500 ml-3 text-2xl font-bold sm:text-sm md:text-base lg:text-lg xl:text-xl">✧</span>
