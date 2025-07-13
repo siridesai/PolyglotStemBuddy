@@ -25,77 +25,91 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStartLearning }) => {
   };
 
   return (
-    <div className="bg-sketch-doodles min-h-screen flex items-center justify-center p-4">
-      <div className="w-full max-w-3xl bg-white rounded-3xl shadow-lg">
-        <div className="bg-gradient-to-r from-blue-500 to-indigo-600 py-8 px-6 md:px-10 rounded-t-3xl">
-          <div className="flex flex-col items-center justify-center space-y-2">
-            <div className="flex items-center">
-              <Sparkles className="w-10 h-10 text-yellow-300 mr-3" />
-              <h1 className="text-3xl md:text-4xl font-bold text-white">Polyglot STEM Buddy</h1>
-              <span className="text-yellow-300 ml-3 text-2xl">✧</span>
-            </div>
-            <p className="text-center text-blue-100 text-lg mt-2">
-              STEM learning made simple
-            </p>
-          </div>
-        </div>
-        
-        <div className="p-6 md:p-10">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            {/* Age Selection */}
-            <div>
-              <h2 className="text-lg font-bold text-gray-800 mb-3">
-                {getTranslation(selectedLanguage, 'selectAgeGroup')}
-              </h2>
-              <AgeSelector 
-                ageGroups={[
-                  { 
-                    label: getTranslation(selectedLanguage, 'earlyExplorer'),
-                    range: getTranslation(selectedLanguage, 'earlyExplorerRange'),
-                    minAge: 5 
-                  },
-                  { 
-                    label: getTranslation(selectedLanguage, 'juniorScientist'),
-                    range: getTranslation(selectedLanguage, 'juniorScientistRange'),
-                    minAge: 9 
-                  },
-                  { 
-                    label: getTranslation(selectedLanguage, 'teenResearcher'),
-                    range: getTranslation(selectedLanguage, 'teenResearcherRange'),
-                    minAge: 13 
-                  }
-                ]}
-                selectedAge={selectedAge}
-                onSelectAge={setSelectedAge}
-                language={selectedLanguage}
-              />
-            </div>
-            
-            {/* Language Selection */}
-            <div>
-              <h2 className="text-lg font-bold text-gray-800 mb-3">
-                {getTranslation(selectedLanguage, 'chooseLanguage')}
-              </h2>
-              <LanguageSelector
-                languages={availableLanguages}
-                selectedLanguage={selectedLanguage}
-                onSelectLanguage={setSelectedLanguage}
-              />
+    <div className="min-h-screen flex flex-col bg-sketch-doodles">
+      {/* Main content centered vertically */}
+      <div className="flex-1 flex items-center justify-center p-4">
+        <div className="w-full max-w-3xl bg-white rounded-3xl shadow-lg">
+          <div className="bg-gradient-to-r from-blue-500 to-indigo-600 py-8 px-6 md:px-10 rounded-t-3xl">
+            <div className="flex flex-col items-center justify-center space-y-2">
+              <div className="flex items-center">
+                <Sparkles className="w-10 h-10 text-yellow-300 mr-3" />
+                <h1 className="text-3xl md:text-4xl font-bold text-white">Polyglot STEM Buddy</h1>
+                <span className="text-yellow-300 ml-3 text-2xl">✧</span>
+              </div>
+              <p className="text-center text-blue-100 text-lg mt-2">
+                STEM learning made simple
+              </p>
             </div>
           </div>
           
-          <div className="flex justify-center">
-            <Button 
-              onClick={handleStartClick} 
-              disabled={!selectedAge}
-              size="large"
-              variant="primary"
-            >
-              {getTranslation(selectedLanguage, 'startLearning')}
-            </Button>
+          <div className="p-6 md:p-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              {/* Age Selection */}
+              <div>
+                <h2 className="text-lg font-bold text-gray-800 mb-3">
+                  {getTranslation(selectedLanguage, 'selectAgeGroup')}
+                </h2>
+                <AgeSelector 
+                  ageGroups={[
+                    { 
+                      label: getTranslation(selectedLanguage, 'earlyExplorer'),
+                      range: getTranslation(selectedLanguage, 'earlyExplorerRange'),
+                      minAge: 5 
+                    },
+                    { 
+                      label: getTranslation(selectedLanguage, 'juniorScientist'),
+                      range: getTranslation(selectedLanguage, 'juniorScientistRange'),
+                      minAge: 9 
+                    },
+                    { 
+                      label: getTranslation(selectedLanguage, 'teenResearcher'),
+                      range: getTranslation(selectedLanguage, 'teenResearcherRange'),
+                      minAge: 13 
+                    }
+                  ]}
+                  selectedAge={selectedAge}
+                  onSelectAge={setSelectedAge}
+                  language={selectedLanguage}
+                />
+              </div>
+              
+              {/* Language Selection */}
+              <div>
+                <h2 className="text-lg font-bold text-gray-800 mb-3">
+                  {getTranslation(selectedLanguage, 'chooseLanguage')}
+                </h2>
+                <LanguageSelector
+                  languages={availableLanguages}
+                  selectedLanguage={selectedLanguage}
+                  onSelectLanguage={setSelectedLanguage}
+                />
+              </div>
+            </div>
+            
+            <div className="flex justify-center">
+              <Button 
+                onClick={handleStartClick} 
+                disabled={!selectedAge}
+                size="large"
+                variant="primary"
+              >
+                {getTranslation(selectedLanguage, 'startLearning')}
+              </Button>
+            </div>
           </div>
         </div>
       </div>
+      {/* Sticky footer at the very bottom */}
+      <footer className="w-full py-4 text-center text-gray-600">
+        <a
+          href="/about"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-indigo-600 underline hover:text-indigo-800 transition"
+        >
+          About
+        </a>
+      </footer>
     </div>
   );
 };
