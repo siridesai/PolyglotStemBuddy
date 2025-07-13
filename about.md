@@ -1,10 +1,10 @@
 # About Polyglot STEM Buddy
 
-Welcome to **Polyglot STEM Buddy**—an open-source educational web app designed to make STEM learning accessible to everyone, in multiple languages.
+Welcome to **Polyglot STEM Buddy**—an open-source educational web application designed to make STEM learning accessible to everyone, in multiple languages.
 
 ## What is Polyglot STEM Buddy?
 
-Polyglot STEM Buddy helps users explore Science, Technology, Engineering, and Math topics interactively. The app provides a conversational AI tutor, multilingual support, quizzes, flashcards, and both speech-to-text and text-to-speech features to enhance the learning experience.
+Polyglot STEM Buddy helps users explore Science, Technology, Engineering, and Math topics interactively. This application provides a conversational AI tutor, multilingual support, quizzes, flashcards, and both speech-to-text and text-to-speech features to enhance the learning experience.
 
 ## Key Features
 
