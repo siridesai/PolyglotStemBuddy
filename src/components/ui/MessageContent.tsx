@@ -10,7 +10,8 @@ interface MessageContentProps {
   }
 
 const MessageContent: React.FC<MessageContentProps> = ({ content }) => {
-  const segments = splitTextAndMermaidBlocks(content);
+  const cleaned = content.replace(/\\\[(.*?)\\\]/gs, '$$$1$$');
+  const segments = splitTextAndMermaidBlocks(cleaned);
 
   return (
     <div>
@@ -20,7 +21,7 @@ const MessageContent: React.FC<MessageContentProps> = ({ content }) => {
               .split(/\n{2,}/)
               .filter(para => para.trim().length > 0)
               .map((para, pidx) => (
-                <div className="message-text" key={`${index}-${pidx}`}>
+                <div className="message-text latex-equation-container" key={`${index}-${pidx}`}>
                   <LatexRender content={para.trim()} />
                 </div>
               ))

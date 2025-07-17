@@ -54,9 +54,42 @@ router.post('/generateSummary', async (req, res) => {
     3. Ensure the JSON is **flat** (not nested inside another object) and contains only the "title" and "summaryExplanation" properties. **Do not** return JSON as a string. Return a flat JSON object only.
     4. Return **only** valid, minified JSON (no extra whitespace, no markdown code blocks, no additional commentary).
     5. Cover **every key topic** discussed in the conversation; do not summarize only the first or last message.
-    6. The output format must be:
+    6. For ages 13 through 16, always use mathematical or chemical equations in LaTeX.
+        When generating answers with math, always use Markdown with standard LaTeX math delimiters: $ ... $ for inline math, and $$ ... $$ for block math.
+        Never use parentheses (e.g., (\frac{2}{3})); only use dollar sign delimiters.
+        For all mathematical or chemical expressions, use Markdown with standard LaTeX math delimiters.
 
-    {"title": "Topic - ${formattedDate}", "summaryExplanation": "..."}
+        Use $ ... $ for inline math (e.g., $\\frac{2}{3}$).
+
+        Use 
+        .
+        .
+        .
+        ... for block math (e.g.,
+
+        text
+        $$
+        \frac{2}{3} \div \frac{4}{5} = \frac{2}{3} \times \frac{5}{4} = \frac{5}{6}
+        $$
+        ).
+
+        Do not use other delimiters like (\frac{2}{3}), $$ ... $$, or $$ ... $$ for math expressions; these won't be rendered by the Markdown parser.
+
+        Escape backslashes properly for LaTeX (e.g., \\frac{2}{3} in JSON or string literals, so it is received as \frac{2}{3} when parsed).
+
+        For ages 13 through 16, always present mathematical or chemical equations in LaTeX using the above delimiters when relevant.
+
+        Ensure all generated content is clear, concise, and formatted for the appropriate age group.
+
+        Review rendered output to confirm math displays as intended and revise if it shows raw code instead of rendered math.
+      . The output format must be:
+
+      {"title": "Topic - ${formattedDate}", "summaryExplanation": "..."}
+      Example valid json 
+      {
+        "title": "Photosynthesis - ${formattedDate}",
+        "summaryExplanation": "**Photosynthesis Equation**\nThe photosynthesis equation...\n\n$$\n6CO_2 + 6H_2O + light \\\\ energy \\\\rightarrow C_6H_{12}O_6 + 6O_2\n$$"
+      }
 
     **Strictly follow these rules. Any deviation will be considered an error.**`;
 

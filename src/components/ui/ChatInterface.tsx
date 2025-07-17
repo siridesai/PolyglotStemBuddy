@@ -32,6 +32,7 @@ import robot from '../../../public/images/robot.svg';
 import user from '../../../public/images/user.svg';
 import { appInsights } from '../../utils/appInsightsForReact.ts';
 import { generateRandomTopicQuestions } from '../../api/generateRandomTopicQuestions.ts';
+import LatexRender from './LatexCodeRender.tsx';
 
 const COOKIE_NAME = 'my_cookie';
 
@@ -78,7 +79,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ settings, onBack }) => {
 
   // Scroll to bottom helper
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+ 
 
   const [showTopicPills, setShowTopicPills] = useState(true);
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
@@ -147,10 +148,7 @@ useEffect(() => {
     // eslint-disable-next-line
   }, [settings.language]);
 
-  // Scroll to bottom when messages change
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+
 
   // Cleanup on unmount
   useEffect(() => {
@@ -248,8 +246,52 @@ useEffect(() => {
     }
   };
 
+  function numberToWords(num: number): string {
+  // Simple rules for 0-20 and fallback numbers
+  const map: Record<number, string> = {
+    0: 'zero', 1: 'one', 2: 'two', 3: 'three', 4: 'four',
+    5: 'five', 6: 'six', 7: 'seven', 8: 'eight', 9: 'nine',
+    10: 'ten', 11: 'eleven', 12: 'twelve', 13: 'thirteen',
+    14: 'fourteen', 15: 'fifteen', 16: 'sixteen', 
+    17: 'seventeen', 18: 'eighteen', 19: 'nineteen', 20: 'twenty'
+  };
+  return map[num] || num.toString();
+}
+
+function denominatorToWords(den: number, num: number): string {
+  // Singular/plural special cases for denominator words
+  const isSingular = num === 1;
+  switch (den) {
+    case 2: return isSingular ? 'half' : 'halves';
+    case 3: return isSingular ? 'third' : 'thirds';
+    case 4: return isSingular ? 'fourth' : 'fourths';
+    case 5: return isSingular ? 'fifth' : 'fifths';
+    case 6: return isSingular ? 'sixth' : 'sixths';
+    default: return isSingular ? `${den}th` : `${den}ths`;
+  }
+}
+
+
+function convertLatexToSpeech(latexText: string) {
+  if (!latexText) return '';
+
+  // Mixed fractions (e.g., 1\frac{3}{4} => one and three over four)
+  latexText = latexText.replace(/(\d+)\\frac\s*{(\d+)}\s*{(\d+)}/g,
+    (_, whole, num, den) => `${whole} and ${num} over ${den}`);
+
+  // Simple fractions (e.g., \frac{3}{4} => three over four)
+  latexText = latexText.replace(/\\frac\s*{(\d+)}\s*{(\d+)}/g,
+    (_, num, den) => `${num} over ${den}`);
+
+  // Remove LaTeX math delimiters and backslashes
+  latexText = latexText.replace(/\$\$?([^$]+)\$\$?/g, '$1').replace(/\\/g, '');
+
+  return latexText.trim();
+}
+
   const handleTTSClick = (messageContent: string) => {
-    const cleanedText = removeMermaidCode(messageContent);
+    let cleanedText = removeMermaidCode(messageContent);
+    cleanedText = convertLatexToSpeech(cleanedText);
     const isPlayingThis = currentTTS === cleanedText && ttsStatus === 'playing';
 
     if (isPlayingThis) {
@@ -300,6 +342,39 @@ useEffect(() => {
 
 };
 
+const scrollContainerRef = useRef<HTMLDivElement>(null);
+function isUserNearBottom() {
+  const el = scrollContainerRef.current;
+  if (!el) return false;
+  return el.scrollHeight - el.scrollTop <= el.clientHeight + 100;
+}
+
+// Scroll to bottom smoothly
+function scrollToBottom() {
+  const el = scrollContainerRef.current;
+  if (el) {
+    el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+  }
+}
+const wasNearBottomRef = useRef(true);
+
+useEffect(() => {
+  // Save if user was near bottom before update
+  wasNearBottomRef.current = isUserNearBottom();
+}, [messages])
+
+useEffect(() => {
+  // Wait for next paint/render (including math, diagrams),
+  // then scroll to bottom if user was near bottom before
+  if (wasNearBottomRef.current) {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => { // run twice to wait layout stabilization
+        scrollToBottom();
+      });
+    });
+  }
+  // else don't scroll, user likely scrolled up so preserve scroll pos
+}, [messages]);
 
 
   // --- Render ---
@@ -415,7 +490,7 @@ useEffect(() => {
       </div>
 
 
-    <div className="flex-1 overflow-y-auto p-4 space-y-6">
+    <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-4 space-y-6">
   {messages.map((message, idx) => {
     // Check if this is the first question bubble
     const isFirstQuestion =
@@ -557,7 +632,7 @@ useEffect(() => {
           tabIndex={0}
           aria-label={`Ask: ${question}`}
         >
-          {question}
+          <LatexRender content={question} />
         </button>
       ))}
     </div>
@@ -596,7 +671,7 @@ useEffect(() => {
               role="button"
               aria-label={`Ask: ${question}`}
             >
-              {question}
+             <LatexRender content={question} />
             </button>
           ))}
         </div>

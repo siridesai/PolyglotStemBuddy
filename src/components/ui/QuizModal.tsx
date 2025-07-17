@@ -5,6 +5,7 @@ import { getTranslation } from '../../data/translations';
 import { ChildSettings, Message } from '../../utils/assistantMessageType.ts';
 import { generateQuestions } from '../../api/generateQuestions';
 import { appInsights } from '../../utils/appInsightsForReact.ts';
+import LatexRender from './LatexCodeRender.tsx';
 
 interface QuizQuestion {
   question: string;
@@ -181,7 +182,7 @@ const QuizModal: React.FC<QuizModalProps> = ({
           {!quizComplete ? (
             <div className="space-y-6">
               <p className="text-lg text-gray-700 font-medium">
-                {questions[currentQuestion].question}
+                <LatexRender content={questions[currentQuestion].question} />
               </p>
 
               <div className="space-y-3">
@@ -200,7 +201,7 @@ const QuizModal: React.FC<QuizModalProps> = ({
                         : 'border-2 border-gray-200'
                     }`}
                   >
-                    {option}
+                  <LatexRender content={option} />
                   </button>
                 ))}
               </div>
@@ -208,7 +209,7 @@ const QuizModal: React.FC<QuizModalProps> = ({
               {showExplanation && (
                 <div className="mt-4 p-4 bg-blue-50 rounded-xl">
                   <p className="text-blue-800">
-                    {questions[currentQuestion].explanation}
+                    <LatexRender content={questions[currentQuestion].explanation} />
                   </p>
                 </div>
               )}

@@ -3,6 +3,7 @@ import { ChildSettings, Message } from '../../utils/assistantMessageType.ts';
 import { generateQuestions } from '../../api/generateQuestions';
 import { getTranslation } from '../../data/translations';
 import { appInsights } from '../../utils/appInsightsForReact.ts';
+import LatexRender from './LatexCodeRender.tsx';
 
 
 interface FlashcardModalProps {
@@ -218,7 +219,7 @@ const FlashcardModal: React.FC<FlashcardModalProps> = ({
             }`}
             style={{ backfaceVisibility: 'hidden' }}
           >
-            <span className="w-full">{flashcards[current].question}</span>
+           <LatexRender content={flashcards[current].question} />
           </div>
           {/* Back Side */}
           <div
@@ -227,7 +228,7 @@ const FlashcardModal: React.FC<FlashcardModalProps> = ({
             }`}
             style={{ backfaceVisibility: 'hidden' }}
           >
-            <span className="w-full">{flashcards[current].answer}</span>
+           <LatexRender content={flashcards[current].answer} />
           </div>
         </div>
 

@@ -143,7 +143,97 @@ export const runAssistantBackend = async (
 
       After the diagram, briefly explain the concept in one or two sentences, using age-appropriate and fun language for the specified age group ${age} plus 3 years (example: for age 5, use age group 5 to 8 years) in ${language}.
 
-      For ages 13 through 16, always use mathematical or chemical equations in LaTeX(inside $$ ... $$) when relevant.
+     
+      For ages 13 through 16, always use mathematical or chemical equations in LaTeX.
+      When generating answers with math, always use Markdown with standard LaTeX math delimiters: $ ... $ for inline math, and $$ ... $$ for block math.
+      Never use parentheses (e.g., (\frac{2}{3})); only use dollar sign delimiters.
+      For all mathematical or chemical expressions((including in follow-up questions), use Markdown with standard LaTeX math delimiters.
+
+      Use $ ... $ for inline math (e.g., $\\frac{2}{3}$).
+
+      Use 
+      .
+      .
+      .
+      ... for block math (e.g.,
+
+      text
+      $$
+      \frac{2}{3} \div \frac{4}{5} = \frac{2}{3} \times \frac{5}{4} = \frac{5}{6}
+      $$
+      ).
+
+      Do not use other delimiters like (\frac{2}{3}), $$ ... $$, or $$ ... $$ for math expressions; these won't be rendered by the Markdown parser.
+
+      Escape backslashes properly for LaTeX (e.g., \\frac{2}{3} in JSON or string literals, so it is received as \frac{2}{3} when parsed).
+
+      Always present any mathematical or chemical equations in LaTeX using the above delimiters when relevant.
+
+      Ensure all generated content is clear, concise, and formatted for the appropriate age group.
+
+      Review rendered output to confirm math displays as intended and revise if it shows raw code instead of rendered math.
+
+      In follow-up questions:
+
+      Use $ ... $ for inline math, e.g., $\\frac{3}{4}$.
+
+      Use $$ ... $$ for block math, if needed.
+
+      Never use parentheses like (\frac{3}{4}) or any other delimiters.
+
+      Escape backslashes properly for JSON, so \\frac{3}{4} reaches the renderer as \frac{3}{4}.
+
+      Confirm that every follow-up question's LaTeX expression is correctly enclosed and properly escaped so it renders instead of displaying raw code.
+
+      When writing a mixed fraction, always present it as a whole number immediately followed by a LaTeX fraction, all inside the appropriate math delimiters.
+
+      For inline mixed fractions, use single dollar signs and double-escaped backslashes.
+
+      Example:
+      $1\\frac{1}{2}$
+      (which renders as 
+      1
+      1
+      2
+      1 
+      2
+      1
+        when processed by your Markdown+math engine)
+
+      For block display, use double dollar signs:
+
+      text
+      $$
+      1\\frac{1}{2}
+      $$
+      Never add extra parentheses, brackets, or spaces between the number and the fraction.
+
+      Always double-escape the backslash in JSON or code (e.g., \\frac{1}{2}), so it renders as \frac{1}{2} at display time.
+
+      Example follow-up question with mixed fraction:
+
+      json
+      "How do you convert $1\\frac{2}{3}$ into an improper fraction?"
+      Always wrap any part of the question containing a mixed fraction in $...$
+      When generating math expressions, use:
+
+      - '$1\\frac{1}{2}$' for inline mixed fractions.
+      - '$$1\\frac{1}{2}$$' for block mixed fractions.
+
+      Never write mixed fractions as "1 and 1/2", "1 (1/2)", "(1\\frac{1}{2})", or similar."
+      Ensure your instructions explicitly and unconditionally require inclusion of at least 3 follow-up questions for every initial concept output, even for topics like "mixed fractions."
+
+      Require that follow-up questions are always output in their own Markdown code blocks with the proper label (followUpQuestions) and formatted using the LaTeX/Markdown conventions described in your prompt.
+
+      If using templating or automated post-processing, confirm that these questions are actually attached to the API response under all circumstances.
+
+      Review the content generator or model's completion for silent failures: If it provides only an explanation and diagram and omits the follow-ups, flag that as non-compliant and prompt for corrections.
+      These LaTeX formatting rules apply in all languages you generate, including Kannada, Marathi, Hindi, Spanish, etc.  
+      Math expressions must always follow the dollar sign delimiter and escaping rules regardless of language.
+
+      
+      All follow up questions must be in ${language} for a student of age group ${age} to ${age} plus 3.
+      
 
       You are an AI tutor. Your task is to generate at least 3 age-appropriate, strictly STEM-related follow-up questions based on the concept: ${message} for a student of age ${age} in language ${language}.
 
