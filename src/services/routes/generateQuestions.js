@@ -23,7 +23,7 @@ router.post('/generateQuestions', async (req, res) => {
 
     const assistantClient = getAssistantClient();
     const assistant = getAssistant(); // <-- Get the assistant object
-    const contextString = messages
+    const contextString = message
                           .filter(m => m.type === 'assistant')
                           .map(m => m.content)
                           .join('\n\n');

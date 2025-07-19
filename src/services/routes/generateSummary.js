@@ -77,11 +77,20 @@ router.post('/generateSummary', async (req, res) => {
 
         Escape backslashes properly for LaTeX (e.g., \\frac{2}{3} in JSON or string literals, so it is received as \frac{2}{3} when parsed).
 
-        For ages 13 through 16, always present mathematical or chemical equations in LaTeX using the above delimiters when relevant.
+        Always present mathematical or chemical equations in LaTeX using the above delimiters when relevant.
 
         Ensure all generated content is clear, concise, and formatted for the appropriate age group.
 
         Review rendered output to confirm math displays as intended and revise if it shows raw code instead of rendered math.
+
+        IMPORTANT: In JSON, you must escape ALL LaTeX backslashes as '\\\\''. 
+        - Use '\\\\frac{2}{3}', not '\\frac{2}{3}'.
+        - Use '\\\\div', not '\\div'.
+
+        Do not send malformed characters like '\\\div' or unescaped LaTeX.
+
+        Return the output as minified JSON. Example:
+        {"title":"Fractions - 2025-07-18","summaryExplanation":"...$$\\\\frac{8}{12}$$..."}
       . The output format must be:
 
       {"title": "Topic - ${formattedDate}", "summaryExplanation": "..."}
