@@ -14,7 +14,6 @@ import SummaryModal from './SummaryModal.tsx';
 import ExitLessonModal from './ExitLessonModal.tsx';
 import MessageContent from './MessageContent.tsx';
 import { extractMermaidCode, removeMermaidCode } from '../../utils/mermaidCodeUtils.ts';
-import { extractMainAndQuestions } from '../../utils/chatUtils.ts';
 
 import {
   getAgeGroupLabel,
@@ -22,11 +21,11 @@ import {
   findRightLanguageForTTS,
   hasUserStartedConversation,
   sttFromMic,
-  textToSpeech,
-  stopCurrentPlayback,
   handleSynthesisComplete,
   handleSynthesisError,
-  cleanupTTS,
+  extractMainAndQuestions,
+  textToSpeechWithHtmlAudio,
+  stopCurrentPlaybackWithAudio,
 } from '../../utils/chatUtils.ts';
 import robot from '../../../public/images/robot.svg';
 import user from '../../../public/images/user.svg';
@@ -61,7 +60,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ settings, onBack }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [cookies, setCookie, removeCookie] = useCookies([COOKIE_NAME]);
   const [threadId, setThreadId] = useState<string>('');
-  const playerRef = useRef<any>(null);
   const synthesizerRef = useRef<any>(null);
   const [ttsStatus, setTtsStatus] = useState<'idle' | 'playing' | 'paused'>('idle');
   const [currentTTS, setCurrentTTS] = useState<string | null>(null);
@@ -84,6 +82,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ settings, onBack }) => {
   const [showTopicPills, setShowTopicPills] = useState(true);
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   const [topicQuestions, setTopicQuestions] = useState<string[]>([]);
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   const BROAD_TOPICS = [
   { key: 'science', translationKey: 'science' },
@@ -113,10 +112,14 @@ useEffect(() => {
     }
   }, []);
 
+  function generateSessionId(): string {
+  return `sid-${Date.now()}-${Math.floor(Math.random() * 1e9)}`;
+}
   // Set cookie if missing
   useEffect(() => {
     if (!cookies[COOKIE_NAME]) {
-      setCookie(COOKIE_NAME, crypto.randomUUID(), { path: '/', maxAge: 3600 });
+      
+      setCookie(COOKIE_NAME, generateSessionId, { path: '/', maxAge: 3600 });
     }
   }, [cookies, setCookie]);
 
@@ -153,17 +156,29 @@ useEffect(() => {
   // Cleanup on unmount
   useEffect(() => {
     return () => {
+      // Clean up <audio> element
+      if (audioRef.current) {
+        try {
+          audioRef.current.pause();
+          audioRef.current.src = '';
+          audioRef.current.currentTime = 0;
+        } catch {}
+      }
+      // Clean up SpeechSynthesizer
       if (synthesizerRef.current) {
-        synthesizerRef.current.close();
+        try {
+          synthesizerRef.current.close();
+        } catch {}
         synthesizerRef.current = null;
       }
-      playerRef.current = null;
+      setTtsStatus('idle');
+      setCurrentTTS(null);
     };
   }, []);
 
   // Handlers
   const handleBack = async () => {
-    cleanupTTS(playerRef, synthesizerRef, setTtsStatus, setCurrentTTS);
+    stopCurrentPlaybackWithAudio(audioRef, synthesizerRef, setTtsStatus, setCurrentTTS);
     const threadId = await fetchThreadID(cookies[COOKIE_NAME]);
     if (threadId) {
       try {
@@ -310,23 +325,24 @@ function convertLatexToSpeech(latexText: string): string {
   const handleTTSClick = (messageContent: string) => {
     let cleanedText = removeMermaidCode(messageContent);
     cleanedText = convertLatexToSpeech(cleanedText);
+
     const isPlayingThis = currentTTS === cleanedText && ttsStatus === 'playing';
 
     if (isPlayingThis) {
-      // Stop TTS if this message is playing
-      cleanupTTS(playerRef, synthesizerRef, setTtsStatus, setCurrentTTS);
+      // Stop the audio
+      stopCurrentPlaybackWithAudio(audioRef, synthesizerRef, setTtsStatus, setCurrentTTS);
     } else {
-      // Start TTS
-      textToSpeech(
+      // Play using HTMLAudioElement
+      textToSpeechWithHtmlAudio(
         cleanedText,
         findRightLanguageForTTS(settings.language),
-        playerRef,
+        audioRef,
         synthesizerRef,
         ttsStatus,
         setTtsStatus,
         currentTTS,
         setCurrentTTS,
-        () => stopCurrentPlayback(playerRef, synthesizerRef, setTtsStatus, setCurrentTTS),
+        () => stopCurrentPlaybackWithAudio(audioRef, synthesizerRef, setTtsStatus, setCurrentTTS),
         () => handleSynthesisComplete(setTtsStatus, setCurrentTTS),
         (error) => handleSynthesisError(error, setTtsStatus)
       );
@@ -398,6 +414,8 @@ useEffect(() => {
   // --- Render ---
   return (
     <div className="flex flex-col h-screen bg-sketch-doodles">
+
+      <audio ref={audioRef} hidden preload="auto" />
       {/* Header */}
       <div className="bg-white shadow-sm w-full p-2 rounded-b-3xl">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 w-full">
@@ -418,7 +436,7 @@ useEffect(() => {
           <div className="flex flex-wrap items-center gap-2 justify-start sm:justify-end w-full sm:w-auto">
             <Button
               onClick={() => {
-                cleanupTTS(playerRef, synthesizerRef, setTtsStatus, setCurrentTTS);
+                stopCurrentPlaybackWithAudio(audioRef, synthesizerRef, setTtsStatus, setCurrentTTS);
                 setShowFlashcards(true)}}
               variant="secondary"
               size="medium"
@@ -426,7 +444,7 @@ useEffect(() => {
               className={`flex items-center gap-1 flex-shrink-0
                 ${buttonsEnabled
                   ? "bg-blue-50 hover:bg-blue-100 text-blue-700"
-                  : "bg-gray-200 text-gray-400 cursor-not-allowed"}
+                  : "bg-gray-300 text-gray-400 opacity-60 cursor-not-allowed"}
               `}
             >
               {/* Flashcards SVG */}
@@ -438,7 +456,7 @@ useEffect(() => {
             </Button>
             <Button
               onClick={() => {
-                cleanupTTS(playerRef, synthesizerRef, setTtsStatus, setCurrentTTS);
+                stopCurrentPlaybackWithAudio(audioRef, synthesizerRef, setTtsStatus, setCurrentTTS);
                 setShowSummary(true)}}
               variant="secondary"
               size="medium"
@@ -454,7 +472,7 @@ useEffect(() => {
             </Button>
             <Button
               onClick={() => {
-                 cleanupTTS(playerRef, synthesizerRef, setTtsStatus, setCurrentTTS);
+                 stopCurrentPlaybackWithAudio(audioRef, synthesizerRef, setTtsStatus, setCurrentTTS);
                  setShowQuiz(true)}}
               variant="secondary"
               size="medium"
@@ -486,7 +504,7 @@ useEffect(() => {
             </Button>
             <Button
               onClick={() => {
-                cleanupTTS(playerRef, synthesizerRef, setTtsStatus, setCurrentTTS);
+                stopCurrentPlaybackWithAudio(audioRef, synthesizerRef, setTtsStatus, setCurrentTTS);
                 setShowExitLessonFeedback(true)}}
               variant="secondary"
               size="medium"
@@ -681,7 +699,7 @@ useEffect(() => {
               key={idx}
               className="rounded-full bg-indigo-100 border border-indigo-200 text-indigo-900 px-5 py-2 text-lg font-medium shadow hover:bg-indigo-200 transition"
               onClick={() => {
-                cleanupTTS(playerRef, synthesizerRef, setTtsStatus, setCurrentTTS);
+                stopCurrentPlaybackWithAudio(audioRef, synthesizerRef, setTtsStatus, setCurrentTTS);
                 setSuggestedQuestions([]);
                 handleSend(question);
               }}

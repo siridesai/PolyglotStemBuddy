@@ -115,7 +115,7 @@ export const runAssistantBackend = async (
 
       Node labels: Use exactly one pair of straight double quotes, in ${language}, with emojis for engagement.
 
-      Edge labels: Write in ${language}, do not use quotes.
+      Edge labels: Write in ${language}, DO NOT use quotes.
 
       Assign each node a unique class for pastel backgrounds using classDef and class.
 

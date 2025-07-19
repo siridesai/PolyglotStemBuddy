@@ -109,6 +109,11 @@ html {
   border-radius: 4px;
 }
 
+.summary-content p {
+  text-align: left;
+  white-space: normal;
+  word-break: break-word;
+}
 
 .latex-equation-container {
   contain: layout style; 

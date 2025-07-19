@@ -10,6 +10,7 @@ import LatexRender from './LatexCodeRender';
 import { generateSummary } from '../../api/generateSummary';
 import { splitTextAndMermaidBlocks } from '../../utils/mermaidCodeUtils';
 import { appInsights } from '../../utils/appInsightsForReact.ts';
+import { sanitizeText } from '../../utils/chatUtils.ts';
 
 
 interface Summary {
@@ -164,7 +165,7 @@ const SummaryModal: React.FC<SummaryModalProps> = ({
 
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-start p-4">
       <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex justify-between items-center mb-6">
@@ -214,13 +215,14 @@ const SummaryModal: React.FC<SummaryModalProps> = ({
                 {summary && splitTextAndMermaidBlocks(summary.summaryExplanation).map((block, idx) => {
                     if (block.type === 'text') {
                       // Split text block into paragraphs by double newlines
-                      return block.content
+                      return sanitizeText(block.content)
                         .split(/\n{2,}/)
                         .filter(para => para.trim().length > 0)
                         .map((para, pidx) => (
-                          <p key={`${idx}-${pidx}`} className="mb-3">
-                            <LatexRender content={para.trim()} />
-                          </p>
+                         <p key={`${idx}-${pidx}`} className="mb-3 mb-3 text-left whitespace-normal break-words leading-relaxed">
+                          <LatexRender content={sanitizeText(para)} />
+                         </p>
+                        
                         ));
                     }
                     if (block.type === 'mermaid') {

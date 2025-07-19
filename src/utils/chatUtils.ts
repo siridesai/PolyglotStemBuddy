@@ -106,6 +106,14 @@ export function hasUserStartedConversation(messages: Message[], welcomeMessage: 
   return hasUser && hasAssistant;
 }
 
+export function sanitizeText(text: string): string {
+  return text
+    .replace(/\u00A0/g, ' ')         // Replace non-breaking spaces
+    .replace(/&nbsp;/g, ' ')         // Replace HTML-encoded NBSP
+    .replace(/\s+/g, ' ')            // Collapse multiple spaces/tabs/newlines
+    .trim();
+}
+
 export async function sttFromMic(
   setRecording: (rec: boolean) => void,
   setInput: (input: string) => void,
@@ -218,6 +226,153 @@ export async function textToSpeech(
   }
 }
 
+export async function textToSpeechWithHtmlAudio(
+  text: string,
+  lang: string,
+  audioRef: React.RefObject<HTMLAudioElement>,
+  synthesizerRef: React.MutableRefObject<SpeechSDK.SpeechSynthesizer | null>,
+  ttsStatus: string,
+  setTtsStatus: (status: 'idle' | 'playing' | 'paused') => void,
+  currentTTS: string | null,
+  setCurrentTTS: (content: string | null) => void,
+  stopCurrentPlayback: () => void,
+  handleSynthesisComplete: () => void,
+  handleSynthesisError: (error: any) => void
+) {
+  const noMermaid = removeMermaidCode(text);
+  const cleanLaTeX = cleanLaTeXForTTS(noMermaid);
+  const cleanedText = cleanLaTeX.replace(/[^\p{L}\p{N}\p{P}\p{Z}\p{M}\+\-=]/gu, '');
+
+  // Handle same-text playback toggle
+  if (currentTTS === cleanedText && audioRef.current) {
+    switch (ttsStatus) {
+      case 'playing':
+        audioRef.current.pause();
+        setTtsStatus('paused');
+        return;
+      case 'paused':
+        audioRef.current.play();
+        setTtsStatus('playing');
+        return;
+    }
+  }
+
+  // Stop any current playback
+  stopCurrentPlayback();
+  setCurrentTTS(cleanedText);
+  setTtsStatus('playing');
+
+  // Track usage
+  if (appInsights) {
+    appInsights.trackEvent({
+      name: 'TextToSpeechUsed',
+      properties: { language: lang }
+    });
+  }
+
+  try {
+    const tokenObj = await getTokenOrRefresh();
+    const speechConfig = SpeechSDK.SpeechConfig.fromAuthorizationToken(
+      tokenObj.authToken,
+      tokenObj.region
+    );
+    speechConfig.speechSynthesisLanguage = lang;
+    speechConfig.speechSynthesisVoiceName = voiceMap[lang];
+
+    // Set audio format suitable for browser playback
+    speechConfig.speechSynthesisOutputFormat =
+      SpeechSDK.SpeechSynthesisOutputFormat.Audio16Khz32KBitRateMonoMp3;
+
+    // Use SSML
+    const ssml = createSSML(cleanedText, lang, voiceMap[lang]);
+
+    const synthesizer = new SpeechSDK.SpeechSynthesizer(speechConfig, null);
+    synthesizerRef.current = synthesizer;
+
+    synthesizer.speakSsmlAsync(
+      ssml,
+      (result) => {
+        if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
+          const audioData = result.audioData;
+          const blob = new Blob([audioData], { type: 'audio/mpeg' });
+          if (blob.size === 0) {
+            handleSynthesisError(new Error("Synthesized audio data is empty."));
+            setTtsStatus('idle');
+            return;
+          }
+          const audioUrl = URL.createObjectURL(blob);
+
+          const audio = audioRef.current;
+          if (audio) {
+            audio.src = audioUrl;
+            audio.onended = () => {
+              if (audioUrl) URL.revokeObjectURL(audioUrl);
+              handleSynthesisComplete();
+              setTtsStatus('idle');
+              setCurrentTTS(null);
+            };
+            audio.onerror = (e) => { 
+              if (audio.src === "" || audio.src !== audioUrl) {
+                // Likely triggered by cleanup/reset, safe to ignore
+                return;
+              }
+              if (audio.src === audioUrl) {
+                URL.revokeObjectURL(audioUrl);
+              }
+              audio.pause();
+              audio.load();
+              audio.removeAttribute('src');
+              const error = audio.error;
+              if (error) {
+                const code = error.code;
+                const message = {
+                  1: "MEDIA_ERR_ABORTED: Playback was aborted.",
+                  2: "MEDIA_ERR_NETWORK: A network error occurred.",
+                  3: "MEDIA_ERR_DECODE: Audio decoding failed.",
+                  4: "MEDIA_ERR_SRC_NOT_SUPPORTED: Unsupported format or missing source.",
+                }[code] || "Unknown audio error";
+
+                console.error("TTS Error:", message, error);
+                handleSynthesisError(new Error(message));
+              } else {
+                handleSynthesisError(new Error("Unknown audio playback error"));
+              }
+              setTtsStatus('idle');
+            };
+
+            audio.play().catch(error => {
+              audio.pause();
+              audio.removeAttribute('src');
+              audio.load();
+
+              if (audioUrl) {
+                URL.revokeObjectURL(audioUrl);
+              }
+              handleSynthesisError(error);
+              setTtsStatus('idle');
+            });
+          }
+        } else {
+          handleSynthesisError(result.errorDetails);
+          setTtsStatus('idle');
+        }
+
+        synthesizer.close();
+        synthesizerRef.current = null;
+      },
+      (error) => {
+        handleSynthesisError(error);
+        setTtsStatus('idle');
+        synthesizer.close();
+        synthesizerRef.current = null;
+      }
+    );
+  } catch (error) {
+    handleSynthesisError(error);
+    setTtsStatus('idle');
+  }
+}
+
 export function stopCurrentPlayback(
   playerRef: React.MutableRefObject<SpeechSDK.SpeakerAudioDestination | null>,
   synthesizerRef: React.MutableRefObject<SpeechSDK.SpeechSynthesizer | null>,
@@ -243,6 +398,55 @@ export function handleSynthesisComplete(
   setCurrentTTS(null);
 }
 
+export function stopCurrentPlaybackWithAudio(
+  audioRef: React.RefObject<HTMLAudioElement>,
+  synthesizerRef: React.MutableRefObject<SpeechSDK.SpeechSynthesizer | null>,
+  setTtsStatus: (status: 'idle' | 'playing' | 'paused') => void,
+  setCurrentTTS: (content: string | null) => void
+) {
+  if (audioRef.current) {
+    try {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      audioRef.current.src = "";
+    } catch {}
+  }
+
+  if (synthesizerRef.current) {
+    try {
+      synthesizerRef.current.close();
+    } catch {}
+    synthesizerRef.current = null;
+  }
+
+  setTtsStatus('idle');
+  setCurrentTTS(null);
+}
+
+export const cleanupTTSWithAudio = (
+  audioRef: React.RefObject<HTMLAudioElement>,
+  synthesizerRef: React.MutableRefObject<SpeechSDK.SpeechSynthesizer | null>,
+  setTtsStatus: (status: 'idle' | 'playing' | 'paused') => void,
+  setCurrentTTS: (content: string | null) => void
+) => {
+  if (audioRef.current) {
+    try {
+      audioRef.current.pause();
+      audioRef.current.src = '';
+      audioRef.current.currentTime = 0;
+    } catch {}
+  }
+
+  if (synthesizerRef.current) {
+    try {
+      synthesizerRef.current.close();
+    } catch {}
+    synthesizerRef.current = null;
+  }
+
+  setTtsStatus('idle');
+  setCurrentTTS(null);
+};
 export function handleSynthesisError(
   error: any,
   setTtsStatus: (status: 'idle' | 'playing' | 'paused') => void
