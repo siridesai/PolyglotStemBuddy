@@ -271,22 +271,40 @@ function denominatorToWords(den: number, num: number): string {
   }
 }
 
-
-function convertLatexToSpeech(latexText: string) {
+function convertLatexToSpeech(latexText: string): string {
   if (!latexText) return '';
 
-  // Mixed fractions (e.g., 1\frac{3}{4} => one and three over four)
-  latexText = latexText.replace(/(\d+)\\frac\s*{(\d+)}\s*{(\d+)}/g,
-    (_, whole, num, den) => `${whole} and ${num} over ${den}`);
+  let text = latexText;
 
-  // Simple fractions (e.g., \frac{3}{4} => three over four)
-  latexText = latexText.replace(/\\frac\s*{(\d+)}\s*{(\d+)}/g,
-    (_, num, den) => `${num} over ${den}`);
+  // 1. Convert mixed fractions like 3\frac{1}{4} to "three and one fourth"
+  text = text.replace(/(\d+)\\frac\s*{(\d+)}\s*{(\d+)}/g, (_, whole, num, den) => {
+    const wholeWord = numberToWords(parseInt(whole));
+    const fractionWord = `${numberToWords(parseInt(num))} ${denominatorToWords(parseInt(den), parseInt(num))}`;
+    return `${wholeWord} and ${fractionWord}`;
+  });
 
-  // Remove LaTeX math delimiters and backslashes
-  latexText = latexText.replace(/\$\$?([^$]+)\$\$?/g, '$1').replace(/\\/g, '');
+  // 2. Convert simple fractions like \frac{3}{4} to "three fourths"
+  text = text.replace(/\\frac\s*{(\d+)}\s*{(\d+)}/g, (_, num, den) => {
+    return `${numberToWords(parseInt(num))} ${denominatorToWords(parseInt(den), parseInt(num))}`;
+  });
 
-  return latexText.trim();
+  // 3. Convert superscripts like x^2 to "x squared"
+  text = text.replace(/([a-zA-Z0-9])\^\{?([^}]*)\}?/g, (_, base, exponent) => {
+    if (exponent === '2') return `${base} squared`;
+    if (exponent === '3') return `${base} cubed`;
+    return `${base} to the ${exponent}`;
+  });
+
+  // 4. Replace arrows with words
+  text = text.replace(/\\rightarrow/g, 'yields');
+
+  // 5. Remove leftover backslashes
+  text = text.replace(/\\/g, '');
+
+  // 6. Remove math delimiters $ and $$
+  text = text.replace(/\$\$?([\s\S]*?)\$\$?/g, '$1');
+
+  return text.trim();
 }
 
   const handleTTSClick = (messageContent: string) => {

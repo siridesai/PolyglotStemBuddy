@@ -23,8 +23,11 @@ router.post('/generateQuestions', async (req, res) => {
 
     const assistantClient = getAssistantClient();
     const assistant = getAssistant(); // <-- Get the assistant object
-    const contextString = message.map(m => m.content).join('\n\n');
-
+    const contextString = messages
+                          .filter(m => m.type === 'assistant')
+                          .map(m => m.content)
+                          .join('\n\n');
+  
 
     // 3. Create a run to generate quiz questions in the same thread
     const run = await assistantClient.beta.threads.runs.create(threadId, {

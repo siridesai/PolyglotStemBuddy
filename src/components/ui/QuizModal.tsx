@@ -39,6 +39,11 @@ const QuizModal: React.FC<QuizModalProps> = ({
   const [error, setError] = useState<string | null>(null);
   const hasFetched = useRef(false);
 
+  const contextString = messages
+  .filter(m => m.type === 'assistant')
+  .map(m => m.content)
+  .join('\n\n');
+
   // Fetch questions when modal opens or dependencies change
   useEffect(() => {
     if (hasFetched.current) return;
