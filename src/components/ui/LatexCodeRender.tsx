@@ -1,3 +1,4 @@
+// LatexRender.tsx
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
@@ -8,31 +9,18 @@ interface LatexRenderProps {
   content: string;
 }
 
-const LatexRender: React.FC<LatexRenderProps> = ({ content }) => (
-  <ReactMarkdown
-    remarkPlugins={[remarkMath]}
-    rehypePlugins={[rehypeKatex]}
-    components={{
-      text({ children }) {
-        return (
-          <>
-            {String(children).split('\n').map((line, i, arr) => (
-              i < arr.length - 1 ? (
-                <React.Fragment key={i}>
-                  {line}
-                  <br />
-                </React.Fragment>
-              ) : (
-                line
-              )
-            ))}
-          </>
-        );
-      }
-    }}
-  >
-    {content}
-  </ReactMarkdown>
-);
+const LatexRender: React.FC<LatexRenderProps> = ({ content }) => {
+  // Strip surrounding quotes, if present (only one pair)
+  const cleanedContent = content.replace(/^"(.*)"$/, '$1');
+
+  return (
+    <ReactMarkdown
+      remarkPlugins={[remarkMath]}
+      rehypePlugins={[rehypeKatex]}
+    >
+      {cleanedContent}
+    </ReactMarkdown>
+  );
+};
 
 export default LatexRender;

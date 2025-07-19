@@ -44,6 +44,34 @@ router.post('/generateRandomTopicQuestions', async (req, res) => {
                         Do not repeat questions from previous sessions, and rotate through different STEM subtopics suitable for the age group.
                         Respond only in this JSON format using respective native script of ${language}.
                         Respond ONLY in ${language} and in the native script of ${language}. Do NOT use English or any other language under any circumstances.
+                        For ages 13 through 16, always use mathematical or chemical equations in LaTeX.
+                        When generating answers with math, always use Markdown with standard LaTeX math delimiters: $ ... $ for inline math, and $$ ... $$ for block math.
+                        Never use parentheses (e.g., (\frac{2}{3})); only use dollar sign delimiters.
+                        For all mathematical or chemical expressions, use Markdown with standard LaTeX math delimiters.
+
+                        Use $ ... $ for inline math (e.g., $\\frac{2}{3}$).
+
+                        Use 
+                        .
+                        .
+                        .
+                        ... for block math (e.g.,
+
+                        text
+                        $$
+                        \frac{2}{3} \div \frac{4}{5} = \frac{2}{3} \times \frac{5}{4} = \frac{5}{6}
+                        $$
+                        ).
+
+                        Do not use other delimiters like (\frac{2}{3}), $$ ... $$, or $$ ... $$ for math expressions; these won't be rendered by the Markdown parser.
+
+                        Escape backslashes properly for LaTeX (e.g., \\frac{2}{3} in JSON or string literals, so it is received as \frac{2}{3} when parsed).
+
+                        For ages 13 through 16, always present mathematical or chemical equations in LaTeX using the above delimiters when relevant.
+
+                        Ensure all generated content is clear, concise, and formatted for the appropriate age group.
+
+                        Review rendered output to confirm math displays as intended and revise if it shows raw code instead of rendered math.
                         Example: For 'kn' language, response should be in the following format - 
                         {"topicQuestions":["ವಿದ್ಯುತ್ ಸರಣಿಯಲ್ಲಿ ಪ್ರತಿರೋಧಕದ ಪಾತ್ರವೇನು?", "ಯಂತ್ರವಿಜ್ಞಾನದಲ್ಲಿ ಸರಳ ಯಂತ್ರಗಳ ಉದಾಹರಣೆಗಳನ್ನು ಹೇಳಿ.", "ಭೌತಶಾಸ್ತ್ರದಲ್ಲಿ ಗುರ್ತಿಸುವ ನಿಯಮ ಯಾವುದು?"]}`;
 
