@@ -4,6 +4,7 @@ import { ChildSettings } from './utils/assistantMessageType.ts';
 import LandingPage from './components/ui/LandingPage';
 import ChatInterface from './components/ui/ChatInterface';
 import About from "./About";
+import 'katex/dist/katex.min.css';
 
 function App() {
   const [settings, setSettings] = useState<ChildSettings | null>(null);

@@ -121,6 +121,23 @@ html {
   -webkit-margin-after: 0;
 }
 
+.summary-content .mermaid {
+  line-height: 1.2 !important;
+  font-size: 1rem !important;
+  font-family: 'Quicksand', 'ui-sans-serif', system-ui, sans-serif;
+  white-space: pre-wrap;
+  margin: 0 !important;
+  padding: 0 !important;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Reduce double-spacing on tspan nodes for iOS Safari */
+.summary-content .mermaid tspan {
+  line-height: 1.1 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
 @supports (-webkit-touch-callout: none) {
   .summary-content p {
     margin-bottom: 0.5rem;

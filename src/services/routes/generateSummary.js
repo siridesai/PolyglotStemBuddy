@@ -52,12 +52,14 @@ router.post('/generateSummary', async (req, res) => {
           - Do not use parentheses around LaTeX (e.g., do not write (\frac{1}{2})).
           - Example: A["Improper Fraction: $$\\\\frac{9}{4}$$"]
 
-      3. LaTeX:
-        - For inline math: use $...$ (e.g., $\\\\frac{2}{3}$)
-        - For block math: use double dollar signs on separate lines.
-          - Example: $$\\n\\\\frac{2}{3} + \\\\frac{1}{3} = 1\\n$$
-        - All LaTeX expressions must follow KaTeX/Markdown standards.
-        - Do not use triple backslashes.
+      3. LaTeX rules:
+        - Inline math must use $...$, e.g. $\\\\frac{2}{3}$
+        - For block math, use: 
+          $$
+          \\\\frac{2}{3} + \\\\frac{1}{3} = 1
+          $$
+        - Use only supported KaTeX syntax.
+        -  Do not use: \\\\div, triple backslashes \\\\\\\\, or malformed escape sequences.
         - Do not use partial/dangling backslashes.
 
       4. Output Restrictions:
@@ -71,12 +73,12 @@ router.post('/generateSummary', async (req, res) => {
         - Each backslash used in LaTeX must be escaped **as \\\\** in the JSON string.
         - e.g., \\\\frac{a}{b}, \\\\rightarrow
         - DO NOT use: \\\\div, \\\\\\, \\\\text{light \\\\ energy}, or any malformed JSON escape sequences.
-        - Any deviation (triple backslashes, malformed objects) will be considered invalid.
+        - Any deviation (triple backslashes, malformed objects, or misescaped LaTeX) will be considered invalid.
 
       6. Example valid output:
       {"title": "Photosynthesis - ${formattedDate}", "summaryExplanation": "**Photosynthesis Equation**\\nThe process of photosynthesis...\\n\\n\`\`\`mermaid\\ngraph TD\\n  A[\\"Sunlight: $$\\\\text{energy}$$\\"] --> B[\\"Carbon Dioxide\\"]\\n  B --> C[\\"Glucose: $$\\\\frac{6H_2O}{CO_2}$$\\"]\\n\`\`\`"}
 
-      Strictly follow all formatting and escaping rules. Any deviation from valid LaTeX, Mermaid, or JSON structure will be rejected.`;
+      Strictly follow all rules for LaTeX, Mermaid, JSON structure, formatting, age, and language targeting. Any invalid escape sequence or deviation may cause rendering errors.`;
 
     // Create the run
     const run = await assistantClient.beta.threads.runs.create(threadId, {

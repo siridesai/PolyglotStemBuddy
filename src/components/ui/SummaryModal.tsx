@@ -227,7 +227,9 @@ const SummaryModal: React.FC<SummaryModalProps> = ({
                     color: '#1e293b',
                   }}
                 >
-                {summary && splitTextAndMermaidBlocks(summary.summaryExplanation).map((block, idx) => {
+                  
+                {/*Replacing extrs escape characters for summary text*/}
+                {summary && splitTextAndMermaidBlocks(summary.summaryExplanation.replace(/\\\\/g, '\\')).map((block, idx) => {
                     if (block.type === 'text') {
                       // Split text block into paragraphs by double newlines
                       return sanitizeText(block.content)
@@ -240,6 +242,7 @@ const SummaryModal: React.FC<SummaryModalProps> = ({
                         
                         ));
                     }
+                    
                     if (block.type === 'mermaid') {
                       return (
                         <div key={idx} className="mb-4 p-4 bg-gray-50 rounded-lg">
