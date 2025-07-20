@@ -97,8 +97,12 @@ html {
 .message-text {
   font-size: clamp(0.95rem, 2vw, 1.2rem);
   line-height: 1.8;
-  color: black
+  color: black;
+  overflow-x: auto;
+  width: fit-content;
 }
+
+
 
 ::-webkit-scrollbar {
   width: 8px;
@@ -109,25 +113,37 @@ html {
   border-radius: 4px;
 }
 
-
-.latex-equation-container {
-  contain: layout style; 
-  overflow: hidden; /* Prevent layout shifting */
-  white-space: normal;
-  max-width: 100%;
-  width: 100%;
-  font-size: 1em;
-  line-height: 1.8;
+.summary-content p {
+  margin: 0 0 0.75em 0;        
+  line-height: 1.6;            
+  font-family: 'Quicksand', system-ui, sans-serif;
+  -webkit-margin-before: 0;
+  -webkit-margin-after: 0;
 }
 
-.katex-display {
- overflow: hidden;
+@supports (-webkit-touch-callout: none) {
+  .summary-content p {
+    margin-bottom: 0.5rem;
+    line-height: 1.6;
+  }
+}
+
+.message-bubble, .message-text {
+  max-width: 100%;
+  overflow-x: auto;
   white-space: normal;
-  display: block;
+  display: inline-block;
+  box-sizing: border-box;
+}
+
+.latex-equation-container,
+.katex-display {
   width: 100%;
   max-width: 100%;
-  margin: 0.5rem 0;
-  text-align: left;
+  word-break: break-word;
+  overflow-x: auto;
+  white-space: normal;
+  box-sizing: border-box;
 }
 
 .outer-container {
@@ -145,12 +161,13 @@ html, body {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  overflow: hidden; 
+  overflow: auto; 
 }
 
 #root, .main-app {
-  height: 100vh;    
+  height: 100vh !important;    
   width: 100vw;
   display: flex;
   flex-direction: column;
 }
+
