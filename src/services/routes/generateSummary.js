@@ -36,71 +36,47 @@ router.post('/generateSummary', async (req, res) => {
       return res.status(404).json({ error: `Thread ${threadId} not found` });
     }
 
-    // Compose instructions for the LLM
-    const instructions = `**User Requirements**
-    - Age group: ${age} years old
-    - Language: ${language}
-    - Message: ${message}
+    const instructions = `Generate a summary based on the conversation relating to: "${message}". The user is ${age} years old and prefers the ${language} language. The summary must be precise, complete, age-appropriate, and use Markdown formatting in ${language}. Use scientific vocabulary appropriate to the age group. Output strictly in a valid, minified JSON object with the format: {"title": "Title - ${formattedDate}", "summaryExplanation": "..."}
+      Rules:
+      1. The summary title must include the main topic(s) discussed, formatted like: "Photosynthesis - ${formattedDate}".
+      2. The "summaryExplanation" must:
+        - Be comprehensive and cover every key concept in the full conversation, not just the latest interaction.
+        - Be written clearly for a ${age}-year-old in ${language}, using simple yet precise scientific language.
+        - Include a Mermaid diagram (only in the *first* summary response), if the concept benefits from visualization.
+        - Mermaid diagrams must use valid Mermaid syntax inside a code block labeled \`\`\`mermaid.
+        - Only include the Mermaid code block itself in the output, not an explanation of it.
+        - Inside Mermaid: 
+          - Node and edge labels must be in ${language}; node labels quoted, edge labels unquoted.
+          - Math expressions inside nodes must be enclosed with double dollar signs: $$...$$.
+          - All LaTeX commands (e.g. \\frac) must be double-escaped (i.e. \\\\frac) in JSON strings.
+          - Do not use parentheses around LaTeX (e.g., do not write (\frac{1}{2})).
+          - Example: A["Improper Fraction: $$\\\\frac{9}{4}$$"]
 
-    **Response Rules**
-    1. Generate title strictly based on the main topics in format: "[ALL MAIN TOPICS DISCUSSED] - ${formattedDate}" and return in JSON as title with first letter capitalized.
-    2. Provide a comprehensive summary explanation of the entire conversation, covering all key points discussed in ${message}. Return this as the "summaryExplanation" property in the JSON. The summary should:
-      - Be written in ${language}, appropriate for a ${age}-year-old.
-      - Include any relevant markdown formatting.
-      - Use mermaid markdown code in ${message} to render the diagram. Do **NOT** include the mermaid markdown text in the summary explanation. Do not just describe the diagram in text or with emojis. ALWAYS INCLUDE THE DIAGRAM IN THE SUMMARY.
-      - Separate multiple topics with bolded headers if more than one topic is discussed. For example, if 2+ topics are discussed, separate each with a clear header describing each topic.
-      - **Do not** include the mermaid markdown diagram text in the summary explanation.
-      - **Do not** include follow-up questions at the end.
-    3. Ensure the JSON is **flat** (not nested inside another object) and contains only the "title" and "summaryExplanation" properties. **Do not** return JSON as a string. Return a flat JSON object only.
-    4. Return **only** valid, minified JSON (no extra whitespace, no markdown code blocks, no additional commentary).
-    5. Cover **every key topic** discussed in the conversation; do not summarize only the first or last message.
-    6. For ages 13 through 16, always use mathematical or chemical equations in LaTeX.
-        When generating answers with math, always use Markdown with standard LaTeX math delimiters: $ ... $ for inline math, and $$ ... $$ for block math.
-        Never use parentheses (e.g., (\frac{2}{3})); only use dollar sign delimiters.
-        For all mathematical or chemical expressions, use Markdown with standard LaTeX math delimiters.
+      3. LaTeX:
+        - For inline math: use $...$ (e.g., $\\\\frac{2}{3}$)
+        - For block math: use double dollar signs on separate lines.
+          - Example: $$\\n\\\\frac{2}{3} + \\\\frac{1}{3} = 1\\n$$
+        - All LaTeX expressions must follow KaTeX/Markdown standards.
+        - Do not use triple backslashes.
+        - Do not use partial/dangling backslashes.
 
-        Use $ ... $ for inline math (e.g., $\\frac{2}{3}$).
+      4. Output Restrictions:
+        - The JSON object must only contain the "title" and "summaryExplanation" keys.
+        - Do NOT return stringified JSON. Do NOT wrap in code blocks or markdown.
+        - The content inside "summaryExplanation" may include LaTeX, Markdown elements (bold, italic, etc.), and Mermaid code.
+        - Do NOT include follow-up questions.
+        - Do NOT mention that the diagram is in Mermaid syntax.
 
-        Use 
-        .
-        .
-        .
-        ... for block math (e.g.,
+      5. Escaping Rules:
+        - Each backslash used in LaTeX must be escaped **as \\\\** in the JSON string.
+        - e.g., \\\\frac{a}{b}, \\\\rightarrow
+        - DO NOT use: \\\\div, \\\\\\, \\\\text{light \\\\ energy}, or any malformed JSON escape sequences.
+        - Any deviation (triple backslashes, malformed objects) will be considered invalid.
 
-        text
-        $$
-        \frac{2}{3} \div \frac{4}{5} = \frac{2}{3} \times \frac{5}{4} = \frac{5}{6}
-        $$
-        ).
+      6. Example valid output:
+      {"title": "Photosynthesis - ${formattedDate}", "summaryExplanation": "**Photosynthesis Equation**\\nThe process of photosynthesis...\\n\\n\`\`\`mermaid\\ngraph TD\\n  A[\\"Sunlight: $$\\\\text{energy}$$\\"] --> B[\\"Carbon Dioxide\\"]\\n  B --> C[\\"Glucose: $$\\\\frac{6H_2O}{CO_2}$$\\"]\\n\`\`\`"}
 
-        Do not use other delimiters like (\frac{2}{3}), $$ ... $$, or $$ ... $$ for math expressions; these won't be rendered by the Markdown parser.
-
-        Escape backslashes properly for LaTeX (e.g., \\frac{2}{3} in JSON or string literals, so it is received as \frac{2}{3} when parsed).
-
-        Always present mathematical or chemical equations in LaTeX using the above delimiters when relevant.
-
-        Ensure all generated content is clear, concise, and formatted for the appropriate age group.
-
-        Review rendered output to confirm math displays as intended and revise if it shows raw code instead of rendered math.
-
-        IMPORTANT: In JSON, you must escape ALL LaTeX backslashes as '\\\\''. 
-        - Use '\\\\frac{2}{3}', not '\\frac{2}{3}'.
-        - Use '\\\\div', not '\\div'.
-
-        Do not send malformed characters like '\\\div' or unescaped LaTeX.
-
-        Return the output as minified JSON. Example:
-        {"title":"Fractions - 2025-07-18","summaryExplanation":"...$$\\\\frac{8}{12}$$..."}
-      . The output format must be:
-
-      {"title": "Topic - ${formattedDate}", "summaryExplanation": "..."}
-      Example valid json 
-      {
-        "title": "Photosynthesis - ${formattedDate}",
-        "summaryExplanation": "**Photosynthesis Equation**\nThe photosynthesis equation...\n\n$$\n6CO_2 + 6H_2O + light \\\\ energy \\\\rightarrow C_6H_{12}O_6 + 6O_2\n$$"
-      }
-
-    **Strictly follow these rules. Any deviation will be considered an error.**`;
+      Strictly follow all formatting and escaping rules. Any deviation from valid LaTeX, Mermaid, or JSON structure will be rejected.`;
 
     // Create the run
     const run = await assistantClient.beta.threads.runs.create(threadId, {
@@ -165,7 +141,9 @@ router.post('/generateSummary', async (req, res) => {
 
     try {
       // Double any backslash not followed by a valid JSON escape character
+      textValue = textValue.replace(/\\\\\\(?=\s)/g, '\\\\');
       textValue = textValue.replace(/\\(?![\\\/bfnrtu"])/g, '\\\\');
+      textValue = textValue.replace(/\\(?![\\/"bfnrtu])/g, '\\\\');
 
       // Attempt to parse JSON
       summary = JSON.parse(textValue);

@@ -116,6 +116,7 @@ const SummaryModal: React.FC<SummaryModalProps> = ({
     pdfContent.style.padding = '20px';
     pdfContent.style.backgroundColor = '#ffffff';
     pdfContent.style.width = '650px';
+    pdfContent.style.boxSizing = 'border-box';
     document.body.appendChild(pdfContent);
 
     try {
@@ -129,10 +130,27 @@ const SummaryModal: React.FC<SummaryModalProps> = ({
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      const pdfHeight = pdf.internal.pageSize.getHeight();
 
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      const imgWidth = pdfWidth;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      // Add first page
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pdfHeight;
+
+      // Add more pages if image is longer than one page
+      while (heightLeft > 0) {
+        position -= pdfHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pdfHeight;
+      }
+
+      // Filename as before
       const today = new Date();
       const yyyy = today.getFullYear();
       const mm = String(today.getMonth() + 1).padStart(2, '0');
@@ -141,7 +159,6 @@ const SummaryModal: React.FC<SummaryModalProps> = ({
 
       pdf.save(`${sanitizeFilename(summary.title)}-${formattedDate}-summary.pdf`);
 
-      // Track the event
       if (appInsights) {
         appInsights.trackEvent({
           name: 'DownloadPDF',
@@ -153,7 +170,6 @@ const SummaryModal: React.FC<SummaryModalProps> = ({
         });
       }
 
-
     } catch (err) {
       console.error('PDF generation failed:', err);
       alert('Failed to generate PDF. Please try again.');
@@ -163,9 +179,8 @@ const SummaryModal: React.FC<SummaryModalProps> = ({
   };
 
 
-
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-start p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex justify-between items-center mb-6">
@@ -219,7 +234,7 @@ const SummaryModal: React.FC<SummaryModalProps> = ({
                         .split(/\n{2,}/)
                         .filter(para => para.trim().length > 0)
                         .map((para, pidx) => (
-                         <p key={`${idx}-${pidx}`} className="mb-3 mb-3 text-left whitespace-normal break-words leading-relaxed">
+                         <p key={`${idx}-${pidx}`} className="text-left mb-2 mt-0 leading-normal break-words">
                           <LatexRender content={sanitizeText(para)} />
                          </p>
                         

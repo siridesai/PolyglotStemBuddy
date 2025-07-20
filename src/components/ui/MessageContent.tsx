@@ -21,9 +21,11 @@ const MessageContent: React.FC<MessageContentProps> = ({ content }) => {
               .split(/\n{2,}/)
               .filter(para => para.trim().length > 0)
               .map((para, pidx) => (
-                <div className="message-text latex-equation-container" key={`${index}-${pidx}`}>
+                 <div className="message-bubble" key={`${index}-${pidx}`}>
+                <div className="message-text latex-equation-container">
                   <LatexRender content={para.trim()} />
                 </div>
+              </div>
               ))
           : (
             <div className="my-4 p-4 bg-gray-100 rounded-lg" key={index}>

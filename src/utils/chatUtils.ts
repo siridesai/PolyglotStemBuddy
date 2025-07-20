@@ -373,6 +373,8 @@ export async function textToSpeechWithHtmlAudio(
   }
 }
 
+
+
 export function stopCurrentPlayback(
   playerRef: React.MutableRefObject<SpeechSDK.SpeakerAudioDestination | null>,
   synthesizerRef: React.MutableRefObject<SpeechSDK.SpeechSynthesizer | null>,
@@ -473,3 +475,4 @@ export function cleanupTTS(
   setTtsStatus('idle');
   setCurrentTTS(null);
 }
+

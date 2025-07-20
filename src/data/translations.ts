@@ -32,7 +32,7 @@ export type TranslationKey =
   | 'noFlashcardAvailable'
   | 'summarize'
   | 'exitLesson'
-  | 'feedbackSurvey'
+  | 'feedback'
   | 'readyForQuiz'
   | 'loadingQuiz'
   | 'learnSomethingElse'
@@ -114,7 +114,7 @@ export const translations: TranslationSet = {
     noLessonContent: 'No lesson content available.',
     summarize: 'Summary',
     exitLesson: 'Exit Lesson',
-    feedbackSurvey: 'Feedback Survey',
+    feedback: 'Feedback',
     readyForQuiz: 'Quiz',
     loadingQuiz: 'Loading quiz',
     learnSomethingElse: 'Learn Something Else',
@@ -186,7 +186,7 @@ export const translations: TranslationSet = {
     noLessonContent: 'No hay contenido de lección disponible.',
     summarize: 'Resumen',
     exitLesson: 'Salir de la Lección',
-    feedbackSurvey: 'Encuesta de Retroalimentación',
+    feedback: 'Comentarios',
     readyForQuiz: 'Prueba',
     loadingQuiz: 'Cargando cuestionario',
     learnSomethingElse: 'Aprender Algo Nuevo',
@@ -258,7 +258,7 @@ export const translations: TranslationSet = {
     noLessonContent: 'कोई पाठ सामग्री उपलब्ध नहीं है।',
     summarize: 'सारांश',
     exitLesson: 'बाहर निकलें',
-    feedbackSurvey: 'प्रतिक्रिया सर्वेक्षण',
+    feedback: 'प्रतिक्रिया',
     readyForQuiz: 'क्विज़',
     loadingQuiz: 'क्विज़ लोड हो रहा है',
     learnSomethingElse: 'कुछ और सीखें',
@@ -330,7 +330,7 @@ export const translations: TranslationSet = {
     noLessonContent: 'कोणतीही पाठ्य सामग्री उपलब्ध नाही.',
     summarize: 'सारांश',
     exitLesson: 'बाहेर पडा',
-    feedbackSurvey: 'अभिप्राय सर्वेक्षण',
+    feedback: 'प्रतिक्रिया',
     readyForQuiz: 'क्विझ',
     loadingQuiz: 'क्विझ लोड करत आहे',
     learnSomethingElse: 'काहीतरी नवीन शिका',
@@ -402,7 +402,7 @@ export const translations: TranslationSet = {
     noLessonContent: 'ಪಾಠದ ವಿಷಯ ಲಭ್ಯವಿಲ್ಲ.',
     summarize: 'ಸಾರಾಂಶ',
     exitLesson: 'ಪಾಠದಿಂದ ಹೊರಬರಲು',
-    feedbackSurvey: 'ಪ್ರತಿಕ್ರಿಯೆ ಸಮೀಕ್ಷೆ',
+    feedback: 'ಪ್ರತಿಕ್ರಿಯೆ',
     readyForQuiz: 'ಕ್ವಿಜ್',
     loadingQuiz: 'ಕ್ವಿಜ್ ಲೋಡ್ ಮಾಡಲಾಗುತ್ತಿದೆ',
     learnSomethingElse: 'ಬೇರೇನು ಕಲಿಯಿರಿ',

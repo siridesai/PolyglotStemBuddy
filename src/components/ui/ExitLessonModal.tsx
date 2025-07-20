@@ -16,25 +16,24 @@ const FIELD_LANGUAGE = import.meta.env.VITE_FEEDBACK_FORM_FIELD_LANGUAGE;
 const FIELD_AGE_GROUP = import.meta.env.VITE_FEEDBACK_FORM_FIELD_AGE_GROUP;
 
 
-// Value mappings
 const VALUE_MAP = {
   age: {
-    'Early Explorer': 'Early%20Explorer%20(Ages%205-8)',
-    'Junior Scientist': 'Junior%20Scientist%20(Ages%209-12)',
-    'Teen Researcher': 'Teen%20Researcher%20(Ages%2013-15)'
+    'Early Explorer': '%22Early%20Explorer%20(Ages%205-8)%22',
+    'Junior Scientist': '%22Junior%20Scientist%20(Ages%209-12)%22',
+    'Teen Researcher': '%22Teen%20Researcher%20(Ages%2013-15)%22'
   },
   language: {
-    'English': 'English%20(English)',
-    'Español': 'Espa%C3%B1ol%20(Spanish)',
-    'हिंदी': '%E0%A4%B9%E0%A4%BF%E0%A4%82%E0%A4%A6%E0%A5%80%20(Hindi)',
-    'ಕನ್ನಡ': '%E0%B2%95%E0%B2%A8%E0%B3%8D%E0%B2%A8%E0%B2%A1%20(Kannada)',
-    'मराठी': '%E0%A4%AE%E0%A4%B0%E0%A4%BE%E0%A4%A0%E0%A5%80%20(Marathi)'
+    'English': '%22English%20(English)%22',
+    'Español': '%22Espa%C3%B1ol%20(Spanish)%22',
+    'हिंदी': '%22%E0%A4%B9%E0%A4%BF%E0%A4%82%E0%A4%A6%E0%A5%80%20(Hindi)%22',
+    'ಕನ್ನಡ': '%22%E0%B2%95%E0%B2%A8%E0%B3%8D%E0%B2%A8%E0%B2%A1%20(Kannada)%22',
+    'मराठी': '%22%E0%A4%AE%E0%A4%B0%E0%A4%BE%E0%A4%A0%E0%A5%80%20(Marathi)%22'
   }
 };
 
 const ExitLessonModal: React.FC<ExitLessonProps> = ({  onBack, settings }) => { 
 
-  const formUrl = `${FORM_BASE_URL}&${FIELD_LANGUAGE}=%22${VALUE_MAP.language[settings.language]}%22&${FIELD_AGE_GROUP}=%22${VALUE_MAP.age[settings.age]}%22`;
+  const formUrl = `${FORM_BASE_URL}&${FIELD_LANGUAGE}=${VALUE_MAP.language[settings.language]}&${FIELD_AGE_GROUP}=${VALUE_MAP.age[settings.age]}`;
   const exitLesson = getTranslation(settings.language, 'exitLesson');
   console.log(settings.language);
   console.log(exitLesson);

@@ -14,6 +14,7 @@ import SummaryModal from './SummaryModal.tsx';
 import ExitLessonModal from './ExitLessonModal.tsx';
 import MessageContent from './MessageContent.tsx';
 import { extractMermaidCode, removeMermaidCode } from '../../utils/mermaidCodeUtils.ts';
+import { v4 as uuidv4 } from 'uuid';
 
 import {
   getAgeGroupLabel,
@@ -70,7 +71,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ settings, onBack }) => {
   const [currentRunId, setCurrentRunId] = useState<string | null>(null);
   const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>([]);
   const [isSending, setIsSending] = useState(false);
-  const [isLoadingTopics, setIsLoadingTopics] = useState(false);
+ 
 
   const welcomeMessage = getWelcomeMessage(settings.language);
   const buttonsEnabled = hasUserStartedConversation(messages, welcomeMessage) && !isLoading;
@@ -83,6 +84,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ settings, onBack }) => {
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   const [topicQuestions, setTopicQuestions] = useState<string[]>([]);
   const audioRef = useRef<HTMLAudioElement>(null);
+
+  const [sessionReady, setSessionReady] = useState(false);
 
   const BROAD_TOPICS = [
   { key: 'science', translationKey: 'science' },
@@ -112,20 +115,35 @@ useEffect(() => {
     }
   }, []);
 
+  useEffect(() => {
+  requestAnimationFrame(() => {
+    scrollToBottom();
+  });
+}, []);
+
   function generateSessionId(): string {
-  return `sid-${Date.now()}-${Math.floor(Math.random() * 1e9)}`;
+    let id='';
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+       id = crypto.randomUUID();
+    } else {
+       id = uuidv4();
+    }
+  return id;
 }
   // Set cookie if missing
   useEffect(() => {
     if (!cookies[COOKIE_NAME]) {
-      
-      setCookie(COOKIE_NAME, generateSessionId, { path: '/', maxAge: 3600 });
+      const id = generateSessionId(); // ← Use your custom generator here
+      setCookie(COOKIE_NAME, id, { path: '/', maxAge: 3600 });
+    } else {
+      setSessionReady(true);
     }
   }, [cookies, setCookie]);
 
+
   // Fetch thread ID if needed
   useEffect(() => {
-    if (cookies[COOKIE_NAME] && !threadId) {
+    if (sessionReady && cookies[COOKIE_NAME] && !threadId) {
       const getThreadId = async () => {
         try {
           const id = await fetchThreadID(cookies[COOKIE_NAME]);
@@ -136,7 +154,7 @@ useEffect(() => {
       };
       getThreadId();
     }
-  }, [cookies, threadId]);
+  }, [sessionReady, cookies, threadId]);
 
   // Set welcome message on mount
   useEffect(() => {
@@ -150,8 +168,6 @@ useEffect(() => {
     ]);
     // eslint-disable-next-line
   }, [settings.language]);
-
-
 
   // Cleanup on unmount
   useEffect(() => {
@@ -395,6 +411,7 @@ const wasNearBottomRef = useRef(true);
 useEffect(() => {
   // Save if user was near bottom before update
   wasNearBottomRef.current = isUserNearBottom();
+  
 }, [messages])
 
 useEffect(() => {
@@ -413,7 +430,7 @@ useEffect(() => {
 
   // --- Render ---
   return (
-    <div className="flex flex-col h-screen bg-sketch-doodles">
+    <div className="flex flex-col h-screen bg-sketch-doodles" style={{ height: 'var(--app-height)'}}>
 
       <audio ref={audioRef} hidden preload="auto" />
       {/* Header */}
@@ -444,7 +461,7 @@ useEffect(() => {
               className={`flex items-center gap-1 flex-shrink-0
                 ${buttonsEnabled
                   ? "bg-blue-50 hover:bg-blue-100 text-blue-700"
-                  : "bg-gray-300 text-gray-400 opacity-60 cursor-not-allowed"}
+                  : "bg-gray-200 text-gray-400 cursor-not-allowed"}
               `}
             >
               {/* Flashcards SVG */}
@@ -516,7 +533,7 @@ useEffect(() => {
                 <path d="M5 12h12" />
                 <path d="M19 5v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
               </svg>
-              <span className="hidden sm:inline">{getTranslation(settings.language, 'exitLesson')}</span>
+              <span className="hidden sm:inline">{getTranslation(settings.language, 'feedback')}</span>
             </Button>
             <div className="ml-auto text-xs sm:text-sm text-gray-600 whitespace-nowrap">
               {getAgeGroupLabel(settings.age, settings.language)} | {getCurrentLanguageName(settings.language)}
@@ -730,7 +747,7 @@ useEffect(() => {
 </div>
 
 
-<div className="bg-white border-t p-4 rounded-t-3xl">
+<div className="bg-white border-t p-4 rounded-t-3xl pb-[env(safe-area-inset-bottom)]">
   <div className="max-w-12xl max-w-full mx-auto">
     <div className="flex flex-nowrap gap-2 items-center w-full">
       <input
