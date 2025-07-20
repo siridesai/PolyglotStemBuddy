@@ -15,6 +15,10 @@ Polyglot STEM Buddy helps users explore Science, Technology, Engineering, and Ma
 - **Speech-to-Text & Text-to-Speech:** Learn by speaking or listening, not just typing.
 - **Accessible for All Ages:** Designed for learners from early explorers to teen researchers.
 
+## 🎥 Watch a Demo
+
+[![Watch the video](https://img.youtube.com/vi/lGsGlxR8EWI/hqdefault.jpg)](https://www.youtube.com/watch?v=lGsGlxR8EWI)
+
 ## Our Mission
 
 Our mission is to break down language barriers in STEM education and make high-quality learning resources freely available to everyone, everywhere.
