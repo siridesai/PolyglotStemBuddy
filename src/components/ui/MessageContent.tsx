@@ -11,8 +11,8 @@ interface MessageContentProps {
   }
 
 const MessageContent: React.FC<MessageContentProps> = ({ content }) => {
-  const cleaned = normalizeLaTeXDelimiters(content);
-  const segments = splitTextAndMermaidBlocks(cleaned);
+  //const cleaned = normalizeLaTeXDelimiters(content);
+  const segments = splitTextAndMermaidBlocks(content);
 
   return (
     <div>
