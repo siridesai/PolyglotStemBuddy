@@ -69,10 +69,6 @@ function keyGenerator(req) {
 }
 
 
-// Initialize assistants first
-initializeAssistantClient();
-initializeAssistant();
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -125,6 +121,18 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../../dist', 'index.html'));
 });
 
-app.listen(port, () => {
-    console.log(`Server running on port ${port}`);
-});
+// Initialize assistants
+(async () => {
+  try {
+    // Await initialization of assistant client and assistant before listening
+    await initializeAssistantClient();
+    await initializeAssistant();
+
+    app.listen(port, () => {
+      console.log(`Server running on port ${port}`);
+    });
+  } catch (error) {
+    console.error('Failed to initialize assistant client or assistant:', error);
+    process.exit(1);
+  }
+})();
