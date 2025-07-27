@@ -160,6 +160,7 @@ router.post('/generateQuestions', async (req, res) => {
             - Return ONLY this pure JSON array, nothing else.
             - Escape LaTeX backslashes as shown.
             - Do not include markdown fences or any other text.
+            - You must respond ONLY in ${language}, using the native ${language} script entirely.
           `,
     tools: [{
         type: "code_interpreter" // Required for JSON parsing
