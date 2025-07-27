@@ -3,6 +3,7 @@ import React from 'react';
 import MermaidDiagram from './MermaidDiagram';
 import LatexRender from './LatexCodeRender';
 import {splitTextAndMermaidBlocks } from '../../utils/mermaidCodeUtils';
+import {normalizeLaTeXDelimiters} from '../../utils/chatUtils'
 
 
 interface MessageContentProps {
@@ -10,7 +11,7 @@ interface MessageContentProps {
   }
 
 const MessageContent: React.FC<MessageContentProps> = ({ content }) => {
-  const cleaned = content.replace(/\\\[(.*?)\\\]/gs, '$$$1$$');
+  const cleaned = normalizeLaTeXDelimiters(content);
   const segments = splitTextAndMermaidBlocks(cleaned);
 
   return (

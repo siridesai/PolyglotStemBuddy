@@ -476,3 +476,35 @@ export function cleanupTTS(
   setCurrentTTS(null);
 }
 
+export function normalizeLaTeXDelimiters(content: string): string {
+    let result = content;
+
+    // Convert LaTeX block math \[ ... \] to $$ ... $$
+    // Use non-greedy match, handle multiline with 's' (dotAll) flag
+    result = result.replace(/\\\[(.*?)\\\]/gs, (_match, mathContent) => {
+      // If already wrapped with $$, keep as is to avoid double-wrap
+      if (/^\$\$.*\$\$$/s.test(mathContent.trim())) {
+        return mathContent;
+      }
+      return `$$${mathContent}$$`;
+    });
+
+    // Convert LaTeX inline math \( ... \) to $ ... $
+    // Use non-greedy match, multiline disabled (inline)
+    result = result.replace(/\\\((.*?)\\\)/g, (_match, mathContent) => {
+      // Avoid double wrapping if already inside $ ... $
+      if (/^\$.*\$$/s.test(mathContent.trim())) {
+        return mathContent;
+      }
+      return `$${mathContent}$`;
+    });
+
+    // Optional: Clean up any multiple $ delimiters accidentally doubled (idempotency)
+    // This is defensive, in case input already has some $ or $$ delimiters mixed inconsistently
+    // For example, replace $$$$ with $$
+    result = result.replace(/\${3,}/g, (match) => {
+      return match.length % 2 === 0 ? '$$' : '$';
+    });
+
+return result;
+}
