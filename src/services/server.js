@@ -115,6 +115,7 @@ app.use('/api', generateRandomTopicQuestionsRouter);
 
 // Static files (MUST COME AFTER API ROUTES)
 app.use(express.static(path.join(__dirname, '../../dist')));
+app.use('/assets', express.static(path.join(__dirname, '../../dist/assets')));
 
 // SPA catch-all (MUST BE LAST)
 app.get('*', (req, res) => {
