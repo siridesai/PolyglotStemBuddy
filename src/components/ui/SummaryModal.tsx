@@ -10,7 +10,7 @@ import LatexRender from './LatexCodeRender';
 import { generateSummary } from '../../api/generateSummary';
 import { splitTextAndMermaidBlocks } from '../../utils/mermaidCodeUtils';
 import { appInsights } from '../../utils/appInsightsForReact.ts';
-import { sanitizeText } from '../../utils/chatUtils.ts';
+import { sanitizeText,normalizeLaTeXDelimiters } from '../../utils/chatUtils.ts';
 
 
 interface Summary {
@@ -232,7 +232,9 @@ const SummaryModal: React.FC<SummaryModalProps> = ({
                 {summary && splitTextAndMermaidBlocks(summary.summaryExplanation.replace(/\\\\/g, '\\')).map((block, idx) => {
                     if (block.type === 'text') {
                       // Split text block into paragraphs by double newlines
-                      return sanitizeText(block.content)
+                      const normalizedContent = normalizeLaTeXDelimiters(block.content);
+
+                      return sanitizeText(normalizedContent)
                         .split(/\n{2,}/)
                         .filter(para => para.trim().length > 0)
                         .map((para, pidx) => (
