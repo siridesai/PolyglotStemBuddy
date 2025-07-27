@@ -144,16 +144,23 @@ router.post('/generateQuestions', async (req, res) => {
 
             The JSON string may contain LaTeX delimiters $...$ or $$...$$ as text, never omit or alter these during serialization.
 
-            Example snippet:
+            **Example of required JSON output format:**
 
-            json
-            {
-              "question": "What is $\\frac{1}{2}$ plus $\\frac{1}{4}$?",
-              "options": ["$\\frac{2}{3}$", "$\\frac{3}{4}$", "$\\frac{1}{2}$", "$\\frac{5}{6}$"],
-              "correctAnswer": 0,
-              "explanation": "Adding $\\frac{1}{2}$ and $\\frac{1}{4}$ yields $\\frac{3}{4}$."
-            }
-    `,
+             [
+              {
+                "question": "What is $\\frac{1}{2}$ plus $\\frac{1}{4}$?",
+                "options": ["$\\frac{2}{3}$", "$\\frac{3}{4}$", "$\\frac{1}{2}$", "$\\frac{5}{6}$"],
+                "correctAnswer": 1,
+                "explanation": "Adding $\\frac{1}{2}$ and $\\frac{1}{4}$ yields $\\frac{3}{4}$."
+              }
+            ]
+
+            **Important Notes:**
+          
+            - Return ONLY this pure JSON array, nothing else.
+            - Escape LaTeX backslashes as shown.
+            - Do not include markdown fences or any other text.
+          `,
     tools: [{
         type: "code_interpreter" // Required for JSON parsing
     }],
