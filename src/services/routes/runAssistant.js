@@ -137,11 +137,11 @@ export const runAssistantBackend = async (
       - Use only supported KaTeX syntax.
       - Do not use: \\\\div, triple backslashes \\\\\\\\, or malformed escape sequences.
       - Do not use partial/dangling backslashes.
-      IMPORTANT—LaTeX Escaping:
+      **IMPORTANT—LaTeX Escaping:**
 
           When outputting any LaTeX formula, every backslash (\) must be escaped as two backslashes (\\) in the pure JSON output, so that upon decoding, the frontend receives a single correct backslash for LaTeX commands.
 
-          For example, output "$\\frac{1}{3}$" in JSON, not "$\frac{1}{3}$".
+          **For example, output "$\\frac{1}{3}$" in JSON, not "$\frac{1}{3}$".**
 
           If you output single backslashes, they will be lost and formulas will not render (e.g., rac{1}{3}).
 
@@ -204,6 +204,7 @@ export const runAssistantBackend = async (
           Do not use LaTeX in parentheses like (\frac{2}{3}), which won't be rendered as math in Markdown. 
           These LaTeX formatting rules apply in all languages you generate, including Kannada, Marathi, Hindi, Spanish, etc.  
           Math expressions must always follow the dollar sign delimiter and escaping rules regardless of language.
+          
 
         
 
@@ -211,6 +212,7 @@ export const runAssistantBackend = async (
       - Generate exactly 3 factual, concise, STEM-based questions per unique concept.
       - Wrap each in its own code block labeled  inside a code block labeled \`\`\'followUpQuestions 
       - Don't add quotes, spaces, or other characters in the label.
+      - LaTeX Rules apply here also.
         These code block formatting rules must be followed **exactly the same in all languages** (e.g., Hindi, Marathi, Kannada, Spanish, etc.) so it can be extracted to display follow-up questions correctly.
         Example: 
         For English language, 

@@ -154,7 +154,7 @@ const FlashcardModal: React.FC<FlashcardModalProps> = ({
     return (
       <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl p-6 max-w-md w-full text-center shadow-lg">
-          <h3 className="text-xl font-bold mb-4 text-red-600">Error</h3>
+          <h3 className="text-xl font-bold mb-4 text-red-600">{getTranslation(settings.language,'error')}</h3>
           <p className="text-gray-600 mb-6">{error}</p>
           <button 
             onClick={onClose}
