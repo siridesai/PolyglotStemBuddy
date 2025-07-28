@@ -75,13 +75,14 @@ const FlashcardModal: React.FC<FlashcardModalProps> = ({
       );
       
       if (!qs || qs.length === 0) {
-        setError('No questions available. Try completing a lesson first!');
+        
+        setError(getTranslation(settings.language,'noQuestionsAvailable'));
         setQuestions([]);
       } else {
         setQuestions(qs);
       }
     } catch (err) {
-      setError('Failed to load flashcards. Please try again later.');
+      setError(getTranslation(settings.language,'failedToLoadFlashcards'));
       console.error('Flashcard error:', err);
     } finally {
       setLoading(false);
@@ -136,7 +137,7 @@ const FlashcardModal: React.FC<FlashcardModalProps> = ({
         <div className="bg-white rounded-2xl p-6 max-w-md w-full text-center shadow-lg">
           <h3 className="text-xl font-bold mb-4">{getTranslation(settings.language,'noLessonContent')}</h3>
           <p className="text-gray-600 mb-6">
-            Start a conversation to generate study materials!
+             {getTranslation(settings.language,'startLearning')}
           </p>
           <button 
             onClick={onClose}

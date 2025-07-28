@@ -90,12 +90,12 @@ const SummaryModal: React.FC<SummaryModalProps> = ({
         if (data?.title && data?.summaryExplanation) {
           setSummary(data);
         } else {
-          setError('Invalid summary format received');
+          getTranslation(settings.language,'noSummaryAvailable');
         }
       } catch (err: any) {
         console.log('Summary generation failed:', err);
         if (err.name !== 'AbortError') {
-          setError('Failed to generate summary. Please try again.');
+          getTranslation(settings.language,'noSummaryAvailable');
           console.error('Summary generation failed:', err);
         }
       } finally {
