@@ -91,7 +91,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ settings, onBack }) => {
   { key: 'science', translationKey: 'science' },
   { key: 'technology', translationKey: 'technology' },
   { key: 'engineering', translationKey: 'engineering' },
-  { key: 'math', translationKey: 'math' },
+  { key: 'mathematics', translationKey: 'mathematics' },
   { key: 'surprise', translationKey: 'surprise' }
 ];
 
