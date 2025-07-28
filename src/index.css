@@ -151,6 +151,8 @@ html {
   white-space: normal;
   display: inline-block;
   box-sizing: border-box;
+  line-height: 1.75;
+  font-size: 1.07rem;
 }
 
 .latex-equation-container,
@@ -161,6 +163,13 @@ html {
   overflow-x: auto;
   white-space: normal;
   box-sizing: border-box;
+  font-size: 1.18em;               /* Slightly larger math */
+  line-height: 1.5;
+  color: #1a202c;                  /* Nice readable dark gray */
+  margin: 1em 0;                   /* Clear separation above/below */
+  padding: 0.25em 0.4em;           /* Add breathing room around math */
+  background: transparent;        
+  font-family: 'KaTeX_Main', 'Quicksand', system-ui, serif !important;
 }
 
 .outer-container {
