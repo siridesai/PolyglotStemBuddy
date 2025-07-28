@@ -151,13 +151,13 @@ html {
   white-space: normal;
   display: inline-block;
   box-sizing: border-box;
-  line-height: 1.75;
+  line-height: 1.8;
 }
 
 .latex-equation-container,
 .katex-display {
-  font-size: 1rem;  /* smaller than normal text */
-  line-height: 1.4;    /* keep comfortable line height */
+  font-size: 1rem;  
+  line-height: 1.6;    /* keep comfortable line height */
   color: #1a202c;      /* readable dark gray */
   margin: 1em 0;
   padding: 0.2em 0.4em;
@@ -170,7 +170,7 @@ html {
 
 .katex {
   font-size: 1rem;
-  vertical-align: middle;
+  vertical-align: text-bottom;
 }
 
 
