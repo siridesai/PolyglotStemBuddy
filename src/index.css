@@ -122,10 +122,10 @@ html {
 }
 
 .summary-content .mermaid {
-  line-height: 1.2 !important;
+  line-height: 1.4 !important;
   font-size: 1rem !important;
   font-family: 'Quicksand', 'ui-sans-serif', system-ui, sans-serif;
-  white-space: pre-wrap;
+  white-space: pre-wrap !important;;
   margin: 0 !important;
   padding: 0 !important;
   -webkit-font-smoothing: antialiased;
@@ -133,7 +133,7 @@ html {
 
 /* Reduce double-spacing on tspan nodes for iOS Safari */
 .summary-content .mermaid tspan {
-  line-height: 1.1 !important;
+  line-height: 1.4 !important;
   margin: 0 !important;
   padding: 0 !important;
 }
@@ -156,21 +156,21 @@ html {
 
 .latex-equation-container,
 .katex-display {
-  font-size: 1rem;  
-  line-height: 1.6;    /* keep comfortable line height */
+  font-size: 1.1rem;  
+  line-height: 1.4;    /* keep comfortable line height */
   color: #1a202c;      /* readable dark gray */
-  margin: 1em 0;
   padding: 0.2em 0.4em;
-  font-family: 'KaTeX_Main', 'Quicksand', system-ui, serif !important;
   overflow-x: auto;
   word-break: break-word;
   white-space: normal;
   box-sizing: border-box;
+  
 }
 
 .katex {
-  font-size: 1rem;
+  font-size: 1.1rem;
   vertical-align: text-bottom;
+  text-align: left;
 }
 
 

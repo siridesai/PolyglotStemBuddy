@@ -223,7 +223,7 @@ const SummaryModal: React.FC<SummaryModalProps> = ({
                   className="summary-content"
                   style={{
                     fontFamily: '"Segoe UI Emoji", "Noto Color Emoji", "Apple Color Emoji", Arial, Helvetica, sans-serif',
-                    lineHeight: 1.6,
+                    lineHeight: 1.8,
                     color: '#1e293b',
                   }}
                 >

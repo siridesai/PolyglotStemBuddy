@@ -18,7 +18,7 @@ export type TranslationKey =
   | 'technology'
   | 'engineering'
   | 'surprise'
-  | 'math'
+  | 'mathematics'
   | 'searchPlaceholder'
   | 'wantToLearnAbout'
   | 'typeMessage'
