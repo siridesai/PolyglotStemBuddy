@@ -157,20 +157,23 @@ html {
 
 .latex-equation-container,
 .katex-display {
-  width: 100%;
-  max-width: 100%;
-  word-break: break-word;
+  font-size: 0.85rem;  /* smaller than normal text */
+  line-height: 1.4;    /* keep comfortable line height */
+  color: #1a202c;      /* readable dark gray */
+  margin: 1em 0;
+  padding: 0.2em 0.4em;
+  font-family: 'KaTeX_Main', 'Quicksand', system-ui, serif !important;
   overflow-x: auto;
+  word-break: break-word;
   white-space: normal;
   box-sizing: border-box;
-  font-size: 1.18em;               /* Slightly larger math */
-  line-height: 1.5;
-  color: #1a202c;                  /* Nice readable dark gray */
-  margin: 1em 0;                   /* Clear separation above/below */
-  padding: 0.25em 0.4em;           /* Add breathing room around math */
-  background: transparent;        
-  font-family: 'KaTeX_Main', 'Quicksand', system-ui, serif !important;
 }
+
+.katex {
+  font-size: 0.9rem;
+  vertical-align: middle;
+}
+
 
 .outer-container {
   overflow-y: auto !important;
