@@ -69,7 +69,7 @@ router.post('/generateRandomTopicQuestions', async (req, res) => {
 
                         For ages 13 through 16, always present mathematical or chemical equations in LaTeX using the above delimiters when relevant.
 
-                        Ensure all generated content is clear, concise, and formatted for the appropriate age group.
+                        **Ensure all generated content is clear, concise, and formatted for the appropriate ${age} group in ${language} and strictly belongs to ${topic}.**
 
                         Review rendered output to confirm math displays as intended and revise if it shows raw code instead of rendered math.
                         Example: For 'kn' language, response should be in the following format - 

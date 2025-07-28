@@ -44,7 +44,7 @@ router.post('/generateQuestions', async (req, res) => {
                         - Questions **cannot** be subjective (e.g., no questions like "What's your favorite color?").
                         - Ensure questions are NOT duplicates of chatbot questions present in ${contextString}.
                       2. Use ${language} suitable for age ${age}.
-                      3. Questions must be strictly age-appropriate and relevant to ${age}.
+                      3. Questions must be strictly age-appropriate and relevant to ${age} and must be directly related to ${contextString}.
                       4. Include fun facts or interesting information related to the questions.
                       5. For ages 13 through 16, always present any mathematical or chemical equations in LaTeX format.
 

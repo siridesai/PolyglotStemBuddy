@@ -60,7 +60,7 @@ const QuizModal: React.FC<QuizModalProps> = ({
     )
       .then((qs) => {
         if (!qs || !Array.isArray(qs) || qs.length === 0) {
-          setError('No questions available. Try completing a lesson first!');
+          getTranslation(settings.language,'noQuestionsAvailable');
           setQuestions([]);
         } else {
           setQuestions(qs);
@@ -68,7 +68,7 @@ const QuizModal: React.FC<QuizModalProps> = ({
         setLoading(false);
       })
       .catch(() => {
-        setError('Failed to load quiz questions.');
+        getTranslation(settings.language,'noQuestionsAvailable');
         setLoading(false);
       });
   }, [messages, threadId, settings.age, settings.language, cookie]);

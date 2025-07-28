@@ -38,7 +38,7 @@ router.post('/generateSummary', async (req, res) => {
 
     const instructions = `Generate a summary based on the conversation relating to: "${message}". The user is ${age} years old and prefers the ${language} language. The summary must be precise, complete, age-appropriate, and use Markdown formatting in ${language}. Use scientific vocabulary appropriate to the age group. Output strictly in a valid, minified JSON object with the format: {"title": "Title - ${formattedDate}", "summaryExplanation": "..."}
       Rules:
-      1. The summary title must include the main topic(s) discussed, formatted like: "Photosynthesis - ${formattedDate}".
+      1. The summary title must include the main topic(s) discussed in the native script of the ${language}, formatted like: "Photosynthesis - ${formattedDate}".
       2. The "summaryExplanation" must:
         - Be comprehensive and cover every key concept in the full conversation, not just the latest interaction.
         - Be written clearly for a ${age}-year-old in ${language}, using simple yet precise scientific language.
