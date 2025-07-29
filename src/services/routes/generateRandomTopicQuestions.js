@@ -17,7 +17,7 @@ router.post('/generateRandomTopicQuestions', async (req, res) => {
 
     // Validate thread exists
     const assistantClient = getAssistantClient();
-    const assistant = getAssistant();
+    const assistant = await getAssistant();
     try {
       await assistantClient.beta.threads.retrieve(threadId);
     } catch (err) {
