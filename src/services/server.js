@@ -129,9 +129,6 @@ app.get('*', (req, res) => {
     await initializeAssistantClient();
     await initializeAssistant();
     
-    const assistantClient = getAssistantClient();          // Get initialized client        
-    console.log("Assistant client warm-up call completed");
-    
     app.listen(port, () => {
       console.log(`Server running on port ${port}`);
     });
