@@ -76,7 +76,7 @@ export const runAssistantBackend = async (
     console.log("Received threadId: " + threadId);
 
     const assistantsClient = getAssistantClient();
-    const assistant = getAssistant();
+    const assistant = await getAssistant();
 
     // Get or create a dedicated chat thread per session
     const chatThreadId = await getOrCreateThread(sessionId);

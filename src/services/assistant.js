@@ -18,9 +18,10 @@ let assistant = null;
      return assistant;
    }
 
-   export const getAssistant = () =>  {
+   export const getAssistant = async ()  =>  {
      if (!assistant) {
-       throw new Error('Assistant not initialized. Call initializeAssistant first.');
+       console.log("Lazy initializing assistant...");
+       assistant = await initializeAssistant();
      }
      return assistant;
    }
