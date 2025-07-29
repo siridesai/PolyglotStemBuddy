@@ -32,7 +32,7 @@ let assistantClient = null;
 
    export const getAssistantClient = () => {
      if (!assistantClient) {
-       throw new Error('Assistant not initialized. Call initializeAssistant first.');
+       throw new Error('Assistant client not initialized. Call initializeAssistantClient first.');
      }
      return assistantClient;
    }
