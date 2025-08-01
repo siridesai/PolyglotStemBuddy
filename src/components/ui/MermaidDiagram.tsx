@@ -25,7 +25,8 @@ const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ chart }) => {
         // Sanitize chart for Mermaid syntax
         let cleanChart = chart
           .replace(/\\"/g, '"')
-          .replace(/""(.*?)""/g, '"$1"');
+          .replace(/""(.*?)""/g, '"$1"')
+          .replace(/\\\\/g, "\\");
 
         if (containerRef.current) {
           const { svg } = await mermaid.render(
