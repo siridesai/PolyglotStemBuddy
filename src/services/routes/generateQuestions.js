@@ -35,7 +35,6 @@ router.post('/generateQuestions', async (req, res) => {
         model: assistant.model,
         temperature: 0.1,
         instructions: `User Requirements
-
                       Age group: ${age} years old
 
                       Language: ${language}
@@ -43,82 +42,100 @@ router.post('/generateQuestions', async (req, res) => {
                       Context: ${contextString}
 
                       Response Rules
+                      Question Generation
 
-                      Create exactly 5 multiple-choice questions that directly relate to and are EXCLUSIVELY ABOUT ALL OF: "${contextString}".
+                      Create exactly 5 multiple-choice questions strictly about all content in ${contextString} and only about that.
 
-                      Questions cannot be subjective (e.g., no questions like "What's your favorite color?").
+                      Questions must be objective and fact-based—no subjective questions.
 
-                      Ensure questions are NOT duplicates of chatbot questions present in ${contextString}.
+                      Avoid any duplication of chatbot questions present in ${contextString}.
 
-                      Use ${language} suitable for age ${age}.
+                      Use ${language} suitable for the ${age}-year-old audience.
 
-                      Questions must be strictly age-appropriate and relevant to ${age} and must be directly related to ${contextString}.
+                      Questions should be strictly age-appropriate and directly relevant to ${contextString}.
 
-                      Include fun facts or interesting information related to the questions.
+                      Include fun facts or interesting related information in the explanations.
 
-                      For ages 13 through 16, always present any mathematical or chemical equations in LaTeX format.
-
-                      Important LaTeX Math Formatting and Escaping Instructions:
+                      Mathematical and LaTeX Formatting Rules (especially for ages 13-16)
 
                       Use standard Markdown LaTeX delimiters:
 
-                      Inline math must be wrapped with single dollar signs: $ ... $.
+                      Inline math wrapped with single dollar signs: $...$
 
-                      Block math may be wrapped with double dollar signs: $$ ... $$.
+                      Block math wrapped with double dollar signs: $$...$$
 
-                      Every single backslash (\) in LaTeX commands must be escaped as double backslashes (\\) in the raw JSON output string.
+                      Crucial LaTeX Backslash Escaping:
 
-                      For example, to represent the fraction \frac{3}{4}, output it as "$\\\\frac{3}{4}$" in the JSON.
+                      Every single backslash \ in all LaTeX commands and symbols (e.g., \frac, \sqrt, \sum, and Greek letters like \mu, \nu, \pi) must be replaced with two backslashes \\ in the raw JSON output string.
 
-                      This escaping ensures that after JSON parsing, the frontend receives the correct single backslash for valid LaTeX rendering.
+                      This includes backslashes anywhere in the LaTeX expression — inside subscripts, superscripts, concatenated strings, or dynamic variables.
 
-                      Do not use parentheses or other delimiters around LaTeX formulas, such as (\frac{3}{4}), \$$\\frac{3}{4}\$$, or unescaped $\frac{3}{4}$. These will NOT render correctly in Markdown.
+                      For example:
 
-                      Mixed fractions must be formatted as a single math expression without spaces, symbols, or parentheses between the whole number and the fraction.
+                      \frac{3}{4} → $\\frac{3}{4}$
 
-                      Correct: $2\\\\frac{3}{4}$
+                      \mu → \\mu
 
-                      Incorrect: $2 \\\\frac{3}{4}$, $(2\\\\frac{3}{4})$, or $2 \\\\frac{3}{4}$ with spaces or words like “and” or plus signs.
+                      $T_{\mu\nu}$ → $T_{\\mu\\nu}$
 
-                      Use LaTeX commands consistently (e.g., \\frac, \\times) and escape all backslashes accordingly in all quiz fields: questions, options, and explanations.
+                      The full expression G_{\mu\nu} = \frac{8\pi G}{c^4} T_{\mu\nu} must be escaped as: $G_{\\mu\\nu} = \\frac{8\\pi G}{c^4} T_{\\mu\\nu}$  
 
-                      Return only a pure JSON array of question objects without any markdown formatting, fences, or extra text.
+                      "G_{\\mu\\nu}"  ← correct  
+                      "G_{\mu\nu}"    ← incorrect (will cause errors or incorrect rendering)
 
-                      Example Pure JSON (for reference):
-                      [
-                        {
-                          "question": "Which is equal to $2\\\\frac{1}{2}$ as an improper fraction?",
-                          "options": [
-                            "$\\\\frac{3}{2}$",
-                            "$\\\\frac{5}{2}$",
-                            "$\\\\frac{8}{2}$",
-                            "$\\\\frac{2}{5}$"
-                          ],
-                          "correctAnswer": 1,
-                          "explanation": "$2\\\\frac{1}{2} = \\\\frac{5}{2}$ because $2\\\\times2+1=5$."
-                        }
-                      ]
-                      Notes:
 
-                      All LaTeX backslashes must be escaped twice (\\) in JSON strings so that, after parsing, they become a single backslash (\) recognized by the renderer.
+                      Important: Perform the double backslash replacement on the entire LaTeX string before converting or embedding it into JSON.
 
-                      This applies equally to questions, options, and explanations.
+                      This is the key step: apply your backslash escaping uniformly to all parts of the LaTeX code, including dynamically generated content, before any JSON serialization or output formatting.
 
-                      Always enclose inline math inside single dollar signs ($...$), block math inside double dollar signs ($$...$$).
+                      Do NOT:
 
-                      Do not use LaTeX in parentheses like (\frac{2}{3}) since these won't render properly in Markdown.
+                      Use any extra delimiters or parentheses around LaTeX formulas (no (\frac{3}{4}), no \$$\\frac{3}{4}\$$) — only $...$ or $$...$$.
 
-                      These LaTeX formatting rules apply in all languages you generate (e.g., Kannada, Marathi, Hindi, Spanish, etc.). Math expressions must always conform to these dollar sign delimiter and escaping rules regardless of language.
+                      Use triple backslashes \\\ or quadruple \\\\ or inconsistent escaping forms like \\\\div.
 
-                      Format the final assistant output as only the pure JSON array shown above — no markdown fences or other decorations.
+                      Insert spaces, words, or extra symbols inside mixed fractions.
 
-                      Use the native ${language} script exclusively in the output.
+                      Mix escaped and non-escaped backslashes—escape all or none, consistently.
 
-                      All string values in the JSON must be enclosed in double quotes ("), including explanations.
+                      Apply all escaping rules consistently across questions, options, and explanations.
 
-                      Do NOT output raw text without quotes; all answers, explanations, questions, and options must be valid JSON strings.
+                      JSON Output Format
 
-                      The final output must be a valid JSON array parsable without error.`,
+                      Return exactly 5 question objects in a pure JSON array.
+
+                      Do NOT output markdown fences, code blocks, explanations, or any extra text.
+
+                      Each question object must have the following fields:
+
+                      "question": string
+
+                      "options": array of strings (typically 4 options)
+
+                      "correctAnswer": integer (0-based index for the correct option)
+
+                      "explanation": string (concise, with fun facts/clarifications)
+
+                      All strings must use double quotes " including text inside LaTeX formulas.
+
+                      Example of fully correct escaping in JSON:
+                      {
+                        "question": "What does the symbol $G_{\\mu\\nu}$ represent in Einstein's field equation?",
+                        "options": [
+                          "The speed of light",
+                          "The gravitational constant",
+                          "The curvature of spacetime",
+                          "The stress-energy tensor"
+                        ],
+                        "correctAnswer": 2,
+                        "explanation": "$G_{\\mu\\nu}$ represents the curvature of spacetime, which is influenced by matter and energy."
+                      }
+
+                      Use the native ${language} script exclusively in all output fields.
+
+                      The final output must be valid JSON parsable without any errors.
+
+                      Please follow these instructions meticulously to generate well-formed, escape-safe, age-appropriate, language-specific multiple-choice questions in JSON format.`,
     tools: [{
         type: "code_interpreter" // Required for JSON parsing
     }],
@@ -164,22 +181,43 @@ router.post('/generateQuestions', async (req, res) => {
         // Correct content extraction:
         content = lastMessage.content.find(c => c.type === 'text')?.text?.value || '';
         // Attempt to extract JSON array if extra text or markdown fences are present
-        const jsonMatch = content.match(/\[.*\]/s);
+        const jsonMatch = content.match(/\[[\s\S]*\]/);
         if (!jsonMatch) throw new Error("No valid JSON array found in assistant response.");
         quizQuestions = JSON.parse(jsonMatch[0]);
       } catch (err) {
-        console.error('JSON parse error:', err, 'Content:', content);
-        emitEvent(
-          "QuestionEvent",
-          {
-            p_age: age,
-            p_language: language,
-            p_threadId: threadId,
-            p_status: "failure",
-            p_errcode: 'JSONParseError'
-          }, req.telemetryContext
-        )
-    return res.status(500).json({ error: 'Failed to parse quiz JSON.' });
+       console.error('JSON parse error:', err, 'Content:', content);
+
+        try {
+              let preCleaned = content;
+
+              const latexPlaceholder = '__LATEX_BS_PLACEHOLDER__';
+              preCleaned = preCleaned.replace(/(\${1,2})([\s\S]+?)\1/g, (match, delim, inner) => {
+                let temp = inner.replace(/\\\\/g, latexPlaceholder);
+                temp = temp.replace(/\\/g, '\\\\');
+                temp = temp.replace(new RegExp(latexPlaceholder, 'g'), '\\\\');
+                return delim + temp + delim;
+              });
+
+              const globalPlaceholder = '__GLOBAL_BS_PLACEHOLDER__';
+              preCleaned = preCleaned.replace(/\\\\/g, globalPlaceholder);
+              preCleaned = preCleaned.replace(/\\/g, '\\\\');
+              preCleaned = preCleaned.replace(new RegExp(globalPlaceholder, 'g'), '\\\\');
+
+              quizQuestions = JSON.parse(preCleaned);
+            } catch (finalErr) {
+              emitEvent(
+                "QuestionEvent",
+                {
+                  p_age: age,
+                  p_language: language,
+                  p_threadId: threadId,
+                  p_status: "failure",
+                  p_errcode: 'JSONParseError'
+                }, req.telemetryContext
+              )
+              return res.status(500).json({ error: 'Failed to parse quiz JSON.' });
+           }
+        
       }
     }
     emitEvent(

@@ -50,22 +50,56 @@ router.post('/generateRandomTopicQuestions', async (req, res) => {
                         For all mathematical or chemical expressions, use Markdown with standard LaTeX math delimiters.
 
                         Use $ ... $ for inline math (e.g., $\\frac{2}{3}$).
+                        **An expression like $T_{\mu\nu}$ must be written as $T_{\\mu\\nu}$ inside JSON.**
 
-                        Use 
-                        .
-                        .
-                        .
-                        ... for block math (e.g.,
-
-                        text
+                       For block math (e.g.)
                         $$
-                        \frac{2}{3} \div \frac{4}{5} = \frac{2}{3} \times \frac{5}{4} = \frac{5}{6}
+                        \\frac{2}{3} \\div \\frac{4}{5} = \\frac{2}{3} \\times \\frac{5}{4} = \\frac{5}{6}
                         $$
                         ).
+                        All math commands (frac, sqrt, sum, overline, etc) and Greek letters (mu, nu, pi, etc) must follow this escaping rule.
+                        Each backslash in these commands or symbols must be double escaped as \\. For example, \mu must be written as \\mu in the JSON string.
 
+                        Specifically, every single backslash \ in LaTeX commands (such as \frac, \sqrt, \sum) and Greek letters (like \mu, \nu, \pi, etc.) must be replaced with a double backslash \\ in the JSON strings.
+
+                        This is required because \ is a special escape character in JSON and needs to be escaped to preserve the literal backslash for LaTeX processing later.
+
+                        For example:
+
+                        The LaTeX command \mu must appear as \\mu in the JSON string.
+
+                        **An expression like $T_{\mu\nu}$ must be written as $T_{\\mu\\nu}$ inside JSON.**
+
+                        When generating or writing JSON manually, confirm all instances of \ within math expressions are doubled.
+                      
                         Do not use other delimiters like (\frac{2}{3}), $$ ... $$, or $$ ... $$ for math expressions; these won't be rendered by the Markdown parser.
 
                         Escape backslashes properly for LaTeX (e.g., \\frac{2}{3} in JSON or string literals, so it is received as \frac{2}{3} when parsed).
+
+                        **IMPORTANT:** 
+                        Every single LaTeX backslash (\) must be escaped as double backslash (\\) in JSON or string outputs so that the front end receives a single backslash for correct rendering.
+                      - Never put LaTeX formulas inside parentheses or any other delimiters like (\frac{2}{3}); use only $...$ and $$...$$.
+                      - For ages 13-16, always present relevant mathematical or chemical equations using these delimiters and escaping rules.
+                      - For mixed fractions, write the whole number immediately followed by the fraction inside math delimiters with no space or extra symbols:
+                      - Inline: $3\\frac{1}{4}$
+                      - The Greek letters such as mu,nu,pi,rho etc must appear as \\mu,\\nu,\\pi,\\rho in the JSON string.
+                      - Example: What does the Einstein tensor $G_{\\mu\\nu}$ represent in general relativity?
+                      - Block:
+                        $$
+                        3\\frac{1}{4}
+                        $$
+                      - All math commands (frac, sqrt, sum, overline, etc) and Greek letters (mu, nu, pi, etc) must follow this escaping rule.
+                      = Specifically, every single backslash \ in LaTeX commands (such as \frac, \sqrt, \sum) and Greek letters (like \mu, \nu, \pi, etc.) must be replaced with a double backslash \\ in the JSON strings.
+
+                      =  This is required because \ is a special escape character in JSON and needs to be escaped to preserve the literal backslash for LaTeX processing later.
+
+                        The Greek letters such as mu,nu,pi,rho etc must appear as \\mu,\\nu,\\pi,\\rho in the JSON string.
+
+                        Example: What does the Einstein tensor $G_{\\mu\\nu}$ represent in general relativity?
+
+                        When generating or writing JSON manually, confirm all instances of \ within math expressions are doubled.
+                      - These rules apply in all languages you output. Math expressions must always follow the dollar sign delimiter and escaping rules regardless of language.
+
 
                         For ages 13 through 16, always present mathematical or chemical equations in LaTeX using the above delimiters when relevant.
 

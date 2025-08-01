@@ -64,11 +64,11 @@ const SummaryModal: React.FC<SummaryModalProps> = ({
           .map(msg => {
             let text = `${msg.type === 'user' ? 'User' : 'Assistant'}: ${msg.content}`;
             if (msg.mermaidCode) {
-              text += `\`\`mermaid\n${msg.mermaidCode}\n\`\`\``;
+              text += `\`\`\`mermaid\n${msg.mermaidCode}\n\`\`\``;
             }
             return text;
           })
-          .join('\n');
+          .join('\n\n');
 
           
         const result = await generateSummary(
@@ -78,6 +78,8 @@ const SummaryModal: React.FC<SummaryModalProps> = ({
           settings.language,
           cookie,
         );
+
+        
 
         // Parse and validate response
         let data: Summary | null = null;
@@ -225,35 +227,44 @@ const SummaryModal: React.FC<SummaryModalProps> = ({
                     fontFamily: '"Segoe UI Emoji", "Noto Color Emoji", "Apple Color Emoji", Arial, Helvetica, sans-serif',
                     lineHeight: 1.8,
                     color: '#1e293b',
+                    whiteSpace: 'pre-wrap',  
                   }}
                 >
                   
                 {/*Replacing extrs escape characters for summary text*/}
-                {summary && splitTextAndMermaidBlocks(summary.summaryExplanation.replace(/\\\\/g, '\\')).map((block, idx) => {
-                    if (block.type === 'text') {
-                      // Split text block into paragraphs by double newlines
-                      const normalizedContent = normalizeLaTeXDelimiters(block.content);
+                {summary && splitTextAndMermaidBlocks(summary.summaryExplanation).flatMap((block, idx) => {
+                  if (block.type === 'text') {
+                    // Normalize LaTeX and newline escapes only for text blocks
+                    const normalizedContent = normalizeLaTeXDelimiters(
+                      block.content
+                        .replace(/\\\\n/g, '\n')  // Handle doubly-escaped newlines
+                        .replace(/\\n/g, '\n')    // Handle singly-escaped newlines
+                        .replace(/\\\\/g, '\\')   // Normalize double backslashes (LaTeX)
+                    );
 
-                      return sanitizeText(normalizedContent)
-                        .split(/\n{2,}/)
-                        .filter(para => para.trim().length > 0)
-                        .map((para, pidx) => (
-                         <p key={`${idx}-${pidx}`} className="text-left mb-2 mt-0 leading-normal break-words">
+                    // Split text into paragraphs by double newlines
+                    return sanitizeText(normalizedContent)
+                      .split(/\n{2,}/)
+                      .filter(para => para.trim().length > 0)
+                      .map((para, pidx) => (
+                        <p
+                          key={`${idx}-${pidx}`}
+                          className="text-left mb-2 mt-0 leading-normal break-words"
+                        >
                           <LatexRender content={sanitizeText(para)} />
-                         </p>
-                        
-                        ));
-                    }
-                    
-                    if (block.type === 'mermaid') {
-                      return (
-                        <div key={idx} className="mb-4 p-4 bg-gray-50 rounded-lg">
-                          <MermaidDiagram chart={block.content} />
-                        </div>
-                      );
-                    }
-                    return null;
-                  })}
+                        </p>
+                      ));
+                  }
+                  if (block.type === 'mermaid') {
+                    // Render mermaid diagrams as-is
+                    return (
+                      <div key={idx} className="mb-4 p-4 bg-gray-50 rounded-lg">
+                        <MermaidDiagram chart={block.content} />
+                      </div>
+                    );
+                  }
+                  return [];
+                })}
                 </div>
               </div>
               <div className="flex justify-end gap-2 mt-4">

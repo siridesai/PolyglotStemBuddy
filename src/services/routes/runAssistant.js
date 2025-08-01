@@ -123,32 +123,42 @@ export const runAssistantBackend = async (
         - All labels and math inside Mermaid must be in ${language}.
         - Node and edge labels must be in ${language}; node labels quoted, edge labels unquoted.
         - Math expressions inside nodes must be enclosed with double dollar signs: $$...$$.
-        - All LaTeX commands inside Mermaid (e.g., \frac) must be double-escaped as \\\\frac in JSON strings.
+        - All LaTeX commands inside Mermaid (e.g., \frac) must be double-escaped as \\frac in JSON strings.
         - Do not use parentheses around LaTeX inside Mermaid nodes (e.g., avoid writing (\frac{1}{2})).
-        - Example node: A["Improper Fraction: $$\\\\frac{9}{4}$$"]
+        - Example node: A["Improper Fraction: $$\\frac{9}{4}$$"]
 
        4. LaTeX Rules:
         - Inline math must use single dollar signs: $...$  
-          Example: $\\\\frac{2}{3}$
+          Example: $\\frac{2}{3}$
         - Block math must be enclosed in double dollar signs on their own lines:
           $$
-          \\\\frac{2}{3} + \\\\frac{1}{3} = 1
+          \\frac{2}{3} + \\frac{1}{3} = 1
           $$
         
         - Use only KaTeX-supported syntax.
         - Do NOT use unsupported commands such as \\\\div, triple backslashes, malformed or dangling backslashes.
 
         **IMPORTANT:** 
-          Every LaTeX backslash (\) must be escaped as double backslash (\\\\) in JSON or string outputs so that the front end receives a single backslash for correct rendering.
+          Every single LaTeX backslash (\) must be escaped as double backslash (\\) in JSON or string outputs so that the front end receives a single backslash for correct rendering.
         - Never put LaTeX formulas inside parentheses or any other delimiters like (\frac{2}{3}); use only $...$ and $$...$$.
         - For ages 13-16, always present relevant mathematical or chemical equations using these delimiters and escaping rules.
         - For mixed fractions, write the whole number immediately followed by the fraction inside math delimiters with no space or extra symbols:
-        - Inline: $3\\\\frac{1}{4}$
+        - Inline: $3\\frac{1}{4}$
+        - **An expression like $T_{\mu\nu}$ must be written as $T_{\\mu\\nu}$ inside JSON.**
         - Block:
           $$
-          3\\\\frac{1}{4}
+          3\\frac{1}{4}
           $$
-        - All math commands (\frac, \sqrt, \sum, \overline, etc) and special symbols must follow this escaping rule.
+        - All math commands (frac, sqrt, sum, overline, etc) and Greek letters (mu, nu, pi, etc) must follow this escaping rule.
+        = Specifically, every single backslash \ in LaTeX commands (such as \frac, \sqrt, \sum) and Greek letters (like \mu, \nu, \pi, etc.) must be replaced with a double backslash \\ in the JSON strings.
+
+        =  This is required because \ is a special escape character in JSON and needs to be escaped to preserve the literal backslash for LaTeX processing later.
+
+          The Greek letters such as mu,nu,pi,rho etc must appear as \\mu,\\nu,\\pi,\\rho in the JSON string.
+
+          Exanple: $T_{\\mu\\nu}$ is the stress-energy tensor that describes matter and energy in the universe.
+
+          When generating or writing JSON manually, confirm all instances of \ within math expressions are doubled.
         - These rules apply in all languages you output. Math expressions must always follow the dollar sign delimiter and escaping rules regardless of language.
 
         5. Follow-Up Questions:
@@ -213,7 +223,6 @@ export const runAssistantBackend = async (
       const messages = await assistantsClient.beta.threads.messages.list(chatThreadId);
       const latestAssistantMsg = messages.data.find(m => m.role === 'assistant');
       const result = latestAssistantMsg?.content?.[0]?.text?.value ?? "(No response)";
-      
       
       return { 
         result, 
