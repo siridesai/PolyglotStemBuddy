@@ -164,6 +164,7 @@ router.post('/generateSummary', async (req, res) => {
       Written clearly and precisely for a ${age}-year-old audience in ${language}, using suitable scientific vocabulary without unnecessary complexity.
 
       Include a Mermaid diagram only if visualization helps understanding the concept.Use only when absoultely necessary.
+      Avoid generating Mermaid diagrams in responses that contain LaTeX math code unless the diagram is essential and truly adds visual clarity.
 
       Mermaid diagrams must:
 
