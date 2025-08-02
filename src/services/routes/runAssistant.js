@@ -118,6 +118,7 @@ export const runAssistantBackend = async (
 
         3. Mermaid Diagrams:
         - Include a Mermaid diagram only if helpful and only in the first response for that concept.
+        - Avoid generating Mermaid diagrams in responses that contain LaTeX math code unless the diagram is essential and truly adds visual clarity.
         - Use valid Mermaid syntax inside a code block labeled exactly: \`\`\`mermaid
         - Only include the Mermaid code block itself, no extra explanation.
         - All labels and math inside Mermaid must be in ${language}.
