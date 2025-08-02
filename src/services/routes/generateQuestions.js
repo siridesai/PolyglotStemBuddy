@@ -5,6 +5,7 @@ import { emitEvent } from '../appInsights.js'
 
 const router = express.Router();
 
+
 router.post('/generateQuestions', async (req, res) => {
   try {
     const { message, threadId, age, language } = req.body;
@@ -105,6 +106,8 @@ router.post('/generateQuestions', async (req, res) => {
                       Return exactly 5 question objects in a pure JSON array.
 
                       Do NOT output markdown fences, code blocks, explanations, or any extra text.
+                      
+                      DO NOT use any other markdown such as \`\`\`json.
 
                       Each question object must have the following fields:
 
@@ -183,13 +186,13 @@ router.post('/generateQuestions', async (req, res) => {
         // Attempt to extract JSON array if extra text or markdown fences are present
         const jsonMatch = content.match(/\[[\s\S]*\]/);
         if (!jsonMatch) throw new Error("No valid JSON array found in assistant response.");
-        quizQuestions = JSON.parse(jsonMatch[0]);
+        quizQuestions = JSON.parse(jsonMatch[0].replace(/^```(?:json)?\s*/i, ''));
       } catch (err) {
        console.error('JSON parse error:', err, 'Content:', content);
 
         try {
               let preCleaned = content;
-
+ 
               const latexPlaceholder = '__LATEX_BS_PLACEHOLDER__';
               preCleaned = preCleaned.replace(/(\${1,2})([\s\S]+?)\1/g, (match, delim, inner) => {
                 let temp = inner.replace(/\\\\/g, latexPlaceholder);

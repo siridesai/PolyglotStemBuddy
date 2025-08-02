@@ -221,7 +221,7 @@ router.post('/generateSummary', async (req, res) => {
 
     Output Restrictions
 
-      JSON object must only contain "title" and "summaryExplanation" keys.
+      JSON object must only contain "title" and "summaryExplanation" keys.DO NOT use any other markdown such as \`\`\`json.
 
       Do not return stringified JSON, do not wrap output in code blocks or markdown—raw minified JSON only.
 
@@ -249,7 +249,7 @@ router.post('/generateSummary', async (req, res) => {
 
       Example valid JSON output (minified, partial):
       {"title":"Photosynthesis - ${formattedDate}",
-      "summaryExplanation":"**Photosynthesis Equation**\nThe process of photosynthesis...\n\n"}
+      "summaryExplanation":"\n\n**Photosynthesis Equation**\nThe process of photosynthesis...\n\n"}
 
       Important Instructions:
 
@@ -263,6 +263,12 @@ router.post('/generateSummary', async (req, res) => {
 
         Every single backslash \ in LaTeX commands (e.g., \frac, \sqrt, \sum) and Greek letters (e.g., \mu, \nu, \pi, \rho) must be escaped as double backslashes \\ inside the JSON strings.
         This applies to all LaTeX code inside the JSON values, including inline math, block math, subscripts, superscripts, and concatenated formulas.
+
+        Bold important headings or phrases with **...**.
+
+        Use explicit newline characters (\n) to separate topics or paragraphs in "summaryExplanation".
+
+        Do not rely on bold ** alone to produce line breaks.
 
         Examples of correct escaping inside the JSON string:
 
@@ -279,13 +285,14 @@ router.post('/generateSummary', async (req, res) => {
         Use inline math with single dollar signs $...$ and block math with double dollar signs $$...$$, without extra parentheses or delimiters.
 
         The JSON returned must be parseable by any standard JSON parser without error.
+      
 
         Example of valid JSON output your response must match:
 
-        text
+        
         {
           "title": "Einstein's General Relativity - YYYY-MM-DD",
-          "summaryExplanation": "**Einstein's General Relativity** describes gravity as the curvature of spacetime $G_{\mu\nu}$ → $G_{\\mu\\nu}$.\n\nThe famous equation is:\n$$\nG_{\\mu\\nu} = \\frac{8\\pi G}{c^4} T_{\\mu\\nu}\n$$"
+          "summaryExplanation": "\n\n**Einstein's General Relativity** describes gravity as the curvature of spacetime $G_{\mu\nu}$ → $G_{\\mu\\nu}$.\n\nThe famous equation is:\n$$\nG_{\\mu\\nu} = \\frac{8\\pi G}{c^4} T_{\\mu\\nu}\n$$"
         }
         Strictly follow these instructions to guarantee valid JSON output and proper LaTeX backslash escaping for downstream parsing and rendering. If generating the JSON programmatically, ensure all backslashes inside math expressions are replaced as described prior to JSON serialization.`;
 
@@ -347,7 +354,7 @@ router.post('/generateSummary', async (req, res) => {
       return res.status(500).json({ error: 'No summary generated.' });
     }
 
-    const textValue = lastMessage.content[0].text.value;
+    const textValue = lastMessage.content[0].text.value.replace(/^```(?:json)?\s*/i, '');
 
     // Parse JSON summary robustly
     const summary = parseSummary(textValue);

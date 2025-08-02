@@ -106,6 +106,7 @@ router.post('/generateRandomTopicQuestions', async (req, res) => {
                         **Ensure all generated content is clear, concise, and formatted for the appropriate ${age} group in ${language} and strictly belongs to ${topic}.**
 
                         Review rendered output to confirm math displays as intended and revise if it shows raw code instead of rendered math.
+                        DO NOT use any other markdown such as \`\`\`json.
                         Example: For 'kn' language, response should be in the following format - 
                         {"topicQuestions":["ವಿದ್ಯುತ್ ಸರಣಿಯಲ್ಲಿ ಪ್ರತಿರೋಧಕದ ಪಾತ್ರವೇನು?", "ಯಂತ್ರವಿಜ್ಞಾನದಲ್ಲಿ ಸರಳ ಯಂತ್ರಗಳ ಉದಾಹರಣೆಗಳನ್ನು ಹೇಳಿ.", "ಭೌತಶಾಸ್ತ್ರದಲ್ಲಿ ಗುರ್ತಿಸುವ ನಿಯಮ ಯಾವುದು?"]}`;
 
@@ -172,9 +173,12 @@ router.post('/generateRandomTopicQuestions', async (req, res) => {
     
 
     try {
+
+      textValue = textValue.replace(/```[\s]*$/, '');   
       // Double any backslash not followed by a valid JSON escape character
       textValue = textValue.replace(/\\(?![\\\/bfnrtu"])/g, '\\\\');
 
+      console.log(textValue);
       // Attempt to parse JSON
       topics = JSON.parse(textValue);
 
@@ -183,6 +187,23 @@ router.post('/generateRandomTopicQuestions', async (req, res) => {
         topics = JSON.parse(topics);
       }
     } catch (err) {
+      console.log("JSON parse failed: ", err);
+       let preCleaned = textValue;
+ 
+              const latexPlaceholder = '__LATEX_BS_PLACEHOLDER__';
+              preCleaned = preCleaned.replace(/(\${1,2})([\s\S]+?)\1/g, (match, delim, inner) => {
+                let temp = inner.replace(/\\\\/g, latexPlaceholder);
+                temp = temp.replace(/\\/g, '\\\\');
+                temp = temp.replace(new RegExp(latexPlaceholder, 'g'), '\\\\');
+                return delim + temp + delim;
+              });
+
+              const globalPlaceholder = '__GLOBAL_BS_PLACEHOLDER__';
+              preCleaned = preCleaned.replace(/\\\\/g, globalPlaceholder);
+              preCleaned = preCleaned.replace(/\\/g, '\\\\');
+              preCleaned = preCleaned.replace(new RegExp(globalPlaceholder, 'g'), '\\\\');
+
+              topics = JSON.parse(preCleaned);
       emitEvent(
         "GenerateTopicsEvent",
         {

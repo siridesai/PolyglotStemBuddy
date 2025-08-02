@@ -197,6 +197,8 @@ export const runAssistantBackend = async (
         - All syntax must be compatible with KaTeX and Mermaid.
         - Strictly follow escaping and formatting conventions mentioned above.
 
+        DO NOT use any other markdown such as \`\`\`json.
+
          Strictly follow all the above rules without deviation to avoid rendering or formatting errors. Always verify output renders as intended in the frontend.`,
 
             
