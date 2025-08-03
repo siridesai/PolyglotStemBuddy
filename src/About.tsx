@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
+import Head from 'next/head';
 
 const GITHUB_RAW_MD =
 "https://raw.githubusercontent.com/siridesai/PolyglotStemBuddy/refs/heads/main/about.md" ;
