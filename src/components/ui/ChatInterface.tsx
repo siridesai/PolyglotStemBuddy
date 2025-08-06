@@ -398,6 +398,7 @@ function convertLatexToSpeech(latexText: string): string {
     }
 
     // Save this threadId for subsequent calls
+    threadId = readyThreadId;
     setThreadId(readyThreadId);
   }
 
