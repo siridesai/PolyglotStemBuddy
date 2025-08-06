@@ -32,12 +32,32 @@ router.post('/generateRandomTopicQuestions', async (req, res) => {
           p_errcode: "ThreadNotFound"
         }, req.telemetryContext
       );
-      // Thread not found: clean map and create new thread, then retry
-      console.log("Cleaning up the map and creating new thread and retry);
+    
+    if (err.message.includes("ThreadNotFound")) {
+    // If thread not found, create a new one and retry internally
+    try {
       await deleteCurrentThread(sessionId);
       const newThreadId = await getOrCreateThread(sessionId);
-      return res.status(404).json({ error: `Thread ${threadId} not found` });
-    }
+
+      // Retry with new thread ID
+      const responseContent = await processWithThread(newThreadId);
+
+      return res.status(200).json({
+        content: responseContent,
+        message: 'Retried with new thread after old thread was not found.',
+        threadId: newThreadId
+        });
+  
+        } catch (retryErr) {
+        console.error('Failed retry after thread recreation:', retryErr);
+        return res.status(500).json({ error: 'Failed to recover from missing thread.' });
+        }
+      } else {
+        // Other errors
+        console.error('Unexpected error:', err);
+        return res.status(500).json({ error: 'Internal server error.' });
+      }
+  }
 
   // Construct the prompt for the AI
   const instructions = `Generate three unique, age-appropriate, single-line STEM questions strictly related to ${topic} for a student in age group ${age} plus 3 years. 
