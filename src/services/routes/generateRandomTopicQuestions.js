@@ -32,6 +32,10 @@ router.post('/generateRandomTopicQuestions', async (req, res) => {
           p_errcode: "ThreadNotFound"
         }, req.telemetryContext
       );
+      // Thread not found: clean map and create new thread, then retry
+      console.log("Cleaning up the map and creating new thread and retry);
+      await deleteCurrentThread(sessionId);
+      const newThreadId = await getOrCreateThread(sessionId);
       return res.status(404).json({ error: `Thread ${threadId} not found` });
     }
 
