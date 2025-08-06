@@ -93,19 +93,40 @@ router.post('/generateRandomTopicQuestions', async (req, res) => {
                         3\\frac{1}{4}
                         $$
                       - All math commands (frac, sqrt, sum, overline, etc) and Greek letters (mu, nu, pi, etc) must follow this escaping rule.
-                      = Specifically, every single backslash \ in LaTeX commands (such as \frac, \sqrt, \sum) and Greek letters (like \mu, \nu, \pi, etc.) must be replaced with a double backslash \\ in the JSON strings.
+                      - Specifically, every single backslash \ in LaTeX commands (such as \frac, \sqrt, \sum) and Greek letters (like \mu, \nu, \pi, etc.) must be replaced with a double backslash \\ in the JSON strings.
 
-                      =  This is required because \ is a special escape character in JSON and needs to be escaped to preserve the literal backslash for LaTeX processing later.
+                      - This is required because \ is a special escape character in JSON and needs to be escaped to preserve the literal backslash for LaTeX processing later.
 
                         The Greek letters such as mu,nu,pi,rho etc must appear as \\mu,\\nu,\\pi,\\rho in the JSON string.
 
                         Example: What does the Einstein tensor $G_{\\mu\\nu}$ represent in general relativity?
 
                         When generating or writing JSON manually, confirm all instances of \ within math expressions are doubled.
+                        
                       - These rules apply in all languages you output. Math expressions must always follow the dollar sign delimiter and escaping rules regardless of language.
 
 
                         For ages 13 through 16, always present mathematical or chemical equations in LaTeX using the above delimiters when relevant.
+
+                        Every single backslash \ in all LaTeX commands and symbols (e.g., \frac, \sqrt, \sum, and Greek letters like \mu, \nu, \pi) must be replaced with two backslashes \\ in the raw JSON output string.
+
+                        This includes backslashes anywhere in the LaTeX expression — inside subscripts, superscripts, concatenated strings, or dynamic variables.
+  
+                        For example:
+  
+                        $\frac{3}{4}$ → $\\frac{3}{4}$
+  
+                        \mu → \\mu
+  
+                        $T_{\mu\nu}$ → $T_{\\mu\\nu}$
+  
+                        The full expression G_{\mu\nu} = \frac{8\pi G}{c^4} T_{\mu\nu} must be escaped as: $G_{\\mu\\nu} = \\frac{8\\pi G}{c^4} T_{\\mu\\nu}$  
+  
+                        "G_{\\mu\\nu}"  ← correct  
+                        "G_{\mu\nu}"    ← incorrect (will cause errors or incorrect rendering)
+
+
+                        Important: Perform the double backslash replacement on the entire LaTeX string before converting or embedding it into JSON.
 
                         **Ensure all generated content is clear, concise, and formatted for the appropriate ${age} group in ${language} and strictly belongs to ${topic}.**
 
