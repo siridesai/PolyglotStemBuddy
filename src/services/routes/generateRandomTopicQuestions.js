@@ -152,7 +152,16 @@ router.post('/generateRandomTopicQuestions', async (req, res) => {
                         Review rendered output to confirm math displays as intended and revise if it shows raw code instead of rendered math.
                         DO NOT use any other markdown such as \`\`\`json.
                         Example: For 'kn' language, response should be in the following format - 
-                        {"topicQuestions":["ವಿದ್ಯುತ್ ಸರಣಿಯಲ್ಲಿ ಪ್ರತಿರೋಧಕದ ಪಾತ್ರವೇನು?", "ಯಂತ್ರವಿಜ್ಞಾನದಲ್ಲಿ ಸರಳ ಯಂತ್ರಗಳ ಉದಾಹರಣೆಗಳನ್ನು ಹೇಳಿ.", "ಭೌತಶಾಸ್ತ್ರದಲ್ಲಿ ಗುರ್ತಿಸುವ ನಿಯಮ ಯಾವುದು?"]}`;
+                        {"topicQuestions":["ವಿದ್ಯುತ್ ಸರಣಿಯಲ್ಲಿ ಪ್ರತಿರೋಧಕದ ಪಾತ್ರವೇನು?", "ಯಂತ್ರವಿಜ್ಞಾನದಲ್ಲಿ ಸರಳ ಯಂತ್ರಗಳ ಉದಾಹರಣೆಗಳನ್ನು ಹೇಳಿ.", "ಭೌತಶಾಸ್ತ್ರದಲ್ಲಿ ಗುರ್ತಿಸುವ ನಿಯಮ ಯಾವುದು?"]}
+                        
+                        For 'en' language, response should be in the following format -  
+                        {
+                          "topicQuestions": [
+                            "What is the value of $\\frac{1}{2}$?",
+                            "Explain the symbol $G_{\\mu\\nu}$ in Einstein's equation.",
+                            "Calculate $\\sqrt{9}$."
+                          ]
+                        }`;
 
   const run = await assistantClient.beta.threads.runs.create(threadId, {
       assistant_id: assistant.id,
