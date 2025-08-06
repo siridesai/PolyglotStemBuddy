@@ -397,8 +397,9 @@ function convertLatexToSpeech(latexText: string): string {
       return;
     }
 
-  // Save this threadId for subsequent calls
-  setThreadId(readyThreadId);
+    // Save this threadId for subsequent calls
+    setThreadId(readyThreadId);
+  }
 
   // Call backend to get AI-generated questions
   console.log(`Topic chosen: ${chosenTopic}`);
