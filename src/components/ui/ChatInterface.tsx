@@ -383,6 +383,23 @@ function convertLatexToSpeech(latexText: string): string {
   }
   setSelectedTopic(chosenTopic);
 
+  // Wait for a valid threadId before making the API call
+  let readyThreadId = threadId;
+
+  if (!readyThreadId) {
+    // Fetch fresh threadId synchronously (blocking this handler)
+    readyThreadId = await fetchThreadID(cookies[COOKIE_NAME]);
+
+    if (!readyThreadId) {
+      // Could not get threadId, show error and abort operation
+      setIsLoading(false);
+      alert('Session still initializing, please try again in a moment.');
+      return;
+    }
+
+  // Save this threadId for subsequent calls
+  setThreadId(readyThreadId);
+
   // Call backend to get AI-generated questions
   console.log(`Topic chosen: ${chosenTopic}`);
   const randomTopicQuestions = await generateRandomTopicQuestions(chosenTopic, threadId, settings.age, settings.language, cookies[COOKIE_NAME]);
