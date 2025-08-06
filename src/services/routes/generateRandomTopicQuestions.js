@@ -39,8 +39,7 @@ router.post('/generateRandomTopicQuestions', async (req, res) => {
       await deleteCurrentThread(sessionId);
       const newThreadId = await getOrCreateThread(sessionId);
 
-      // Retry with new thread ID
-      const responseContent = await processWithThread(newThreadId);
+      const responseContent = await assistantClient.beta.threads.retrieve(threadId);
 
       return res.status(200).json({
         content: responseContent,
