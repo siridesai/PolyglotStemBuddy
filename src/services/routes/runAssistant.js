@@ -150,8 +150,8 @@ export const runAssistantBackend = async (
           $$
           3\\frac{1}{4}
           $$
-        - All math commands (frac, sqrt, sum, overline, etc) and Greek letters (mu, nu, pi, etc) must follow this escaping rule.
-        = Specifically, every single backslash \ in LaTeX commands (such as \frac, \sqrt, \sum) and Greek letters (like \mu, \nu, \pi, etc.) must be replaced with a double backslash \\ in the JSON strings.
+        - All math commands (frac, sqrt, sum, overline etc) and Greek letters (mu, nu, pi, sigma etc) must follow this escaping rule.
+        = Specifically, every single backslash \ in LaTeX commands (such as \frac, \sqrt, \sum) and Greek letters (like \mu, \nu, \pi, \sigma etc.) must be replaced with a double backslash \\ in the JSON strings.
 
         =  This is required because \ is a special escape character in JSON and needs to be escaped to preserve the literal backslash for LaTeX processing later.
 

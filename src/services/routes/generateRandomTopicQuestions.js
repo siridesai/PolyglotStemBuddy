@@ -83,7 +83,7 @@ router.post('/generateRandomTopicQuestions', async (req, res) => {
                         All math commands (frac, sqrt, sum, overline, etc) and Greek letters (mu, nu, pi, etc) must follow this escaping rule.
                         Each backslash in these commands or symbols must be double escaped as \\. For example, \mu must be written as \\mu in the JSON string.
 
-                        Specifically, every single backslash \ in LaTeX commands (such as \frac, \sqrt, \sum) and Greek letters (like \mu, \nu, \pi, etc.) must be replaced with a double backslash \\ in the JSON strings.
+                        Specifically, every single backslash \ in LaTeX commands (such as \frac, \sqrt, \sum) and Greek letters (like \mu, \nu, \pi, \sigma, etc.) must be replaced with a double backslash \\ in the JSON strings.
 
                         This is required because \ is a special escape character in JSON and needs to be escaped to preserve the literal backslash for LaTeX processing later.
 
@@ -112,7 +112,7 @@ router.post('/generateRandomTopicQuestions', async (req, res) => {
                         3\\frac{1}{4}
                         $$
                       - All math commands (frac, sqrt, sum, overline, etc) and Greek letters (mu, nu, pi, etc) must follow this escaping rule.
-                      - Specifically, every single backslash \ in LaTeX commands (such as \frac, \sqrt, \sum) and Greek letters (like \mu, \nu, \pi, etc.) must be replaced with a double backslash \\ in the JSON strings.
+                      - Specifically, every single backslash \ in LaTeX commands (such as \frac, \sqrt, \sum) and Greek letters (like \mu, \nu, \pi, \sigma, etc.) must be replaced with a double backslash \\ in the JSON strings.
 
                       - This is required because \ is a special escape character in JSON and needs to be escaped to preserve the literal backslash for LaTeX processing later.
 
@@ -127,7 +127,7 @@ router.post('/generateRandomTopicQuestions', async (req, res) => {
 
                         For ages 13 through 16, always present mathematical or chemical equations in LaTeX using the above delimiters when relevant.
 
-                        Every single backslash \ in all LaTeX commands and symbols (e.g., \frac, \sqrt, \sum, and Greek letters like \mu, \nu, \pi) must be replaced with two backslashes \\ in the raw JSON output string.
+                        Every single backslash \ in all LaTeX commands and symbols (e.g., \frac, \sqrt, \sum, \sigma, and Greek letters like \mu, \nu, \pi) must be replaced with two backslashes \\ in the raw JSON output string.
 
                         This includes backslashes anywhere in the LaTeX expression — inside subscripts, superscripts, concatenated strings, or dynamic variables.
   
