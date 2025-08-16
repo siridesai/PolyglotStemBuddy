@@ -196,7 +196,7 @@ router.post('/generateSummary', async (req, res) => {
 
       Always double-escape LaTeX backslashes:
 
-      Every single backslash \ in LaTeX commands (such as \frac, \sqrt, \sum, \sigma) and Greek letters (like \mu, \nu, \pi, \rho, etc.) must be replaced with a double backslash \\ inside JSON strings.
+      Every single backslash \ in LaTeX commands (such as \frac, \sqrt, \sum) and Greek letters (like \mu, \nu, \pi, \rho, , \sigma etc.) must be replaced with a double backslash \\ inside JSON strings.
 
       Example:
 
@@ -262,7 +262,7 @@ router.post('/generateSummary', async (req, res) => {
 
         Do NOT include any code fences, markdown delimiters, explanations, or any extra text outside the JSON object.
 
-        Every single backslash \ in LaTeX commands (e.g., \frac, \sqrt, \sum, \sigma) and Greek letters (e.g., \mu, \nu, \pi, \rho) must be escaped as double backslashes \\ inside the JSON strings.
+        Every single backslash \ in LaTeX commands (e.g., \frac, \sqrt, \sum) and Greek letters (e.g., \mu, \nu, \pi, \rho, \sigma) must be escaped as double backslashes \\ inside the JSON strings.
         This applies to all LaTeX code inside the JSON values, including inline math, block math, subscripts, superscripts, and concatenated formulas.
 
         Bold important headings or phrases with **...**.
