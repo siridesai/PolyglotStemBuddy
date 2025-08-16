@@ -67,7 +67,7 @@ router.post('/generateQuestions', async (req, res) => {
 
                       Crucial LaTeX Backslash Escaping:
 
-                      Every single backslash \ in all LaTeX commands and symbols (e.g., \frac, \sqrt, \sum, \sigma, and Greek letters like \mu, \nu, \pi) must be replaced with two backslashes \\ in the raw JSON output string.
+                      Every single backslash \ in all LaTeX commands and symbols (e.g., \frac, \sqrt, \sum, and Greek letters like \mu, \nu, \pi, \sigma) must be replaced with two backslashes \\ in the raw JSON output string.
 
                       This includes backslashes anywhere in the LaTeX expression — inside subscripts, superscripts, concatenated strings, or dynamic variables.
 
